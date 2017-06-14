@@ -1,0 +1,39 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+    <style></style>
+  </head>
+  <body onload="init()">
+
+<style type="text/css">
+
+#draw { 
+    cursor: pointer;
+    border:1px solid black;
+    width:200px;
+    height:200px;
+}
+
+#draw:active { 
+    cursor: crosshair;
+}
+
+</style>
+<script language="javascript" src="/webapps/bbc_news/visor/siteroot/static/scripts/lib/easeljs-0.8.2.min.js"></script>
+<script>
+function init() {
+canvas = document.getElementById("draw");
+var stage = new createjs.Stage(canvas);
+createjs.Ticker.addEventListener("tick", tick);
+createjs.Ticker.setFPS(100);
+}
+function tick() {
+}
+</script>
+
+
+<canvas width=600 height=600 id="draw" />
+
+</body>
+</html>

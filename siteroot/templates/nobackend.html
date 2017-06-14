@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- Page displayed when no backend is reachable -->
+{% comment %}
+The following variables are defined:
+    SITE_TITLE - page title
+{% endcomment %}
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta content="en-gb" http-equiv="Content-Language" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link href="static/styles/main.css" rel="stylesheet" type="text/css" />
+        <link href="static/styles/nobackend.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/widgets/jquery.ui.querybar.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/widgets/jquery.ui.imageuploader.css" rel="stylesheet" type="text/css" />
+        <title>{{SITE_TITLE}} - Waiting for the backend</title>
+    </head>
+    <body>
+        <div id="container">
+            <div id="page_header">
+                <a href="{{HOME_LOCATION}}">
+                    <img src="static/images/logo_sml.png" alt="{{SITE_TITLE}}" id="header_logo" />
+                </a>
+            </div>
+            <div id="nobackend">
+                <div id="nobackend-img">
+                    <img src="static/images/plug.png" alt="Connection Error" />
+                    <img src="static/images/plug-loader.gif" alt="Checking Status..." id="nobackend-loader" />
+                </div>
+                <div id="nobackend-text">
+                    <h2>Attempting to reconnect to backend...</h2>
+                    <p>Oops! It looks like there was an error interacting with backend. This may be because the backend is not currently running.</p>
+                    <!-- If the backend crashed, it should automatically restart. As this may take 5 minutes or so,
+                    this might be a good time to go and grab a cup of coffee. -->
+                    <p>This page will automatically redirect to the frontpage when communication has been re-established.</p>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="static/scripts/lib/jquery-1.11.3.min.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.widgets.min.js"></script>
+        <script type="text/javascript" src="static/scripts/widgets/jquery.ui.querybar.js"></script>
+        <script type="text/javascript" src="static/scripts/widgets/jquery.ui.imageuploader.js"></script>
+        <script type="text/javascript" src="static/scripts/make-querybar-imup.js"></script>
+        <script type="text/javascript" src="static/scripts/check-if-backend-active.js"></script>
+    </body>
+</html>

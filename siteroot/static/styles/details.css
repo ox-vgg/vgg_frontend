@@ -1,0 +1,45 @@
+dl.image-details {
+    clear: left;
+    float: left;
+    width: 520px;
+    margin: 1em 0;
+    padding: 0;
+    border-bottom: 1px solid #807C7A;
+}
+
+.image-details dt {
+    clear: left;
+    float: left;
+    width: 200px;
+    margin: 0;
+    padding: 5px;
+    border-top: 1px solid #807C7A;
+    font-weight: bold;
+}
+
+.image-details dd {
+    float: left;
+    width: 300px;
+    margin: 0;
+    padding: 5px;
+    border-top: 1px solid #807C7A;
+}
+
+.image-summary dt {
+    font-weight: bold;
+}
+
+.titlebar {
+    display: table;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.titlebar_left,.titlebar_right {
+    display: table-cell;
+}
+
+.titlebar_left {
+    text-align: left;
+}

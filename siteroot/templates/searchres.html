@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <!-- Results page -->
+    {% comment %}
+     The following variables are defined:
+        AUTHENTICATED - boolean that indicates whether the current user is authenticated or not
+        SITE_TITLE - page title
+        DATASETS - dictionary of supported datasets { name_id1:real_name1, name_id2:real_name2, ... }
+        QUERY - dictionary containing query parameters
+        QUERY_STRING - string representation of the query
+        QUERY_ID - query id
+        PAGE - page of results to display (default = 1)
+        PROCESSING_TIME - time taken to process result (hidden if = 0)
+        TRAINING_TIME - time taken to train classifier (hidden if = 0)
+        RANKING_TIME - time taken to rank result (hidden if = 0)
+        DISABLE_AUTOCOMPLETE - if true, disable autocomplete for the form field. True by default.
+        HOME_LOCATION - location of the root home page taking into account possible redirections
+        ENGINE - currently selected engine
+        AVAILABLE_ENGINES - engines info
+        ENGINES_WITH_IMAGE_SEARCH_SUPPORT - list of strings with the ids of those engines supporting images as input
+    {% endcomment %}
+    <head>
+        <meta content="en-gb" http-equiv="Content-Language" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link href="static/styles/main.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/widgets/jquery.ui.querybar.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/widgets/jquery.ui.imageuploader.css" rel="stylesheet" type="text/css" />
+        <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
+        <link href="static/scripts/lib/apprise/apprise.min.css" rel="stylesheet" type="text/css" />
+        <title>{{SITE_TITLE}} - Results</title>
+    </head>
+
+    <body>
+        <div id="container">
+            <div id="page_header_fill"></div>
+            <div id="page_header">
+                <div id="top-right-links">
+                {% if AUTHENTICATED %}
+                    <a href="{{HOME_LOCATION}}admintools">Admin Tools</a> &middot;
+                    <a href="{{HOME_LOCATION}}logout/">Sign out</a>
+                {% else %}
+                    <a href="{{HOME_LOCATION}}login/">Sign in</a>
+                {% endif %}
+                </div>
+                <a href="{{HOME_LOCATION}}">
+                    <img src="static/images/logo_sml.png" alt="{{SITE_TITLE}}" id="header_logo" />
+                </a>
+                <form class="page_header_search" action="searchproc_qstr" method="get" {% if DISABLE_AUTOCOMPLETE %}autocomplete="off"{% endif %}>
+                     <!-- start query box -->
+                    <div id="query_box">
+                        <div id="qbControl">
+                            <div class="qbTextSearchEnabled">true</div>
+                            <div class="qbImageSearchEnabled">true</div>
+                            <div class={% if QUERY.qtype == "text" %}"qbTextSearchVal"{% else %}"qbImageSearchVal"{% endif %}>{{QUERY_STRING}}</div>
+                            <div class="qbQueryEngine">{{ENGINE}}</div>
+                            <div class="qbQueryDset">{{QUERY.dsetname}}</div>
+                            {% for key,value in DATASETS.items %}
+                              <div class="qbDset">{{key}}|{{value}}</div>
+                            {% endfor %}
+                            {% for key,value in AVAILABLE_ENGINES.items %}
+                              <div class="qbEngine">{{key}}|{{value.full_name}}</div>
+                            {% endfor %}
+                            <div class="qbImagePreviewPrefix">uploadedimgs/</div>
+                            <div class="qbDatasetImagePreviewPrefix">thumbnails/{{QUERY.dsetname}}/</div>
+                            <div class="qbSrcQueryId">{{QUERY_ID}}</div>
+                            <div class="qbEnginesWithImageSearchSupport">{{ENGINES_WITH_IMAGE_SEARCH_SUPPORT|safe}}</div>
+                            <div id="imupControl"></div>
+                            <!-- put submit box in control so it also appears after qb
+                                 has finished loading -->
+                            <input id="query_box_submit" type="submit" value="&#xf002;" />
+                        </div>
+                    </div>
+                    <!-- end query box -->
+                </form>
+            </div>
+            <br>
+            <div id="results_content_block_primary"> </div>
+            <div id="results_content_block_secondary"> </div>
+            <div class="results_params">
+                <!-- store parameters in hidden divs to make them
+                accessible from within results-initial-load.js script -->
+                <div id="rpQuerySesId">{{QUERY_ID}}</div>
+                <div id="rpPage">{{PAGE}}</div>
+                <div id="rpProcessingtime">{{PROCESSING_TIME}}</div>
+                <div id="rpTrainingtime">{{TRAINING_TIME}}</div>
+                <div id="rpRankingtime">{{RANKING_TIME}}</div>
+            </div>
+        </div>
+        <script type="text/javascript" src="static/scripts/lib/jquery-1.11.3.min.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.widgets.min.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/jquery.form.js"></script>
+        <script type="text/javascript" src="static/scripts/widgets/jquery.ui.querybar.js"></script>
+        <script type="text/javascript" src="static/scripts/widgets/jquery.ui.imageuploader.js"></script>
+        <script type="text/javascript" src="static/scripts/make-querybar-imup.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.autocomplete.min.js"></script>
+        <!-- JQuery plugin for transitions between subpages. Requires JQuery UI Transitions module.
+        Also handles update of history queue when browsing between subpages -->
+        <script type="text/javascript" src="static/scripts/plugins/jquery.divtransition.js"></script>
+        <!-- load initial page of results, and provide hooks for navigation to sub-pages using ajax calls -->
+        <script type="text/javascript" src="static/scripts/ajax_setup.js"></script>
+        <script type="text/javascript" src="static/scripts/results-initial-load.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/jquery.path.js"></script>
+        <script type="text/javascript" src="static/scripts/folding-header.js"></script>
+        <script>
+        // Configuration of autocomplete widget
+        $(function() {
+            $("#qbQueryInputText").autocomplete({
+                position: {my: "left top", at: "left-13% bottom", collision: "none" , of: "#qbInput"},
+                source: function (request, response) {
+                    $.ajax({
+                        url: "{{HOME_LOCATION}}text_suggestions",
+                        data: { query: request.term, engine: $('#qbSelEngine').val()},
+                        success: function (data) {
+                             var jsonObj = JSON.parse(data);
+                             var array = [];
+                             for (var item in jsonObj['results']) {
+                                  array.push( jsonObj['results'][item] );
+                            }
+                            response(array);
+                        },
+                        error: function () {
+                            response([]);
+                        }
+                    });
+                }
+            });
+        });
+        </script>
+    </body>
+</html>

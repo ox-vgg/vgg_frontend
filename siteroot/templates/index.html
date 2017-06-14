@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <!-- Main landing page for search -->
+    {% comment %}
+    The following variables are defined:
+      AUTHENTICATED - boolean that indicates whether the current user is authenticated or not
+      AVAILABLE_ENGINES - engines info
+      SITE_TITLE - page title
+      DISABLE_AUTOCOMPLETE - if true, disable autocomplete for the form field. True by default.
+      OPEN_TOUR - boolean indicating whether the tour should be automtically started or not
+      DATASETS - dictionary of supported datasets { name_id1:real_name1, name_id2:real_name2, ... }
+      ENGINES_WITH_IMAGE_SEARCH_SUPPORT - list of strings with the ids of those engines supporting images as input
+    {% endcomment %}
+    <head>
+        <meta content="en-gb" http-equiv="Content-Language" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <!-- main stylesheet for site -->
+        <link href="static/styles/main.css" rel="stylesheet" type="text/css" />
+        <!-- stylesheets for querybar/imageuploader widgets -->
+        <link href="static/scripts/widgets/jquery.ui.querybar.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/widgets/jquery.ui.imageuploader.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/lib/fancybox/jquery.fancybox.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/lib/fancybox/helpers/jquery.fancybox-buttons.css" rel="stylesheet" type="text/css" />
+        <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
+        <title>{{SITE_TITLE}}</title>
+    </head>
+
+    <body>
+        <div id="container">
+            <div id="search_header">
+                <div id="top-right-links">
+                {% if AUTHENTICATED %}
+                    <a href="{{HOME_LOCATION}}admintools">Admin Tools</a> &middot;
+                    <a href="{{HOME_LOCATION}}logout/">Sign out</a>
+                {% else %}
+                    <a href="{{HOME_LOCATION}}login/">Sign in</a>
+                {% endif %}
+                </div>
+                <img src="static/images/logo.png" alt="{{SITE_TITLE}}" />
+                <br><br>
+                <a href="http://www.robots.ox.ac.uk/~vgg/" target="_blank"> <img src="static/images/powered_by_vgg.png" alt="powered by VGG" /></a>
+            </div>
+            <div id="search_console">
+                 <form action="searchproc_qstr" method="get" {% if DISABLE_AUTOCOMPLETE %}autocomplete="off"{% endif %}>
+                    <div id="query_box">
+                        <div id="qbControl">
+                            <div class="qbTextSearchEnabled">true</div>
+                            <div class="qbImageSearchEnabled">true</div>
+                            {% for key,value in DATASETS.items %}
+                              <div class="qbDset">{{key}}|{{value}}</div>
+                            {% endfor %}
+                            {% for key,value in AVAILABLE_ENGINES.items %}
+                              <div class="qbEngine">{{key}}|{{value.full_name}}</div>
+                            {% endfor %}
+                            <div class="qbImagePreviewPrefix">uploadedimgs/</div>
+                            <div class="qbEnginesWithImageSearchSupport">{{ENGINES_WITH_IMAGE_SEARCH_SUPPORT|safe}}</div>
+                            <div id="imupControl"></div>
+                            <!-- put submit box in control so it also appears after qb
+                                 has finished loading -->
+                            <input id="query_box_submit" type="submit" value="&#xf002;" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- ACKs -->
+            <div id="ack_console">
+                <img src="static/images/ack-ox.png" />
+            </div>
+        </div>
+        <a id="getting_started" href="#">Getting Started</a>
+        <script type="text/javascript" src="static/scripts/lib/jquery-1.11.3.min.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.widgets.animation.min.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.autocomplete.min.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/jquery.form.js"></script>
+        <!-- querybar widget provides multi-modal (text/image) query textbox -->
+        <!-- imageuploader widget provides dropdown menu used to select url/local file to upload and use as image input -->
+        <script type="text/javascript" src="static/scripts/ajax_setup.js"></script>
+        <script type="text/javascript" src="static/scripts/widgets/jquery.ui.querybar.js"></script>
+        <script type="text/javascript" src="static/scripts/widgets/jquery.ui.imageuploader.js"></script>
+        <!-- the following utility script connects the querybar widget with the imageuploader widget -->
+        <script type="text/javascript" src="static/scripts/make-querybar-imup.js"></script>
+        <!-- set up the 'getting started' lightbox -->
+        <script type="text/javascript" src="static/scripts/lib/fancybox/jquery.fancybox.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/fancybox/helpers/jquery.fancybox-buttons.js"></script>
+        <script type="text/javascript" src="static/scripts/add-getting-started-lb.js"></script>
+        <!-- set up the example queries -->
+        {% if OPEN_TOUR %}
+            <script type="text/javascript">
+            $(function() {
+                openTour();
+            });
+        </script>
+        {% endif %}
+        <script>
+        // Configuration of autocomplete widget
+        $(function() {
+            $("#qbQueryInputText").autocomplete({
+                position: {my: "left top", at: "left-13% bottom", collision: "none" , of: "#qbInput"},
+                source: function (request, response) {
+                    $.ajax({
+                        url: "{{HOME_LOCATION}}text_suggestions",
+                        data: { query: request.term, engine: $('#qbSelEngine').val()},
+                        success: function (data) {
+                             var jsonObj = JSON.parse(data);
+                             var array = [];
+                             for (var item in jsonObj['results']) {
+                                  array.push( jsonObj['results'][item] );
+                            }
+                            response(array);
+                        },
+                        error: function () {
+                            response([]);
+                        }
+                    });
+                }
+            });
+        });
+        </script>
+    </body>
+</html>

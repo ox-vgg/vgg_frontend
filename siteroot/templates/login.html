@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <!-- Main logging page -->
+    {% comment %}
+    The following variables are defined:
+        HOME_LOCATION - location of the root home page taking into account possible redirections
+        SITE_PREFIX - prefix of the current web site as defined in the settings
+        NEXT - next page to visit after a successful login
+    {% endcomment %}
+    <head>
+        <meta content="en-gb" http-equiv="Content-Language" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <!-- main stylesheet for site -->
+        <link href="../static/styles/main.css" rel="stylesheet" type="text/css" />
+        <link href="../static/styles/login.css" rel="stylesheet" type="text/css" />
+        <title>Login</title>
+    </head>
+    <body>
+        <div id="container">
+            <div id="search_header">
+              <a href="{{HOME_LOCATION}}"> <img src="../static/images/logo.png" alt="Visor login" /> </a>
+              <br><br>
+              <a href="http://www.robots.ox.ac.uk/~vgg/" target="_blank"> <img src="../static/images/powered_by_vgg.png" alt="powered by VGG" /></a>
+            </div>
+            <h3>Login required</h3>
+            {% if form.non_field_errors %}
+            <ul class='form-errors'>
+               {% for error in form.non_field_errors %}
+                  <li>{{ error }}</li>
+               {% endfor %}
+            </ul>
+            {% endif %}
+            <div id="login_form">
+            <form action="{% url 'login' %}" method="post" accept-charset="utf-8">{% csrf_token %}
+                {% for field in form %}
+                    <label>{{ field.label }}</label><br/>
+                    {% if field.errors %}
+                        {{ field.errors }}
+                    {% endif %}
+                    {{ field }}
+                {% endfor %}
+                <input type="hidden" name="next" {% if NEXT %}value="{{NEXT}}"{% else %}value="{{SITE_PREFIX}}/"{% endif %}/>
+                <input class="button small" type="submit" value="Submit"/>
+                <input class="button small" type="button" value="Cancel" onclick="window.location='{{HOME_LOCATION}}';" />
+            </form>
+            </div>
+        </div>
+        <div id="ack_console">
+            <img src="../static/images/ack-ox.png" />
+        </div>
+    </body>
+</html>

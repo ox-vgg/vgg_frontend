@@ -1,0 +1,16 @@
+.roi_box {
+    border-width: 4px;
+    border-style: solid;
+}
+
+.roi_box_positive {
+    border-color: green;
+}
+
+.roi_box_negative {
+    border-color: red;
+}
+
+.roi_box_skip {
+    border-color: yellow;
+}

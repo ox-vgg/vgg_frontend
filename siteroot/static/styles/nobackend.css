@@ -1,0 +1,33 @@
+/* error page styles */
+#nobackend {
+    margin-top: 30px;
+    width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#nobackend-img {
+    position: relative;
+    float: left;
+    margin-top: 25px;
+}
+
+#nobackend-loader {
+    position: absolute;
+    left: 20px;
+    top: 58px;
+}
+
+#nobackend-text {
+    float: left;
+    margin-left: 3em;
+    width: 420px;
+    color: #7C8694
+}
+
+#nobackend-text:after {
+    display: block;
+    clear: both;
+    visibility: hidden;
+    content: ".";
+}

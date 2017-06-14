@@ -1,0 +1,6 @@
+*.pyc
+*~
+*.sqlite3
+# avoid tracking static files from django admin site
+/siteroot/static/admin/*
+

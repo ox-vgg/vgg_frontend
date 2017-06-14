@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <!-- Results list page. Loaded as subpage into searchres.html -->
+    {% comment %}
+    The following variables are defined:
+        QUERY_ID - query id
+        QUERY - query object
+        RDATA - list of image data
+        IMAGE_COUNT - image count
+        PAGE_COUNT - page count
+        PAGE - page of results to display
+        SA_THUMBS - path to thumbnails
+        PAGES - list of pages
+        PROCESSING_TIME - time taken to process result (hidden if = 0)
+        TRAINING_TIME - time taken to train classifier (hidden if = 0)
+        RANKING_TIME - time taken to rank result (hidden if = 0)
+        ENGINE - currently selected engine
+        SIMILAR_ENGINE - engine for the similar search
+        ENGINE_CAN_SAVE_UBER - boolean indicating whether the current engine supports saving uber classifiers
+        ENGINE_HAS_IMG_POSTPROC_MODULE - boolean indicating whether the current engine supports an image postprocessing module
+    {% endcomment %}
+    {% load siteroot_extras %}
+    <div class="results_footer results_footer_top">
+        <div id="results_prevpane_top">
+            {% if PAGE != 1 %}
+            <a href="{{HOME_LOCATION}}searchreslist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"-1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
+                &lt; Previous
+            </a>
+           {% endif %}
+        </div>
+        <div id="results_nextpane_top">
+            {% if PAGE != PAGE_COUNT %}
+            <a href="{{HOME_LOCATION}}searchreslist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
+                Next &gt;
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <div id="results_header">
+        <div>
+            Search results page {{PAGE|intToCommaStr}} of {{PAGE_COUNT|intToCommaStr}}
+            ({{IMAGE_COUNT|intToCommaStr}} results)
+        </div>
+        <div>
+            {% if PROCESSING_TIME > 0.0 %}
+                Images processed in {{PROCESSING_TIME}}s
+                {% if TRAINING_TIME > 0.0 or RANKING_TIME > 0.0 %} &middot; {% endif %}
+            {% endif %}
+            {% if TRAINING_TIME > 0.0 %}
+                Model trained in {{TRAINING_TIME}}s
+                {% if RANKING_TIME > 0.0 %} &middot; {% endif %}
+            {% endif %}
+            {% if RANKING_TIME > 0.0 %}
+                Ranked in {{RANKING_TIME}}s
+            {% endif %}
+        </div>
+    </div>
+    <div id="content">
+        <div id="results_list" class="grid_list">
+            {% for RITEM in RDATA %}
+            <div class="results_box">
+                <div class="result_outer_wrapper">
+                    <div class="result_inner_wrapper">
+                        <a class="result_image_link" href="{{HOME_LOCATION}}viewdetails?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;dsetresid={{RITEM.dsetresid}}&amp;dsetname={{QUERY.dsetname}}{% if RITEM.roi %}&amp;roi={{RITEM.roi}}{% endif %}">
+                            <img src="{{SA_THUMBS}}{{RITEM.path}}{{RITEM.thumbnailroi}}" />
+                        </a>
+                        <div class="result_refinebtns">
+                            <div class="result_refinebtn_url" style="display:none;">{{RITEM.dsetresid}}</div>
+                            <a class="result_refinebtn result_refinebtn_unselected result_refinebtn_pos" href="#">+</a><a class="result_refinebtn result_refinebtn_unselected result_refinebtn_neg" href="#">&#8722;</a>
+                        </div>
+                        <div class="result_belowtext">
+                            <div><span class="result_belowtext_movsymbol"></span><span class="result_belowtext_text">{{RITEM.desc|trunc:20}}</span></div>
+                        </div>
+                        {% if SIMILAR_ENGINE %}
+                        <div class="result_extras">
+                            <a href="{{HOME_LOCATION}}searchproc_qstr?engine={{SIMILAR_ENGINE}}&amp;q={{RITEM.dsetresid}}&amp;qtype=dsetimage&amp;dsetname={{QUERY.dsetname}}"><img src="static/images/search_more.png" />similar</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="results_footer">
+        <div id="results_prevpane">
+            {% if PAGE != 1 %}
+            <a href="{{HOME_LOCATION}}searchreslist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"-1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
+                &lt; Previous
+            </a>
+            {% endif %}
+        </div>
+        <div id="results_nextpane">
+            {% if PAGE != PAGE_COUNT %}
+            <a href="{{HOME_LOCATION}}searchreslist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
+                Next &gt;
+            </a>
+            {% endif %}
+        </div>
+        <div id="results_pagespane">
+            {% for ITEM in PAGES %}
+               {% if ITEM != PAGE %}
+                    <a href="{{HOME_LOCATION}}searchreslist?qsid={{QUERY_ID}}&amp;page={{ITEM}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
+                        {{ITEM}}
+                    </a>
+               {% else %}
+                    <span class="result_link_unlinked">{{ITEM}}</span>
+               {% endif %}
+            {% endfor %}
+        </div>
+        <div class="results_nav_centre">
+            {% if ENGINE_HAS_IMG_POSTPROC_MODULE %}
+                <br/><a class="results_nav_centre_link" href="{{HOME_LOCATION}}trainingimages?qsid={{QUERY_ID}}&amp;page={{PAGE}}">View Training Images</a>
+            {% endif %}
+            {% if ENGINE_CAN_SAVE_UBER %}
+                &middot;
+                <a id="save_uber_classif" onclick="save_uber()" href="#">Save as Uber Classifier</a>
+            {% endif %}
+            <br/>
+        </div>
+        <div class="results_nav_ack">
+            <img src="static/images/ack-ox.png"/>
+        </div>
+    </div>
+    <div class="results_params">
+      {% if QUERY.qtype == "text" %}
+        <div id="rpQueryStr">{{QUERY.qdef}}</div>
+      {% else %}
+        <div id="rpQueryStr"></div>
+      {% endif %}
+        <div id="rpQuerySesId">{{QUERY_ID}}</div>
+    </div>
+    <!-- dynamically load in apprise css and script -->
+    <script type="text/javascript" src="static/scripts/lib/apprise/apprise-1.5.min.js"></script>
+    <script type="text/javascript">
+    $(function() {
+        $('head').append('<link href="static/scripts/lib/apprise/apprise.min.css" rel="stylesheet" type="text/css" />');
+    });
+    </script>
+    <!-- click() handler for uber classifer -->
+    <script type="text/javascript">
+    function save_uber() {
+        var input_val = true;
+        if ($('#rpQueryStr').html()) {
+            input_val = $('#rpQueryStr').html();
+        }
+        apprise('Enter a name for the Uber Classifier:', {'input':input_val}, function(r) {
+            if (r) {
+                $.get('{{HOME_LOCATION}}save_uber_classifier', {qsid: $('#rpQuerySesId').html(),
+                                                name: String(r)}).done(function(data) {
+                    if (data == '1') {
+                        apprise('Uber classifier \'' + r + '\' saved!<small><br/><br/>Search for <b>$' + r + '</b> to reuse</small>');
+                    } else {
+                        apprise('Error saving uber classifier \'' + r + '\' to disk cache!');
+                    }
+                });
+            }
+        });
+        //If you don't want the link to actually redirect the browser to '#',
+        // return false at the end of this block.
+        return false;
+    }
+    </script>
+    <!-- utility script for dynamically reflowing grid so that each row fills the width of the current page -->
+    <script type="text/javascript" src="static/scripts/results-grid-resize.js"></script>
+    <!-- JQuery plugin for transitions between subpages. Requires JQuery UI Transitions module.
+    Also handles update of history queue when browsing between subpages -->
+    <script type="text/javascript" src="static/scripts/plugins/jquery.divtransition.js"></script>
+    <!-- script which modifies standard links into AJAX subpage links. Should be updated if new pages are added -->
+    <script type="text/javascript" src="static/scripts/results-linkify.js"></script>
+    <script type="text/javascript" src="static/scripts/results-add-refine-buttons.js"></script>
+    <script type="text/javascript" src="static/scripts/results-add-refine-drag.js"></script>
+    <script type="text/javascript" src="static/scripts/results-add-refine-state.js"></script>
+</html>

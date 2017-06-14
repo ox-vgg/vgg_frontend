@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <!-- Pipeline status checking page. -->
+    {% comment %}
+    The following variables are defined:
+        HOME_LOCATION - location of the root home page taking into account possible redirections
+        PROCESSED_FRAME_CHUNKS - number of frame chunks processed so far
+        TOTAL_FRAME_CHUNKS -  total number of frame chunks to be processed
+        TOTAL_FRAMES - total number of frames to be processed
+    {% endcomment %}
+        <head>
+        <meta content="en-gb" http-equiv="Content-Language" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta http-equiv="refresh" content="5;url={{HOME_LOCATION}}pipeline_status" />
+        <!-- main stylesheet for site -->
+        <link href="static/styles/main.css" rel="stylesheet" type="text/css" />
+        <!-- reuse login.css for h3 style -->
+        <link href="static/styles/login.css" rel="stylesheet" type="text/css" />
+        <title>Please wait</title>
+    </head>
+    <body>
+      <div id="container">
+        <div id="search_header">
+          <img src="static/images/logo.png" alt="{{SITE_TITLE}}" />
+          <br><br>
+          <a href="http://www.robots.ox.ac.uk/~vgg/" target="_blank"> <img src="static/images/powered_by_vgg.png" alt="powered by VGG" /></a>
+        </div>
+        <br/>
+        <h3><strong>THE DATA PIPELINE IS EXECUTING. PLEASE WAIT.</strong></h3>
+        <br/>
+        <h3><strong>{{PROCESSED_FRAME_CHUNKS}} OUT OF {{TOTAL_FRAME_CHUNKS}} FRAME-CHUNKS ({{TOTAL_FRAMES}} FRAMES) HAVE FINISHED PROCESSING</strong></h3>
+        <br/>
+        <h3>The status of the data pipeline will be automatically checked in </h3><div id="timer_div" style="text-align:center; margin:0 auto;">5</div>
+        <h3>seconds</h3>
+     </div>
+     <script type="text/javascript" src="static/scripts/lib/jquery-1.11.3.min.js"></script>
+     <script>
+        var seconds_left = 5;
+        var interval = setInterval(function() {
+            document.getElementById('timer_div').innerHTML = --seconds_left;
+
+            if (seconds_left <= 0)
+            {
+               clearInterval(interval);
+            }
+        }, 1000);
+     </script>
+    </body>
+</html>

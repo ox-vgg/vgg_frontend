@@ -1,0 +1,96 @@
+/* @group Image Scroller */
+
+#results_progress_imsc {
+    width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #E7E8E9;
+}
+
+#imsc_stage_canvas {
+    background-color: #FDFEFF;
+}
+
+.imsc_cursorstyle {
+    cursor: url('../images/cursors/draghand.cur'),default;
+}
+
+.imsc_cursorstyle:active {
+    cursor: url('../images/cursors/draghanddown.cur'),default;
+}
+
+#imsc_stage_canvas_back {
+    background-color: #F7F8F9;
+}
+
+#results_progress_incompatible_browser {
+    width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 20px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #E7E8E9;
+    padding-left: 5em;
+    padding-right: 5em;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    display: none;
+}
+
+/* @end */
+
+/* @group Progress Box */
+
+#results_progress_box {
+    padding: 5px 15px 5px 15px;
+    background-color: #E7E9ED;
+    width: 350px;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #CCC;
+}
+
+.results_progress_box_extra_topmargin {
+    margin-top: 2em;
+}
+
+.progress-done {
+    list-style-type: none;
+    padding-left: 50px;
+    background: transparent url('../images/chrome/tick.gif') no-repeat;
+    background-position: 10px 2px;
+    color: #7E8895;
+}
+
+.progress-processing {
+    list-style-type: none;
+    padding-left: 50px;
+    background: transparent url('../images/chrome/loader.gif') no-repeat;
+    background-position: 10px 2px;
+    color: #7E8895;
+}
+
+.progress-arrow {
+    list-style-type: none;
+    padding-left: 50px;
+    background: transparent url('../images/chrome/arrow.gif') no-repeat;
+    background-position: 10px 2px;
+    color: #7E8895;
+}
+
+.progress-todo {
+    list-style-type: none;
+    padding-left: 50px;
+    background: transparent url('../images/chrome/blank.gif') no-repeat;
+    background-position: 10px 2px;
+    color: #C0C0C0;
+}
+
+/* @end */

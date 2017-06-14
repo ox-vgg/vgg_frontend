@@ -1,0 +1,134 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <!-- Progress page, displayed while search is in progress -->
+    {% comment %}
+     The following variables are defined:
+        SITE_TITLE - page title
+        DATASETS - dictionary of supported datasets { name_id1:real_name1, name_id2:real_name2, ... }
+        DATASET_NAME - name_id of selected dataset
+        QUERY_STRING - string representation of the query
+        QUERY_TYPE - query type ('text' or 'image')
+        QUERY_ID - query id
+        HOME_LOCATION - location of the root home page taking into account possible redirections
+        CURATED - Boolean indicating whether the current query is a curated one or not
+        ENGINE - selected engine
+        AVAILABLE_ENGINES - engines info
+    {% endcomment %}
+    <head>
+        <meta content="en-gb" http-equiv="Content-Language" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <!-- main stylesheet for site -->
+        <link href="static/styles/main.css" rel="stylesheet" type="text/css" />
+        <!-- stylesheets for querybar/imageuploader widgets -->
+        <link href="static/scripts/widgets/jquery.ui.querybar.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/widgets/jquery.ui.imageuploader.css" rel="stylesheet" type="text/css" />
+        <link href="static/styles/searchproc.css" rel="stylesheet" type="text/css" />
+        <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
+        <title>{{SITE_TITLE}} - Results</title>
+    </head>
+
+    <body>
+        <div id="container">
+            <div id="page_header">
+                <a href="{{HOME_LOCATION}}">
+                    <img src="static/images/logo_sml.png" alt="$title" id="header_logo" />
+                </a>
+                <form class="page_header_search" action="searchproc_qstr" method="get">
+                    <!-- start query box -->
+                    <div id="query_box">
+                        <div id="qbControl">
+                            <div class="qbTextSearchEnabled">true</div>
+                            <div class="qbImageSearchEnabled">true</div>
+                            <div class={% if QUERY_TYPE == "text" %}"qbTextSearchVal"{% else %}"qbImageSearchVal"{% endif %}>{{QUERY_STRING}}</div>
+                            <div class="qbQueryEngine">{{ENGINE}}</div>
+                            <div class="qbQueryDset">{{DATASET_NAME}}</div>
+                            {% for key,value in DATASETS.items %}
+                              <div class="qbDset">{{key}}|{{value}}</div>
+                            {% endfor %}
+                            {% for key,value in AVAILABLE_ENGINES.items %}
+                              <div class="qbEngine">{{key}}|{{value.full_name}}</div>
+                            {% endfor %}
+                            <div class="qbImagePreviewPrefix">uploadedimgs/</div>
+                            <div id="imupControl"></div>
+                        </div>
+                        <input id="query_box_submit" type="submit" value="&#xf002;" />
+                    </div>
+                    <!-- end query box -->
+                </form>
+            </div>
+            <div id="content">
+                {% if QUERY_TYPE == "text" %}
+                    <div id="results_progress_imsc">
+                        <!-- am not sure why, but the following widths and heights aren't read
+                        properly in the javascript if put in the stylesheet where they belong -->
+                        <canvas width="600" height="80" id="imsc_stage_canvas" class="imsc_cursorstyle"></canvas>
+                        <canvas width="600" height="20" id="imsc_stage_canvas_back"></canvas>
+                    </div>
+                    <!-- below div is shown instead of scroller if browser is not compatible -->
+                    <div id="results_progress_incompatible_browser">
+                        <p>Whoops! It's been detected that you're using an older
+                            browser. Please upgrade your browser to something a little
+                            more modern for more detailed progress information when
+                            searching using Visor.</p><p>The latest version of Chrome,
+                            Firefox or Safari is recommended.
+                            </p>
+                    </div>
+                {% endif %}
+                <div id="results_progress_box">
+                    <ul>
+                        <li id="results-pi-processing" class="progress-processing">
+                            {% if CURATED %}
+                                Processing curated query
+                            {% else %}
+                                Processing query
+                            {% endif %}
+                        </li>
+                        <li id="results-pi-training" class="progress-todo">
+                            Training ranking function
+                        </li>
+                        <li id="results-pi-ranking" class="progress-todo">
+                            Applying ranking function
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="static/scripts/lib/jquery-1.11.3.min.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.widgets.animation.min.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/jquery.form.js"></script>
+        <script type="text/javascript" src="static/scripts/widgets/jquery.ui.querybar.js"></script>
+        <script type="text/javascript" src="static/scripts/widgets/jquery.ui.imageuploader.js"></script>
+        <script type="text/javascript" src="static/scripts/make-querybar-imup.js"></script>
+        <!-- easel is used for display of imagescroller widget -->
+        <!-- json2 is used to provide advanced JSON support in older browsers -->
+        <!-- queryprogress provides the XMLHttpRequest callback required to update a progress checklist + image scroller widget -->
+        <!-- imagescroller is the imagescroller widget implementation -->
+        <script type="text/javascript" src="static/scripts/lib/easeljs-0.8.2.min.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/json2.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/extract-params.js"></script>
+        <script type="text/javascript" src="static/scripts/query-progress.js"></script>
+        <div id="qpQsid" style="display:none;">{{QUERY_ID}}</div>
+        <script type="text/javascript">
+        $(function() {
+            // initial request for query-progress.js
+            sendRequest($('#qpQsid').html());
+        });
+        </script>
+        {% if QUERY_TYPE == "text" %}
+                <script type="text/javascript" src="static/scripts/imagescroller.js"></script>
+                <script type="text/javascript">
+                $(function () {
+                    /* initialize image scroller widget */
+                    imsc_init()
+                });
+                </script>
+       {% else %}
+                <script type="text/javascript">
+                $(function () {
+                    /* add extra padding to top margin of progress box given lack of scroller */
+                    $('#results_progress_box').addClass('results_progress_box_extra_topmargin');
+                });
+                </script>
+       {% endif %}
+    </body>
+</html>

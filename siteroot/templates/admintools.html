@@ -1,0 +1,367 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- Admin page for enabling/disabling precomputed queries which exist in results cache. -->
+{% comment %}
+The following variables are defined:
+  SITE_TITLE - page title
+  NUM_POS_TRAIN - number of positive training images
+  DISABLE_CACHE - boolean for disabling/enabling the cache
+  IMPROC_TIMEOUT - Query Download Timeout
+  IMPROC_ENGINE - Image Search Engine currently selected
+  IMPROC_ENGINE_LIST - List of Image Search Engines
+  RF_RANK_TYPE - Relevance Feedback Rank Type currently selected
+  RF_RANK_TYPE_LIST - List of Relevance Feedback Rank Type
+  RF_RANK_TOPN - If 'topn' RF type is used, this is the 'topn' number
+  RF_TRAIN_TYPE - Relevance Feedback Train Type currently selected
+  RF_TRAIN_TYPE_LIST - List of available Relevance Feedback Train Types
+  ENGINES_NAMES - Dictionary of engines names
+  CPUVISOR_ENABLED - Boolean indicating the 'cpuvisor-srv' is included in the backend engines
+  CACHED_TEXT_QUERIES - List of cached text queries
+  HOME_LOCATION - location of the root home page taking into account possible redirections
+{% endcomment %}
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta content="en-gb" http-equiv="Content-Language" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link href="static/styles/main.css" rel="stylesheet" type="text/css" />
+        <link href="static/styles/admintools.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/widgets/jquery.ui.querybar.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/widgets/jquery.ui.imageuploader.css" rel="stylesheet" type="text/css" />
+        <title>{{SITE_TITLE}} - Manage Cache</title>
+    </head>
+
+    <body>
+        <div id="container">
+            <div id="page_header">
+                <a href="{{HOME_LOCATION}}">
+                    <img src="static/images/logo_sml.png" alt="{{SITE_TITLE}}" />
+                </a>
+                <div id="top-right-links">
+                    <a href="{{HOME_LOCATION}}">Home</a> &middot;
+                    <a href="{{HOME_LOCATION}}logout/">Sign out</a>
+                </div>
+            </div>
+
+            <ul class="tab">
+                <li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'Configuration')">Global Server Configuration</a></li>
+                <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'Manage')">Manage Backend Service</a></li>
+                {% if CPUVISOR_ENABLED %}<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'Process')">Manage Backend Data</a></li>{% endif %}
+            </ul>
+
+            <!-- "Global Server Configuration" tab -->
+            <div  class="tabcontent" id="Configuration" style="display: block;">
+                <form id="cachemanage" style="display: inline; margin: 0;" action="set_config" method="post">{% csrf_token %}
+                    <div id="modules-container">
+                        <h2>Global Server Configuration</h2>
+                        <small>The following are only valid for engines with an active Image Postprocessing Module</small>
+                        <div class="module-content">
+                            <dl>
+                                <dt>Number of Training Images:</dt>
+                                <dd>
+                                    <input name="num_pos_train" type="number" size="6" min="1" max="200" value="{{NUM_POS_TRAIN}}" /> <small><em>(max 200)</em></small>
+                                </dd>
+                                 <dt>Query Download Timeout:</dt>
+                                <dd>
+                                    <input name="improc_timeout" size="6" value="{{IMPROC_TIMEOUT}}" />
+                                </dd>
+                                <dt>Image Search Engine:</dt>
+                                <dd>
+                                    <select name="improc_engine">
+                                        {% for ITEM in IMPROC_ENGINE_LIST %}
+                                            <option value="{{ITEM}}" {% if ITEM == IMPROC_ENGINE %}selected="selected"{% endif %}>{{ITEM}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </dd>
+                                <dt>Relevance Feedback Rank Type:</dt>
+                                <dd>
+                                    <select name="rf_rank_type" id="rf_rank_type_select">
+                                        {% for ITEM in RF_RANK_TYPE_LIST %}
+                                            <option value="{{ITEM}}" {% if ITEM == RF_RANK_TYPE %}selected="selected"{% endif %}>{{ITEM}}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input name="rf_rank_topn" id="rf_rank_topn_input" type="number" size="6" min="1" value="{{RF_RANK_TOPN}}" {% if RF_RANK_TYPE != 'topn' %}style="visibility:hidden;"{% endif %} />
+                                </dd>
+                                <dt>Relevance Feedback Train Type:</dt>
+                                <dd>
+                                    <select name="rf_train_type">
+                                        {% for ITEM in RF_TRAIN_TYPE_LIST %}
+                                            <option value="{{ITEM}}" {% if ITEM == RF_TRAIN_TYPE %}selected="selected"{% endif %} disabled="disabled">{{ITEM}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </dd>
+                            </dl>
+                        </div>
+
+                        <h2>Query Cache</h2>
+                        <div class="module-content">
+                            <dl>
+                                <dt>Disable caching for all queries:</dt>
+                                <dd>
+                                    <select name="cache_disabled" id="cache_disabled">
+                                        {% if DISABLE_CACHE == True %}
+                                           <option value="0">False</option>
+                                           <option value="1" selected="selected">True</option>
+                                        {% else %}
+                                           <option value="0" selected="selected">False</option>
+                                           <option value="1">True</option>
+                                        {% endif %}
+                                    </select>
+                                </dd>
+                            </dl>
+                            <h3>Text Queries</h3>
+                            {% if DISABLE_CACHE == True %}
+                                <p class="warning-message" id="msg_server_cache_disabled">NOTE: Caching is currently disabled on the server. The global cache setting must be re-enabled for the settings below to have any effect.</p>
+                            {% endif %}
+                            <p class="warning-message" id="msg_cache_to_be_disabled" style="display:none;">NOTE: You have chosen to disable caching on the server. The global cache setting must be enabled for the settings below to have any effect.</p>
+                            <ul class="tab" name="queries_tab">
+                               {% for ENGINE,NAME in ENGINES_NAMES.items %}
+                                    <li><a href="#queries_tab" {% if forloop.counter0 == 0 %}class="tablinks2 active"{% else %}class="tablinks2"{% endif %} onclick="openEngineCache(event, '{{ENGINE}}')">{{NAME}}</a></li>
+                               {% endfor %}
+                            </ul>
+                           {% for ENGINE,QUERIES in CACHED_TEXT_QUERIES.items %}
+                            <div id="{{ENGINE}}" class="tabcontent2" {% if forloop.counter0 == 0 %}style="display: block;"{% else %}style="display: none;"{% endif %}>
+                                 <div class="module-content">
+                                    <p>Uncheck to disable caching for a query <strong>for the current session</strong></p>
+                                    {% if QUERIES %}
+                                    <div id="cached_text_queries_{{ENGINE}}" style="-webkit-column-width:200px;-moz-column-width:200px;column-width:200px;">
+                                        {% for ITEM in QUERIES %}
+                                            {% if ITEM.0|make_list|first  == '#' %}
+                                                <div style="display:inline-block; width:200px;color:red"><input type="checkbox" name="active_text_queries_{{ENGINE}}" value="{{ITEM.0}}" {% if ITEM.1 == False %}checked="checked"{% endif %} /> {{ITEM.0}} {% if ITEM.1 == False %}<a class="del_link" href="{{HOME_LOCATION}}delete_text_query?q={{ITEM.0|urlencode}}&amp;engine={{ENGINE}}" style="font-size:small;">delete</a>{% endif %}</div>
+                                            {% else %}
+                                                <div style="display:inline-block; width:200px"><input type="checkbox" name="active_text_queries_{{ENGINE}}" value="{{ITEM.0}}" {% if ITEM.1 == False %}checked="checked"{% endif %} /> {{ITEM.0}} {% if ITEM.1 == False %}<a class="del_link" href="{{HOME_LOCATION}}delete_text_query?q={{ITEM.0}}&amp;engine={{ENGINE}}" style="font-size:small;">delete</a>{% endif %}</div>
+                                            {% endif %}
+                                             <input type="hidden" name="all_text_queries_{{ENGINE}}" value="{{ITEM.0}}" />
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                       <p>No cached text queries</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <a href="" id="show_cache_clear_tools">Display cache clear tools</a>
+                            <dl id="cache_clear_tools" style="display:none;">
+                                <dt>Clear caches:</dt>
+                                <dd>
+                                    <button type="button" id="btn_clear_feats" href="{{HOME_LOCATION}}clear_cache?type=features">Clear features</button>
+                                    <button type="button" id="btn_clear_classifs" href="{{HOME_LOCATION}}clear_cache?type=classifiers">Clear classifiers</button>
+                                    <button type="button" id="btn_clear_postrainimgs" href="{{HOME_LOCATION}}clear_cache?type=postrainimgs">Clear postraining images</button>
+                                    <button type="button" id="btn_clear_annos" href="{{HOME_LOCATION}}clear_cache?type=annotations">Clear annotation lists</button>
+                                    <button type="button" id="btn_clear_rlists" onclick="clearCacheAndReload('ranking_lists');">Clear ranking lists</button>
+                                </dd>
+                            </dl>
+                        </div>
+                        <input type="submit" value="Save Changes"/>
+                    </div>
+                </form>
+            </div>
+
+            <!-- "Manage Service" tab -->
+            <div id="Manage" class="tabcontent" style="display: none;">
+                <form id="config_pipeline" action="start_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
+                    <div id="config-options-container">
+                        <h2>Start Backend Service</h2>
+                        Search Engine:
+                        <select name="engine_name">
+                            {% for ENGINE,NAME in ENGINES_NAMES.items %}
+                                <option value="{{ENGINE}}">{{NAME}}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="submit" value="Start"/>
+                    </div>
+                </form>
+                <form id="config_pipeline" action="stop_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
+                    <div id="config-options-container">
+                        <h2>Stop Backend Service</h2>
+                        Search Engine:
+                        <select name="engine_name">
+                            {% for ENGINE,NAME in ENGINES_NAMES.items %}
+                                <option value="{{ENGINE}}">{{NAME}}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="submit" value="Stop"/>
+                    </div>
+                </form>
+                <br/>
+            </div>
+
+            {% if CPUVISOR_ENABLED %}
+            <!-- "Manage Backend Data" tab -->
+            <div id="Process" class="tabcontent" style="display: none;">
+                <form id="config_pipeline"  action="pipeline_start" enctype="multipart/form-data" method="post">{% csrf_token %}
+                    <div id="config-options-container">
+                        <h2>Category search engine: DATA INGESTION</h2>
+                        <div id="config-options-container">
+                                <dl>
+                                    <dt>Input type:</dt>
+                                    <dd>
+                                          <input type="radio" name="input_type" value="positive" checked> Positive Images<br>
+                                          <input type="radio" name="input_type" value="negative"> Negative Images<br>
+                                    </dd>
+                                    <br/>
+                                    <dt>(OPTIONAL) Select specific files to be ingested:</dt>
+                                    <dd>
+                                        <input name="input_file" id="input_descriptor_file_input" type="file" multiple="true"/>
+                                    </dd>
+                                </dl>
+                        </div>
+                        <strong>If no specific files are selected for ingestion, the full content of the images folder will be processed</strong>
+                        <br/>
+                        <br/>
+                        <input type="submit" value="Ingest"/>
+                    </div>
+                </form>
+                <br/>
+                <form id="config_pipeline" action="clear_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
+                    <div id="config-options-container">
+                        <h2>Category search engine: CLEAR BACKEND DATA</h2>
+                        <div id="config-options-container">
+                                <dl>
+                                    <dt>Input type:</dt>
+                                    <dd>
+                                          <input type="radio" name="input_type" value="positive" checked> Positive Images<br>
+                                          <input type="radio" name="input_type" value="negative"> Negative Images<br>
+                                    </dd>
+                                </dl>
+                        </div>
+                        <input type="submit" value="Clear"/>
+                    </div>
+                </form>
+                <br/>
+            </div>
+            {% endif %}
+
+            <!-- ACKs -->
+            <div class="results_nav_ack">
+                <img src="static/images/ack-ox.png"/>
+                <br><br>
+            </div>
+            <script type="text/javascript" src="static/scripts/lib/jquery-1.11.3.min.js"></script>
+            <script type="text/javascript">
+            function clearCacheAndReload(cachetype) {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open( "GET", "{{HOME_LOCATION}}clear_cache?type=" + cachetype , false );
+                xmlHttp.send( null );
+                location.reload();
+            }
+            </script>
+            <script type="text/javascript">
+            function openTab(evt, tabName) {
+                // Declare all variables
+                var i, tabcontent, tablinks;
+
+                // Get all elements with class="tabcontent" and hide them
+                tabcontent = document.getElementsByClassName("tabcontent");
+                for (i = 0; i < tabcontent.length; i++) {
+                    tabcontent[i].style.display = "none";
+                }
+
+                // Get all elements with class="tablinks" and remove the class "active"
+                tablinks = document.getElementsByClassName("tablinks");
+                for (i = 0; i < tablinks.length; i++) {
+                    tablinks[i].className = tablinks[i].className.replace(" active", "");
+                }
+
+                // Show the current tab, and add an "active" class to the link that opened the tab
+                document.getElementById(tabName).style.display = "block";
+                evt.currentTarget.className += " active";
+            }
+            </script>
+            <script type="text/javascript">
+            function openEngineCache(evt, engineName) {
+                // Declare all variables
+                var i, tabcontent, tablinks;
+
+                // Get all elements with class="tabcontent" and hide them
+                tabcontent = document.getElementsByClassName("tabcontent2");
+                for (i = 0; i < tabcontent.length; i++) {
+                    tabcontent[i].style.display = "none";
+                }
+
+                // Get all elements with class="tablinks" and remove the class "active"
+                tablinks = document.getElementsByClassName("tablinks2");
+                for (i = 0; i < tablinks.length; i++) {
+                    tablinks[i].className = tablinks[i].className.replace(" active", "");
+                }
+
+                // Show the current tab, and add an "active" class to the link that opened the tab
+                document.getElementById(engineName).style.display = "block";
+                evt.currentTarget.className += " active";
+            }
+            </script>
+            <script type="text/javascript">
+            $(function() {
+                $('#rf_rank_type_select').change(function() {
+                    var val = $(this).val();
+                    if (val == 'topn') {
+                        $('#rf_rank_topn_input').css({opacity: 0.0,
+                                                      visibility: 'visible'}).animate({opacity: 1.0},
+                                                                                      'fast');
+                    } else {
+                        $('#rf_rank_topn_input').css({opacity: 1.0,
+                                                      visibility: 'visible'}).animate({opacity: 0.0},
+                                                                                      'fast',
+                                                                                      function() {
+                            $(this).css({visibility: 'hidden'});
+                        });
+                    }
+                });
+                $('.del_link').click(function(e) {
+                    e.stopPropagation();
+
+                    $.get($(this).attr('href'));
+
+                    $(this).parent().hide();
+
+                    return false;
+                });
+                $('#show_cache_clear_tools').click(function(e) {
+                    e.stopPropagation();
+
+                    $('#cache_clear_tools').slideDown();
+                    $('#show_cache_clear_tools').hide();
+
+                    return false;
+                })
+                $('#btn_clear_feats').click(function(e) {
+                    $(this).attr('disabled','disabled');
+
+                    $.get($(this).attr('href'));
+                });
+                $('#btn_clear_annos').click(function(e) {
+                    $(this).attr('disabled','disabled');
+
+                    $.get($(this).attr('href'));
+                });
+                $('#btn_clear_postrainimgs').click(function(e) {
+                    $(this).attr('disabled','disabled');
+
+                    $.get($(this).attr('href'));
+                });
+                $('#btn_clear_classifs').click(function(e) {
+                    $(this).attr('disabled','disabled');
+
+                    $.get($(this).attr('href'));
+                });
+                $('#btn_clear_rlists').click(function(e) {
+                    $(this).attr('disabled','disabled');
+
+                    $.get($(this).attr('href'));
+
+                    $('#cached_text_queries').empty();
+                });
+                $('#cache_disabled').change(function() {
+                    disable_cache = Boolean(parseInt($(this).val()));
+
+                    $('#msg_server_cache_disabled').slideUp('fast');
+
+                    if (disable_cache) {
+                        $('#msg_cache_to_be_disabled').slideDown('fast');
+                    } else {
+                        $('#msg_cache_to_be_disabled').slideUp('fast');
+                    }
+                });
+            });
+            </script>
+        </div>
+    </body>
+</html>

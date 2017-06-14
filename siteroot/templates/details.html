@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <!-- Details page for an image result. Loaded as subpage into searchres.html. -->
+    {% comment %}
+    The following variables are defined:
+        QUERY_ID - Query id
+        DATASET_NAME - Dataset name
+        PAGE - page of results to display
+        BACKPAGE - Page to go back to
+        ROI_ENGINE - currently selected engine
+        IMAGE_NAME - image name
+        IMAGE_URL - full URL of the image
+        IMAGE_LOCATION - image location
+        IMAGE_WIDTH - image width
+        IMAGE_HEIGHT - image heigth
+        IMAGE_FORMAT - image format
+        SELECT_ROI - boolean indicating if the roi selection is enable
+        ROI - actual ROI coming from the backend in the form of a list
+        DSET_RES_ID - Dataset result id from previous page. Use this to make a query in case ROI is invalid.
+        METADATA - Metadata associated to the image
+    {% endcomment %}
+    <div id="content">
+        <p>
+            <a class="back_to_results" href="{{BACKPAGE}}?qsid={{QUERY_ID}}&amp;page={{PAGE}}">&lt;- Back to results</a>
+        </p>
+        <br><br>
+        {% if SELECT_ROI and ROI_ENGINE %}
+            <!-- ROI selection -->
+            <script type="text/javascript" src="static/scripts/lib/jcrop/jquery.Jcrop.min.js"></script>
+            <script language="javascript">
+            // the following (and closing tag) is needed for ampersand to work with javascript
+            //<![CDATA[
+            jQuery(function(){ jQuery('#detailimg').Jcrop({ onChange: recCoords, onSelect: recCoords}); });
+            {% if ROI %}
+                selXMin = {{ROI.0}}; selYMin = {{ROI.1}};
+            {% else %}
+                selXMin = 0; selYMin = 0;
+            {% endif %}
+            imWidth = {{IMAGE_WIDTH}};
+            imHeight = {{IMAGE_HEIGHT}};
+            function recCoords(c){ selXMin = c.x; selYMin = c.y; selXMax = c.x2; selYMax = c.y2; selWidth = c.w; selHeight = c.h; }
+            // ]]>
+            </script>
+        {% endif %}
+
+        <table>
+            <tr>
+                <td valign="top" style="padding:0 15px 0 15px;">
+                        <table>
+                                <tr align="center">
+                                         <td valign="bottom" align="center">
+                                                <img id="detailimg" src="datasets/{{IMAGE_URL}}" alt="" />
+                                         </td>
+                                </tr>
+                                {% if ROI_ENGINE %}
+                                    <tr align="center">
+                                            <td valign="bottom" align="center">
+                                                    <input id="imageroi_dsetname" type ="hidden" value="{{DATASET_NAME}}"/>
+                                                    <input id="imageroi_query_box_submit" type="button" value="Search" />
+                                                    <input id="imageroi_imagename" type ="hidden" value="{{IMAGE_NAME}}"/>
+                                                    <input id="imageroi_dsetresid" type ="hidden" value="{{DSET_RES_ID}}"/>
+                                                    <input id="imageroi_engine" type ="hidden" value="{{ROI_ENGINE}}"/>
+                                            </td>
+                                    </tr>
+                                {% endif %}
+                         </table>
+                </td>
+            </tr>
+        </table>
+
+        <div>
+            <dl class="image_summary">
+                <dt>Path:</dt><dd>{{IMAGE_LOCATION}}</dd>
+                <dt>Format:</dt>
+                <dd>{{IMAGE_FORMAT}}</dd>
+                <dt>Size:</dt>
+                <dd>{{IMAGE_WIDTH}} x {{IMAGE_HEIGHT}}</dd>
+                <dt>Dataset:</dt>
+                <dd>{{DATASET_NAME}}</dd>
+                <dt>Metadata:</dt>
+                <dd>{{METADATA}}</dd>
+            </dl>
+        </div>
+        <div>
+           {% if SELECT_ROI %}
+                <script language="javascript">
+                    {% if ROI %}
+                        selXMax = {{ROI.2}};
+                        selYMax = {{ROI.5}};
+                    {% else %}
+                        selXMax = {{IMAGE_WIDTH}};
+                        selYMax = {{IMAGE_HEIGHT}};
+                    {% endif %}
+                </script>
+           {% endif %}
+        </div>
+        <p>
+            <a class="back_to_results" href="{{BACKPAGE}}?qsid={{QUERY_ID}}&amp;page={{PAGE}}">&lt;- Back to results</a>
+        </p>
+    </div>
+    <canvas id="snap_canvas" width="480" height="270" style="visibility:hidden;"></canvas>
+    <!-- dynamically load in styles associated specifically with this page -->
+
+    <script type="text/javascript">
+    $(function() {
+        $('head').append('<link href="static/styles/details.css" rel="stylesheet" type="text/css" />');
+
+        {% if SELECT_ROI %}
+            $('head').append('<link href="static/scripts/lib/jcrop/jquery.Jcrop.min.css" rel="stylesheet" type="text/css" />');
+        {% endif %}
+    });
+    </script>
+    <!-- JQuery plugin for transitions between subpages. Requires JQuery UI Transitions module.
+    Also handles update of history queue when browsing between subpages -->
+    <script type="text/javascript" src="static/scripts/plugins/jquery.divtransition.js"></script>
+    <!-- load in linkify script to convert regular links to AJAX subpage links -->
+    <script type="text/javascript" src="static/scripts/results-linkify.js"></script>
+    <script type="text/javascript" src="static/scripts/ajax_setup.js"></script>
+    <!-- <script type="text/javascript" src="static/scripts/video-snap.js"></script>
+    <script type="text/javascript" src="static/scripts/ajax_setup.js"></script> -->
+    <script type="text/javascript" src="static/scripts/roi-search.js"></script>
+</html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+<!-- Simple alert message that redirects to the home page-->
+{% comment %}
+The following variables are defined:
+    REDIRECT_TO - Address to redirect to
+    MESSAGE - Test message to be shown to the user
+{% endcomment %}
+<script type="text/javascript" src="static/scripts/lib/jquery-1.11.3.min.js"></script>
+<script type="text/javascript">
+    alert("{{MESSAGE}}");
+    {% if request.META.HTTP_X_FORWARDED_HOST %}
+        document.location.href="{{request.META.UWSGI_SCHEME}}://{{request.META.HTTP_X_FORWARDED_HOST}}{{REDIRECT_TO}}";
+    {% else %}
+        document.location.href="{{REDIRECT_TO}}";
+    {% endif %}    
+</script>
