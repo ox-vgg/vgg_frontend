@@ -513,6 +513,11 @@ class APIFunctions:
                         os.remove(full_path)
 
 
+        if len(self.pipeline_frame_list) == 0:
+            message = 'No valid input images were found. The pipeline cannot be started.'
+            redirect_to = settings.SITE_PREFIX + '/admintools'
+            return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+
         # Calculate number of threads. Set to a maximum of settings.FRAMES_THREAD_NUM_LIMIT and a minimum of 1.
         num_threads = max(1, min( len(self.pipeline_frame_list)/settings.PREPROC_CHUNK_SIZE, settings.FRAMES_THREAD_NUM_LIMIT ) )
 
