@@ -143,7 +143,10 @@ class Session(object):
         #TODO: when the request fails, we need to trigger a more usefull error. This applies for all requests in this file.
 
         func_out = json.loads(response)
-        return func_out["query_id"]
+        if "query_id" in func_out:
+            return func_out["query_id"]
+        else:
+            return -1
 
 
     def release_query_id(self, query_id):

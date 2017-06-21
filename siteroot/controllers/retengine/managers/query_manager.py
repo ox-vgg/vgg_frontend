@@ -169,17 +169,23 @@ class QueryManager(object):
             excl_query = self.result_cache[ query['engine'] ].query_in_exclude_list(query, ses_id=user_ses_id)
 
             # print 'Initializing query worker process...'
-            worker = QueryWorker(query, self._engine, excl_query)
-            self._workers[worker.qid] = worker
+            try:
+                worker = QueryWorker(query, self._engine, excl_query)
+                self._workers[worker.qid] = worker
 
-            # start the query
-            # print 'Launching query process...'
-            self.process_pool.apply_async(func=self._engine.process,
-                                          args=(query,
-                                                worker.qid,
-                                                worker.shared_vars,
-                                                self._proc_opts,
-                                                user_ses_id))
+                # start the query
+                # print 'Launching query process...'
+                self.process_pool.apply_async(func=self._engine.process,
+                                              args=(query,
+                                                    worker.qid,
+                                                    worker.shared_vars,
+                                                    self._proc_opts,
+                                                    user_ses_id))
+            except models.errors.QueryIdError:
+                # this exception is triggered by the constructor of QueryWorker
+                # if the backend cannot be contacted
+                return models.QueryStatus(state=models.opts.states.fatal_error_or_socket_timeout)
+
         # return query status (including qid as a field)
         return worker.get_status()
 
