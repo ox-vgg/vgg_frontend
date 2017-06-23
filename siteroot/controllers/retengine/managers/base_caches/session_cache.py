@@ -147,6 +147,27 @@ class SessionCache(object):
         return data
 
 
+    def delete_data_unknown_session(self, data, key):
+        """
+            Searches for a data value associated with a key within all sessions
+            and deletes each session where an exact match is found
+            If necessary, purges old data to make room for new entries.
+            Arguments:
+                data: data value to search
+                key: ID associated to the data to be searched.
+        """
+        with self._sessions_lock:
+            found_ses = []
+            for ses_id in self._sessions:
+                for (key_, item) in self._sessions[ses_id].data[key].items():
+                    if data == item:
+                        found_ses.append(ses_id)
+            for ses_id in found_ses:
+                del self._sessions[ses_id]
+
+            self.purge_old_sessions(False)
+
+
     def add_data(self, data, ses_id, key):
         """
             Adds data to a session and associates it with the specified key.

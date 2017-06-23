@@ -34,6 +34,16 @@ class QueryKeyCache(object):
         self._session_cache = base_caches.SessionCache(session_lifetime)
 
 
+    def delete_text_query_unknown_session(self, query_text):
+        """
+            Searches for all sessions matching the query_text and removes
+            them from the cache.
+            Arguments:
+                query_text: query text
+        """
+        self._session_cache.delete_data_unknown_session(query_text, "query")
+
+
     def gen_query_session_id(self, query):
         """
             Generates a query key ID and stores the query
@@ -101,3 +111,8 @@ class QueryKeyCache(object):
         """
         self._session_cache.delete_session(self, query_ses_id)
         #print 'Deleted qsid data: %s' % query_ses_id
+
+
+    def clear_all_sessions(self):
+        """ Clears up the entire cache """
+        self._session_cache.clear_all_sessions()

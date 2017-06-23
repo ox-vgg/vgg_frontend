@@ -156,6 +156,8 @@ class APIFunctions:
            return HttpResponseBadRequest("Cache type not specified")
 
         self.visor_controller.interface.clear_cache(cache_type)
+        if cache_type == 'ranking_lists':
+            self.visor_controller.query_key_cache.clear_all_sessions()
         return HttpResponse()
 
 
@@ -176,6 +178,7 @@ class APIFunctions:
         if query_text==None or engine==None:
            return HttpResponseBadRequest("Query text not correctly specified or query does not exist")
 
+        self.visor_controller.query_key_cache.delete_text_query_unknown_session(query_text)
         self.visor_controller.interface.delete_text_query(query_text, engine)
         return HttpResponse()
 
