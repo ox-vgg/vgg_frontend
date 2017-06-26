@@ -123,7 +123,7 @@ class TextQuery(object):
                 func_loc = ('http://%s:%d/exec_pipeline' % \
                             (self.opts.imsearchtools_opts['service_host'],
                              self.opts.imsearchtools_opts['service_port']))
-                extra_prms = {'func': 'addPosTrsAsync',
+                extra_prms = {'func': 'addPosTrs',
                               'backend_host': 'localhost',
                               'backend_port': self.backend_port,
                               'query_id': self.query_id,
