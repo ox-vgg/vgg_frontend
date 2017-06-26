@@ -12,7 +12,6 @@ import sys
 import json
 import glob
 import fnmatch
-import imghdr
 from subprocess import Popen, PIPE
 import threading
 from google.protobuf import text_format
@@ -26,6 +25,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../pipeline')) # add
 from data_pipeline import data_processing_pipeline
 
 import retengine.engine.backend_client
+
+# Set a minimum set of valid image extensions. This is to check whether a file is an image or not
+# WITHOUT actually reading the file, because checking all files is too expensive when large amounts
+# of images are ingested.
+VALID_IMG_EXTENSIONS = { ".jpeg", ".jpg", ".png", ".bmp", ".dib", ".tiff", ".tif", ".ppm" }
+VALID_IMG_EXTENSIONS_STR = 'jpeg, jpg, png, bmp, dib, tiff, tif, ppm'
 
 def start_backend_service(engine):
     """ Body of the thread that runs the script to start the backend service """
@@ -474,10 +479,17 @@ class APIFunctions:
                         if relative_path.startswith("/"):
                             relative_path = relative_path[1:]
                         # check file is an image...
-                        if imghdr.what(full_path) != None:
+                        filename, file_extension = os.path.splitext(relative_path)
+                        if file_extension in VALID_IMG_EXTENSIONS:
                             # if it is, add it to the list
                             self.pipeline_frame_list.append(relative_path)
-                        # ...skip it otherwise
+                        else:
+                            # otherwise, abort !. This might seem drastic, but it is better to
+                            # keep the image folder clean !.
+                            self.pipeline_frame_list = []
+                            message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (relative_path, str(VALID_IMG_EXTENSIONS_STR))
+                            redirect_to = settings.SITE_PREFIX + '/admintools'
+                            return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
         if len(request.FILES) != 0:
             file_list = request.FILES.getlist('input_file')
@@ -488,33 +500,42 @@ class APIFunctions:
                     if frame_path.startswith('/'):
                         frame_path = frame_path[1:]
                     full_frame_path = os.path.join( img_base_path, frame_path )
+                    filename, file_extension = os.path.splitext(full_frame_path)
                     # Check frames exists
                     if not os.path.exists(full_frame_path):
                          # abort the process in this case
                         message = ('Input file %s does not exist or cannot be read') % full_frame_path
                         redirect_to = settings.SITE_PREFIX + '/admintools'
                         return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
-                    # Check file is an image ..
-                    elif imghdr.what(full_frame_path) != None:
+                    # Check file is an image ...
+                    elif file_extension in VALID_IMG_EXTENSIONS:
                         # if it is, add it to the list
                         self.pipeline_frame_list.append(frame_path)
-                    # ...skip it otherwise
+                    else:
+                        # otherwise, abort !. This might seem drastic, but it is better to
+                        # keep the image folder clean !.
+                        self.pipeline_frame_list = []
+                        message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (frame_path, str(VALID_IMG_EXTENSIONS_STR))
+                        redirect_to = settings.SITE_PREFIX + '/admintools'
+                        return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
             else:
-                # otherwise try to upload all selected files and copy them to the images folder
+                # First check all files for a valid image extension ...
+                for afile in file_list:
+                    filename, file_extension = os.path.splitext(afile.name)
+                    if file_extension not in VALID_IMG_EXTENSIONS:
+                        # otherwise, abort !. This might seem drastic, but it is better to
+                        # keep the image folder clean !.
+                        message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (afile.name, str(VALID_IMG_EXTENSIONS_STR))
+                        redirect_to = settings.SITE_PREFIX + '/admintools'
+                        return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+                # ... and if we made it until here, try to upload all selected files and copy them to the images folder
                 for afile in file_list:
                     full_path = os.path.join( img_base_path, afile.name )
                     # save the file to disk
                     with open(full_path , 'wb+') as destination:
                         for chunk in afile.chunks():
                             destination.write(chunk)
-                    # check file is an image...
-                    if imghdr.what(full_path)  != None:
-                        # if it is, add it to the list
-                        self.pipeline_frame_list.append(afile.name)
-                    else:
-                        # ...skip it otherwise, and also remove it from the images folder
-                        os.remove(full_path)
-
+                    self.pipeline_frame_list.append(afile.name)
 
         if len(self.pipeline_frame_list) == 0:
             message = 'No valid input images were found. The pipeline cannot be started.'
