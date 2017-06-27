@@ -16,6 +16,7 @@ from PIL import Image
 import copy
 import requests
 import time
+import re
 
 # add 'controllers' to the path so that we can import stuff from it
 sys.path.append(os.path.join(settings.BASE_DIR, 'siteroot', 'controllers'))
@@ -217,6 +218,12 @@ class UserPages:
                 return redirect(home_location)
             else:
                 return redirect(home_location + '?engine=' + engine)
+
+        # Only accept text queries with acceptable characters
+        if query_type==retengine.models.opts.qtypes.text and not re.match("^[#$]?[a-zA-Z0-9_\-\ +,:;.!\?()\[\]]*$", query_string):
+            message = 'Your text query contains invalid characters. Please use only letters, numbers, spaces or common word dividers'
+            redirect_to = settings.SITE_PREFIX
+            return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
         available_engines = self.visor_controller.opts.engines_dict
         if engine in available_engines.keys(): # if engine is 'None' or invalid, the user should get an error
