@@ -125,10 +125,12 @@ The following variables are defined:
                                     <div id="cached_text_queries_{{ENGINE}}" style="-webkit-column-width:200px;-moz-column-width:200px;column-width:200px;">
                                         {% for ITEM in QUERIES %}
                                             {% if ITEM.0|make_list|first  == '#' %}
-                                                <div style="display:inline-block; width:200px;color:red"><input type="checkbox" name="active_text_queries_{{ENGINE}}" value="{{ITEM.0}}" {% if ITEM.1 == False %}checked="checked"{% endif %} /> {{ITEM.0}} {% if ITEM.1 == False %}<a class="del_link" href="{{HOME_LOCATION}}delete_text_query?q={{ITEM.0|urlencode}}&amp;engine={{ENGINE}}" style="font-size:small;">delete</a>{% endif %}</div>
+                                             <div style="display:inline-block; width:200px;color:red">
                                             {% else %}
-                                                <div style="display:inline-block; width:200px"><input type="checkbox" name="active_text_queries_{{ENGINE}}" value="{{ITEM.0}}" {% if ITEM.1 == False %}checked="checked"{% endif %} /> {{ITEM.0}} {% if ITEM.1 == False %}<a class="del_link" href="{{HOME_LOCATION}}delete_text_query?q={{ITEM.0}}&amp;engine={{ENGINE}}" style="font-size:small;">delete</a>{% endif %}</div>
+                                             <div style="display:inline-block; width:200px">
                                             {% endif %}
+                                             <input type="checkbox" name="active_text_queries_{{ENGINE}}" value="{{ITEM.0}}" {% if ITEM.1 == False %}checked="checked"{% endif %} /> {{ITEM.0}} {% if ITEM.1 == False %}<a class="del_link" href="{{HOME_LOCATION}}delete_text_query?q={{ITEM.0|urlencode}}&amp;engine={{ENGINE}}" style="font-size:small;">delete</a>{% endif %}
+                                             </div>
                                              <input type="hidden" name="all_text_queries_{{ENGINE}}" value="{{ITEM.0}}" />
                                         {% endfor %}
                                     </div>

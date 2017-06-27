@@ -2,7 +2,6 @@
 
 import msgpack
 import os
-import re
 import string
 
 from retengine import utils
@@ -299,18 +298,16 @@ class ResultCache(base_caches.SessionExcludeListCache):
         # remove from disk cache
         if self.Caches.disk in caches:
             if for_all_datasets:
-                fname_regex = self._get_disk_fname(query)
-                fname_regex = fname_regex.replace(query['dsetname'], '(.+)')
-                # uber classifiers contain $ on the name and that breaks
-                # the regular expression search in the code below
-                fname_regex = fname_regex.replace('$','\$')
+                cache_fname = self._get_disk_fname(query)
+                cache_fname = cache_fname.replace(query['dsetname'], '###')
 
-                a_dir = os.path.dirname(fname_regex)
+                a_dir = os.path.dirname(cache_fname)
                 a_files = os.listdir(a_dir)
+                cache_fname = cache_fname.split('###')[1] #we just added '###', so this should work
 
                 all_fnames = [os.path.join(a_dir, a_file) for a_file in a_files]
                 # just get fnames which conform to regular expression
-                fnames = [fname for fname in all_fnames if re.search(fname_regex, fname)]
+                fnames = [fname for fname in all_fnames if cache_fname in fname]
 
                 for fname in fnames:
                     if os.path.isfile(fname):
