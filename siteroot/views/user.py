@@ -46,7 +46,7 @@ class UserPages:
         """ Customized login page to be able to add extra content """
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            home_location = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
         next_page = request.GET.get('next', None)
         context = {
         'NEXT': next_page,
@@ -60,7 +60,7 @@ class UserPages:
         """ Customized logout page to be able to specify the next page after login out """
         next_page = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            next_page = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + next_page
+            next_page = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + next_page
         return auth_views_logout(request, next_page=next_page)
 
 
@@ -90,7 +90,7 @@ class UserPages:
         # compute home location taking into account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            home_location = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         # set up rendering context and render the page
         context = {
@@ -137,7 +137,7 @@ class UserPages:
         # compute home location taking into account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            home_location = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         # check which engines support image input
         str_engines_with_image_input_support = ''
@@ -167,7 +167,7 @@ class UserPages:
         # compute home location taking into account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            home_location = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         # get parameters needed for the redirection to the search_process (inside the template)
         engine = request.GET.get('engine', None)
@@ -211,7 +211,7 @@ class UserPages:
         # compute home location taking into account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            home_location = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         if not query_string:
             if not engine:
@@ -285,10 +285,7 @@ class UserPages:
                     try:
                         search_finished = False
                         seconds_between_requests = 0.5 # Adjust to your needs, but if results are almost instant this should be ok.
-                        if 'wsgi.url_scheme' in request.META:
-                            host = request.META['wsgi.url_scheme'] + '://' + request.META['HTTP_HOST']
-                        if 'UWSGI_SCHEME' in request.META:
-                            host = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_HOST']
+                        host = 'http://' + request.META['HTTP_HOST']
                         while not search_finished:
                             # Start query or get query status
                             r = requests.get( host + home_location + 'execquery?qsid=' + query_ses_info['query_ses_id'])
@@ -383,7 +380,7 @@ class UserPages:
         # compute home location taking into account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            home_location = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         # extract query string, specially needed when the query type is not 'text'
         query_string = retengine.query_translations.query_to_querystr(query)
@@ -519,7 +516,7 @@ class UserPages:
         # compute home location taking into account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            home_location = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         similar_search_engine = None
         VISOR_SETTINGS = settings.VISOR
@@ -598,7 +595,7 @@ class UserPages:
         # compute home location taking into account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            home_location = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         # setup target for 'Back to results' link
         backpage = home_location + 'searchreslist'
@@ -689,7 +686,7 @@ class UserPages:
         # compute home location taking into account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            home_location = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         # setup target for 'Back to results' link
         backpage = home_location + 'searchreslist'
