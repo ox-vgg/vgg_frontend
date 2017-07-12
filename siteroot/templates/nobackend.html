@@ -3,6 +3,8 @@
 {% comment %}
 The following variables are defined:
     SITE_TITLE - page title
+    HOME_LOCATION - location of the root home page taking into account possible redirections
+    AUTHENTICATED - boolean that indicates whether the current user is authenticated or not
 {% endcomment %}
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
@@ -17,6 +19,14 @@ The following variables are defined:
     <body>
         <div id="container">
             <div id="page_header">
+                <div id="top-right-links">
+                {% if AUTHENTICATED %}
+                    <a href="{{HOME_LOCATION}}admintools">Admin Tools</a> &middot;
+                    <a href="{{HOME_LOCATION}}logout/">Sign out</a>
+                {% else %}
+                    <a href="{{HOME_LOCATION}}login/">Sign in</a>
+                {% endif %}
+                </div>
                 <a href="{{HOME_LOCATION}}">
                     <img src="static/images/logo_sml.png" alt="{{SITE_TITLE}}" id="header_logo" />
                 </a>

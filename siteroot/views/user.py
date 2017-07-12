@@ -95,7 +95,8 @@ class UserPages:
         # set up rendering context and render the page
         context = {
         'SITE_TITLE': settings.VISOR['title'],
-        'HOME_LOCATION' : home_location
+        'HOME_LOCATION' : home_location,
+        'AUTHENTICATED' : request.user.is_authenticated()
         }
         return render_to_response(template, context)
 
