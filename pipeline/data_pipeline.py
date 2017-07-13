@@ -117,11 +117,14 @@ def data_processing_pipeline(inputListOfFrames, index, lock, feat_type, DATASET_
                     currentLineCount = currentLineCount + 1
                 fout.write( ('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN CURRENT FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), currentLineCount)  )
                 newLineCount = currentLineCount
-                for i in range(0, len(frameList) ): # 200): <-- for testing
+                for i in range(0, len(frameList) ):
                     newLineCount = newLineCount + 1
-                    datasetImgsFile.write(frameList[i])
+                    encodeFrameName =  frameList[i].encode("utf-8")
+                    datasetImgsFile.write(encodeFrameName)
                     datasetImgsFile.write('\n')
             fout.write( ('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN NEW FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), newLineCount))
+        except Exception as e:
+            fout.write( str(e) )
         finally:
             # release lock to give the chance to another thread
             lock.release()

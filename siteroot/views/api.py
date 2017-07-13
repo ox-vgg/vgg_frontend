@@ -11,7 +11,6 @@ import os
 import sys
 import json
 import glob
-import fnmatch
 from subprocess import Popen, PIPE
 import threading
 from google.protobuf import text_format
@@ -469,19 +468,31 @@ class APIFunctions:
         self.pipeline_frame_list = []
         self.global_input_index = -1
 
+        fileSystemEncodingNotUTF8 = sys.getfilesystemencoding().lower() != 'utf-8'
+        if fileSystemEncodingNotUTF8:
+            img_base_path = str(img_base_path)  # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
+
         if len(request.FILES) == 0:
             # if no input file or list is provided with the names of the files to ingest, so ingest the whole directory by default
-            for root, dirnames, filenames in os.walk(img_base_path):
-                for filename in fnmatch.filter(filenames, '*'):
-                    full_path = os.path.join(root, filename)
+            for root, dirnames, filenames in os.walk( img_base_path ):
+                for i in range(len(filenames)):
+                    filename = filenames[i]
+                    if filename.startswith('.'):
+                        continue # skip hidden files, specially in macOS
+                    root_str = root
+                    if fileSystemEncodingNotUTF8:
+                        root_str = str(root) # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
+                    full_path = os.path.join( root_str , filename)
                     if os.path.isfile(full_path):
-                        relative_path = os.path.join( root.replace(img_base_path,'') , filename)
+                        relative_path = os.path.join( root_str.replace( img_base_path ,'') , filename)
                         if relative_path.startswith("/"):
                             relative_path = relative_path[1:]
                         # check file is an image...
                         filename, file_extension = os.path.splitext(relative_path)
                         if file_extension in VALID_IMG_EXTENSIONS:
                             # if it is, add it to the list
+                            if fileSystemEncodingNotUTF8:
+                                relative_path = relative_path.decode('utf-8') # if needed, convert from utf-8. It will be converted back by the pipeline.
                             self.pipeline_frame_list.append(relative_path)
                         else:
                             # otherwise, abort !. This might seem drastic, but it is better to
@@ -499,6 +510,8 @@ class APIFunctions:
                     frame_path = frame_path.strip()
                     if frame_path.startswith('/'):
                         frame_path = frame_path[1:]
+                    if not fileSystemEncodingNotUTF8:           # if NOT utf-8, convert before operations with the 'os' module,
+                        frame_path = frame_path.decode('utf-8') # otherwise convert it later
                     full_frame_path = os.path.join( img_base_path, frame_path )
                     filename, file_extension = os.path.splitext(full_frame_path)
                     # Check frames exists
@@ -510,6 +523,8 @@ class APIFunctions:
                     # Check file is an image ...
                     elif file_extension in VALID_IMG_EXTENSIONS:
                         # if it is, add it to the list
+                        if fileSystemEncodingNotUTF8:
+                            frame_path = frame_path.decode('utf-8') # if needed, convert from utf-8
                         self.pipeline_frame_list.append(frame_path)
                     else:
                         # otherwise, abort !. This might seem drastic, but it is better to
@@ -532,6 +547,8 @@ class APIFunctions:
                 for afile in file_list:
                     full_path = os.path.join( img_base_path, afile.name )
                     # save the file to disk
+                    if fileSystemEncodingNotUTF8:
+                        full_path = full_path.encode('utf-8') # if needed, convert from utf-8
                     with open(full_path , 'wb+') as destination:
                         for chunk in afile.chunks():
                             destination.write(chunk)
