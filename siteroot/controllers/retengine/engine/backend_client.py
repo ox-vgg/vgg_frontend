@@ -5,6 +5,7 @@ try:
     import simplejson as json
 except ImportError:
     import json  # Python 2.6+ only
+import urllib
 
 TCP_TERMINATOR = "$$$"
 SUCCESS_FIELD = "success"
@@ -195,7 +196,7 @@ class Session(object):
         else:
             func_in["func"] = "addPosTrs"
         func_in["query_id"] = query_id
-        func_in["impath"] = impath
+        func_in["impath"] =  urllib.unquote(urllib.unquote(impath)) # decode possibly url-encoded image names
         func_in["featpath"] = featpath
         func_in["from_dataset"] = (1 if from_dataset else 0)
 
@@ -235,7 +236,7 @@ class Session(object):
         else:
             func_in["func"] = "addNegTrs"
         func_in["query_id"] = query_id
-        func_in["impath"] = impath
+        func_in["impath"] =  urllib.unquote(urllib.unquote(impath)) # decode possibly url-encoded image names
         func_in["featpath"] = featpath
         func_in["from_dataset"] = (1 if from_dataset else 0)
 
