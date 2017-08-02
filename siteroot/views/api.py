@@ -11,8 +11,6 @@ import os
 import sys
 import json
 import glob
-import fnmatch
-import imghdr
 from subprocess import Popen, PIPE
 import threading
 from google.protobuf import text_format
@@ -26,6 +24,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../pipeline')) # add
 from data_pipeline import data_processing_pipeline
 
 import retengine.engine.backend_client
+
+# Set a minimum set of valid image extensions. This is to check whether a file is an image or not
+# WITHOUT actually reading the file, because checking all files is too expensive when large amounts
+# of images are ingested.
+VALID_IMG_EXTENSIONS = { ".jpeg", ".jpg", ".png", ".bmp", ".dib", ".tiff", ".tif", ".ppm" }
+VALID_IMG_EXTENSIONS_STR = 'jpeg, jpg, png, bmp, dib, tiff, tif, ppm'
 
 def start_backend_service(engine):
     """ Body of the thread that runs the script to start the backend service """
@@ -156,6 +160,8 @@ class APIFunctions:
            return HttpResponseBadRequest("Cache type not specified")
 
         self.visor_controller.interface.clear_cache(cache_type)
+        if cache_type == 'ranking_lists':
+            self.visor_controller.query_key_cache.clear_all_sessions()
         return HttpResponse()
 
 
@@ -176,6 +182,7 @@ class APIFunctions:
         if query_text==None or engine==None:
            return HttpResponseBadRequest("Query text not correctly specified or query does not exist")
 
+        self.visor_controller.query_key_cache.delete_text_query_unknown_session(query_text)
         self.visor_controller.interface.delete_text_query(query_text, engine)
         return HttpResponse()
 
@@ -461,20 +468,39 @@ class APIFunctions:
         self.pipeline_frame_list = []
         self.global_input_index = -1
 
+        fileSystemEncodingNotUTF8 = sys.getfilesystemencoding().lower() != 'utf-8'
+        if fileSystemEncodingNotUTF8:
+            img_base_path = str(img_base_path)  # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
+
         if len(request.FILES) == 0:
             # if no input file or list is provided with the names of the files to ingest, so ingest the whole directory by default
-            for root, dirnames, filenames in os.walk(img_base_path):
-                for filename in fnmatch.filter(filenames, '*'):
-                    full_path = os.path.join(root, filename)
+            for root, dirnames, filenames in os.walk( img_base_path ):
+                for i in range(len(filenames)):
+                    filename = filenames[i]
+                    if filename.startswith('.'):
+                        continue # skip hidden files, specially in macOS
+                    root_str = root
+                    if fileSystemEncodingNotUTF8:
+                        root_str = str(root) # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
+                    full_path = os.path.join( root_str , filename)
                     if os.path.isfile(full_path):
-                        relative_path = os.path.join( root.replace(img_base_path,'') , filename)
+                        relative_path = os.path.join( root_str.replace( img_base_path ,'') , filename)
                         if relative_path.startswith("/"):
                             relative_path = relative_path[1:]
                         # check file is an image...
-                        if imghdr.what(full_path) != None:
+                        filename, file_extension = os.path.splitext(relative_path)
+                        if file_extension in VALID_IMG_EXTENSIONS:
                             # if it is, add it to the list
+                            if fileSystemEncodingNotUTF8:
+                                relative_path = relative_path.decode('utf-8') # if needed, convert from utf-8. It will be converted back by the pipeline.
                             self.pipeline_frame_list.append(relative_path)
-                        # ...skip it otherwise
+                        else:
+                            # otherwise, abort !. This might seem drastic, but it is better to
+                            # keep the image folder clean !.
+                            self.pipeline_frame_list = []
+                            message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (relative_path, str(VALID_IMG_EXTENSIONS_STR))
+                            redirect_to = settings.SITE_PREFIX + '/admintools'
+                            return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
         if len(request.FILES) != 0:
             file_list = request.FILES.getlist('input_file')
@@ -484,34 +510,54 @@ class APIFunctions:
                     frame_path = frame_path.strip()
                     if frame_path.startswith('/'):
                         frame_path = frame_path[1:]
+                    if not fileSystemEncodingNotUTF8:           # if NOT utf-8, convert before operations with the 'os' module,
+                        frame_path = frame_path.decode('utf-8') # otherwise convert it later
                     full_frame_path = os.path.join( img_base_path, frame_path )
+                    filename, file_extension = os.path.splitext(full_frame_path)
                     # Check frames exists
                     if not os.path.exists(full_frame_path):
                          # abort the process in this case
                         message = ('Input file %s does not exist or cannot be read') % full_frame_path
                         redirect_to = settings.SITE_PREFIX + '/admintools'
                         return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
-                    # Check file is an image ..
-                    elif imghdr.what(full_frame_path) != None:
+                    # Check file is an image ...
+                    elif file_extension in VALID_IMG_EXTENSIONS:
                         # if it is, add it to the list
+                        if fileSystemEncodingNotUTF8:
+                            frame_path = frame_path.decode('utf-8') # if needed, convert from utf-8
                         self.pipeline_frame_list.append(frame_path)
-                    # ...skip it otherwise
+                    else:
+                        # otherwise, abort !. This might seem drastic, but it is better to
+                        # keep the image folder clean !.
+                        self.pipeline_frame_list = []
+                        message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (frame_path, str(VALID_IMG_EXTENSIONS_STR))
+                        redirect_to = settings.SITE_PREFIX + '/admintools'
+                        return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
             else:
-                # otherwise try to upload all selected files and copy them to the images folder
+                # First check all files for a valid image extension ...
+                for afile in file_list:
+                    filename, file_extension = os.path.splitext(afile.name)
+                    if file_extension not in VALID_IMG_EXTENSIONS:
+                        # otherwise, abort !. This might seem drastic, but it is better to
+                        # keep the image folder clean !.
+                        message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (afile.name, str(VALID_IMG_EXTENSIONS_STR))
+                        redirect_to = settings.SITE_PREFIX + '/admintools'
+                        return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+                # ... and if we made it until here, try to upload all selected files and copy them to the images folder
                 for afile in file_list:
                     full_path = os.path.join( img_base_path, afile.name )
                     # save the file to disk
+                    if fileSystemEncodingNotUTF8:
+                        full_path = full_path.encode('utf-8') # if needed, convert from utf-8
                     with open(full_path , 'wb+') as destination:
                         for chunk in afile.chunks():
                             destination.write(chunk)
-                    # check file is an image...
-                    if imghdr.what(full_path)  != None:
-                        # if it is, add it to the list
-                        self.pipeline_frame_list.append(afile.name)
-                    else:
-                        # ...skip it otherwise, and also remove it from the images folder
-                        os.remove(full_path)
+                    self.pipeline_frame_list.append(afile.name)
 
+        if len(self.pipeline_frame_list) == 0:
+            message = 'No valid input images were found. The pipeline cannot be started.'
+            redirect_to = settings.SITE_PREFIX + '/admintools'
+            return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
         # Calculate number of threads. Set to a maximum of settings.FRAMES_THREAD_NUM_LIMIT and a minimum of 1.
         num_threads = max(1, min( len(self.pipeline_frame_list)/settings.PREPROC_CHUNK_SIZE, settings.FRAMES_THREAD_NUM_LIMIT ) )
@@ -597,7 +643,7 @@ class APIFunctions:
 
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            home_location = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         context = {
         'PROCESSED_FRAME_CHUNKS': doneThreadCounter,

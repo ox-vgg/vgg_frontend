@@ -419,7 +419,7 @@ class VisorController:
 
         except Exception:
             traceback.print_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], limit=2)
-            jsonstr = json.dumps({'Error': 'Error uploading image', 'srcurl': url, 'impath': localimg})
+            jsonstr = json.dumps({'Error': 'Error uploading image', 'srcurl': url, 'impath': filepath})
             return jsonstr
 
         localimg = urllib.quote(localimg)

@@ -27,9 +27,11 @@ def verify_image(filename, maxwidth=None, maxheight=None):
             It raises ImageExtfindError if the image extension/format cannot be recognized.
     """
     im = Image.open(filename)
+    imformat = None
     try:
         (imwidth, imheight) = im.size
         im.verify()
+        imformat = im.format
 
         sf = 1.0
         sf2 = 1.0
@@ -44,11 +46,12 @@ def verify_image(filename, maxwidth=None, maxheight=None):
             newimwidth = int(imwidth*sf)
             newimheight = int(imheight*sf)
             im = im.resize((newimwidth,newimheight), Image.ANTIALIAS)
-            im.save(filename)
+            im.save(filename, format=imformat)
         else:
             im = Image.open(filename)
-            im.save(filename)
-    except:
+            im.save(filename, format=imformat)
+    except Exception as e:
+        print 'Exception while verifying image', str(e)
         raise IOError
 
     # now see if a valid extension has been specified (required)
@@ -56,10 +59,9 @@ def verify_image(filename, maxwidth=None, maxheight=None):
     if (fileext == '') or (fileext.find('?') != -1):
         # if there is no valid extension supplied, then try to extract
         # this using the loaded image...
-        imformat = im.format
         if imformat != None:
             impath = filename + '.' + imformat.lower()
-            os.rename(filename, impath)
+            im.save(impath, imformat)
         else:
             raise ImageExtfindError(filename)
     else:

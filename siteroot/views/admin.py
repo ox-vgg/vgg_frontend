@@ -70,7 +70,7 @@ class AdminPages:
         # compute home location taking account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
-            home_location = request.META['UWSGI_SCHEME'] + '://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         # set up rendering context and render the page
         context = {

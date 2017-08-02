@@ -46,6 +46,7 @@ sudo pip install protobuf==2.6.1
 sudo apt-get install -y libssl-dev
 
 # download caffe
+sudo apt-get install -y unzip
 wget https://github.com/BVLC/caffe/archive/rc3.zip
 unzip rc3.zip -d /webapps/visorgen/backend_dependencies/
 

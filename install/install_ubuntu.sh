@@ -24,8 +24,8 @@ touch /webapps/visorgen/secret_key_visorgen
 # create data folders
 mkdir /webapps/visorgen/backend_data
 mkdir /webapps/visorgen/datasets  /webapps/visorgen/datasets/images/  /webapps/visorgen/datasets/images/mydataset
-mkdir /webapps/visorgen/datasets  /webapps/visorgen/datasets/metadata/  /webapps/visorgen/datasets/metadata/mydataset
-mkdir /webapps/visorgen/datasets  /webapps/visorgen/datasets/negatives/  /webapps/visorgen/datasets/negatives/mydataset
+mkdir /webapps/visorgen/datasets/metadata/  /webapps/visorgen/datasets/metadata/mydataset
+mkdir /webapps/visorgen/datasets/negatives/  /webapps/visorgen/datasets/negatives/mydataset
 mkdir /webapps/visorgen/frontend_data  /webapps/visorgen/frontend_data/searchdata/ /webapps/visorgen/frontend_data/curatedtrainimgs
 mkdir /webapps/visorgen/frontend_data/searchdata/classifiers
 mkdir /webapps/visorgen/frontend_data/searchdata/postrainanno
@@ -40,6 +40,7 @@ sudo apt-get install -y memcached
 sudo pip install python-memcached
 
 # frontend dependencies
+sudo apt-get install -y libz-dev libjpeg-dev libfreetype6-dev
 sudo pip install protobuf==2.6.1
 sudo pip install Pillow==2.3.0
 

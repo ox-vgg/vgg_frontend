@@ -10,7 +10,7 @@ The following variables are defined:
 <script type="text/javascript">
     alert("{{MESSAGE}}");
     {% if request.META.HTTP_X_FORWARDED_HOST %}
-        document.location.href="{{request.META.UWSGI_SCHEME}}://{{request.META.HTTP_X_FORWARDED_HOST}}{{REDIRECT_TO}}";
+        document.location.href="http://{{request.META.HTTP_X_FORWARDED_HOST}}{{REDIRECT_TO}}";
     {% else %}
         document.location.href="{{REDIRECT_TO}}";
     {% endif %}    
