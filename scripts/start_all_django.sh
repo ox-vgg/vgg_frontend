@@ -6,23 +6,23 @@
 case "${1}" in
     text)
         ## Start the text-search engine ##
-        /webapps/visorgen/visorgen/scripts/start_backend_service.sh text
+        /webapps/visorgen/vgg_frontend/scripts/start_backend_service.sh text
         # Use the command below to overwrite the predefined settings and include setting for the text-search engine only (for docker deployment)
-        cp -f /webapps/visorgen/backend_data/settings_text.py /webapps/visorgen/visorgen/visorgen/settings.py
+        cp -f /webapps/visorgen/backend_data/settings_text.py /webapps/visorgen/vgg_frontend/visorgen/settings.py
     ;;
     category)
         ## Start the cpuvisor-srv engine ##
-        /webapps/visorgen/visorgen/scripts/start_backend_service.sh cpuvisor-srv
+        /webapps/visorgen/vgg_frontend/scripts/start_backend_service.sh cpuvisor-srv
         # Use the command below to overwrite the predefined settings and include setting for the cpuvisor-srv engine only (for docker deployment)
-        cp -f /webapps/visorgen/backend_data/settings_cpuvisor-srv.py /webapps/visorgen/visorgen/visorgen/settings.py
+        cp -f /webapps/visorgen/backend_data/settings_cpuvisor-srv.py /webapps/visorgen/vgg_frontend/visorgen/settings.py
     ;;
     *)
         ## Start both ##
-        /webapps/visorgen/visorgen/scripts/start_backend_service.sh cpuvisor-srv
-        /webapps/visorgen/visorgen/scripts/start_backend_service.sh text
-        cp -f /webapps/visorgen/backend_data/settings.py /webapps/visorgen/visorgen/visorgen/settings.py
+        /webapps/visorgen/vgg_frontend/scripts/start_backend_service.sh cpuvisor-srv
+        /webapps/visorgen/vgg_frontend/scripts/start_backend_service.sh text
+        cp -f /webapps/visorgen/backend_data/settings.py /webapps/visorgen/vgg_frontend/visorgen/settings.py
     ;;
 esac
-cd /webapps/visorgen/visorgen/
+cd /webapps/visorgen/vgg_frontend/
 python manage.py runserver 0.0.0.0:8000
 #tail -f /dev/null # (for docker deployment)
