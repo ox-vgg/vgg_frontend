@@ -9,7 +9,7 @@ import threading
 import time
 
 # Some constants
-CPUVISOR_BIN_PATH = os.path.join(os.path.dirname(__file__),'../../cpuvisor-srv/bin')
+CPUVISOR_BIN_PATH = os.path.join(os.path.dirname(__file__),'../../vgg_classifier/bin')
 cpuvisor_preproc = os.path.join(CPUVISOR_BIN_PATH,'cpuvisor_preproc')
 cpuvisor_append_chunk = os.path.join(CPUVISOR_BIN_PATH,'cpuvisor_append_chunk')
 
