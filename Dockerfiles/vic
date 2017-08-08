@@ -1,0 +1,117 @@
+# Dockerfile for the VIC application. See http://www.robots.ox.ac.uk/~vgg/software/vic/
+
+# Start from a clean Ubuntu Trusty machine
+FROM ubuntu:trusty
+
+# Update repositories and install all apt-get dependencies
+RUN apt-get update && apt-get install -y \
+    python-pip \
+    python-dev \
+    memcached \
+    libz-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libevent-dev \
+    libzmq-dev \
+    screen \
+    cmake \
+    pkg-config \
+    libgoogle-glog-dev \
+    libhdf5-serial-dev \
+    liblmdb-dev \
+    libleveldb-dev \
+    libprotobuf-dev \
+    protobuf-compiler \
+    libopencv-dev \
+    libatlas-base-dev \
+    libsnappy-dev \
+    libgflags-dev \
+    libssl-dev \
+    unzip \
+    wget \
+    && apt-get install -y --no-install-recommends libboost-all-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create requirements files for pip, install all pip requirements, create main folders and secret key file
+RUN printf "django==1.10\npython-memcached\nprotobuf==2.6.1\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==1.1.0\ngevent-zeromq==0.2.5" > /tmp/requirements.txt \
+    && pip install -r /tmp/requirements.txt \
+    && mkdir /webapps/  \
+    && chmod 777 /webapps/ \
+    && mkdir /webapps/visorgen /webapps/visorgen/backend_dependencies  /webapps/visorgen/backend_data \
+          /webapps/visorgen/datasets  /webapps/visorgen/datasets/images/  /webapps/visorgen/datasets/images/mydataset \
+          /webapps/visorgen/datasets/metadata/  /webapps/visorgen/datasets/metadata/mydataset \
+          /webapps/visorgen/datasets/negatives/  /webapps/visorgen/datasets/negatives/mydataset \
+          /webapps/visorgen/frontend_data  /webapps/visorgen/frontend_data/searchdata/ /webapps/visorgen/frontend_data/curatedtrainimgs \
+          /webapps/visorgen/frontend_data/searchdata/classifiers /webapps/visorgen/frontend_data/searchdata/postrainanno \
+          /webapps/visorgen/frontend_data/searchdata/postrainfeats /webapps/visorgen/frontend_data/searchdata/postrainimgs \
+          /webapps/visorgen/frontend_data/searchdata/rankinglists /webapps/visorgen/frontend_data/searchdata/uploadedimgs \
+    && echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
+
+# Download caffe, cpp-netlib and liblinear
+RUN wget https://github.com/BVLC/caffe/archive/rc3.zip -P /tmp \ 
+    && unzip /tmp/rc3.zip -d /webapps/visorgen/backend_dependencies/ \
+    && wget https://github.com/kencoken/cpp-netlib/archive/0.11-devel.zip -P /tmp \
+    && unzip /tmp/0.11-devel.zip -d /webapps/visorgen/backend_dependencies/ \
+    && wget https://github.com/cjlin1/liblinear/archive/v210.zip -P /tmp \
+    && unzip /tmp/v210.zip -d /webapps/visorgen/backend_dependencies/ \
+    && rm -rf /tmp/*.zip
+
+# Download vgg repos
+RUN wget https://gitlab.com/vgg/vgg_frontend/repository/archive.zip?ref=master -O /tmp/vgg_frontend.zip \
+    && unzip /tmp/vgg_frontend.zip -d /webapps/visorgen/ \
+    && mv /webapps/visorgen/vgg_frontend*  /webapps/visorgen/vgg_frontend \
+    && wget https://gitlab.com/vgg/vgg_classifier/repository/archive.zip?ref=master -O /tmp/vgg_classifier.zip \
+    && unzip /tmp/vgg_classifier.zip -d /webapps/visorgen/ \
+    && mv /webapps/visorgen/vgg_classifier*  /webapps/visorgen/vgg_classifier \
+    && rm -rf /tmp/*.zip
+
+# Compile caffe
+RUN cd /webapps/visorgen/backend_dependencies/caffe-rc3/ \
+    && cp Makefile.config.example Makefile.config \
+    && sed -i 's/# CPU_ONLY/CPU_ONLY/g' Makefile.config \
+    && sed -i 's/\/usr\/include\/python2.7/\/usr\/include\/python2.7 \/usr\/local\/lib\/python2.7\/dist-packages\/numpy\/core\/include/g' Makefile.config \
+    && make all
+
+# Compile liblinear
+RUN cd /webapps/visorgen/backend_dependencies/liblinear-210/ \
+    && make lib \
+    && ln -s liblinear.so.3 liblinear.so
+
+# Compile cpp-netlib. Compile and install vgg_classifier. Remove 'build' folder of cpp-netlib to reduce image size.
+RUN cd /webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/ \
+    && mkdir build \
+    && cd build \
+    && cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=/usr/bin/cc -DCMAKE_CXX_COMPILER=/usr/bin/c++ ../ \
+    && make \
+    && cd /webapps/visorgen/vgg_classifier \
+    && mkdir build \
+    && cd build \
+    && cmake -DCaffe_DIR=/webapps/visorgen/backend_dependencies/caffe-rc3/ -DCaffe_INCLUDE_DIR="/webapps/visorgen/backend_dependencies/caffe-rc3/include;/webapps/visorgen/backend_dependencies/caffe-rc3/build/src" -DLiblinear_DIR=/webapps/visorgen/backend_dependencies/liblinear-210/ -Dcppnetlib_DIR=/webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/build/ ../ \
+    && make \
+    && make install \
+    && rm -rf /webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/build \
+    && sed -i 's/<full_path_to_this_directory>/\/webapps\/visorgen\/vgg_classifier/g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's/<full_path_to_base_folder_where_images_in_dsetpaths_sample.txt_are_located>/\/webapps\/visorgen\/datasets\/images\/mydataset/g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's/<full_path_to_base_folder_where_images_in_negpaths_sample.txt_are_located>/\/webapps\/visorgen\/datasets\/negatives\/mydataset/g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's/<full_path_to_dsetfeats_binaryproto_file_produced_by_cpuvisor_preproc>/\/webapps\/visorgen\/backend_data\/cpuvisor-srv\/dsetfeats.binaryproto/g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's/<full_path_to_negpaths_binaryproto_file_produced_by_cpuvisor_preproc>/\/webapps\/visorgen\/backend_data\/cpuvisor-srv\/negfeats.binaryproto/g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's/negpaths_sample/negpaths/g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's/dsetpaths_sample/dsetpaths/g' /webapps/visorgen/vgg_classifier/config.prototxt
+
+# configure default user in frontend
+RUN cd /webapps/visorgen/vgg_frontend/ \
+    && python manage.py migrate \
+    && cd /webapps/visorgen/vgg_frontend/ \
+    && printf "import os\nfrom django.core.wsgi import get_wsgi_application\nos.environ['DJANGO_SETTINGS_MODULE']='visorgen.settings'\napplication = get_wsgi_application()\nfrom django.contrib.auth.models import User\nuser=User.objects.create_user('admin', password='vggadmin')\nuser.is_superuser=True\nuser.is_staff=True\nuser.save()" > super.py \
+    && python super.py \
+    && rm -f super.py \
+    && echo 'tail -f /dev/null' >> /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh
+
+# expose django port
+EXPOSE 8000
+VOLUME /webapps/visorgen/backend_data \
+       /webapps/visorgen/frontend_data \
+       /webapps/visorgen/datasets/images/mydataset \
+       /webapps/visorgen/datasets/negatives/mydataset \
+       /webapps/visorgen/datasets/metadata/mydataset
+ENTRYPOINT /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh category
