@@ -28,8 +28,21 @@ The web frontend has been developed using **Django version 1.10**, under **Ubunt
 
 The following sections describe how to install and configure the `vgg_frontend` application to work with the aforementioned backend engines.
 
-Installation
-------------
+Docker Installation
+-------------------
+
+Installation via docker technology is possible, but only if the `category` backend engine is going to be used. The `vgg_frontend` with the `category` engine is what we call the `VGG Image Classification (VIC) engine`. You can read more about it in the corresponding [VGG page](http://www.robots.ox.ac.uk/~vgg/software/vic/).
+
+All you need to do is to use the docker service installed on your PC to download the image, by entering the following command:
+
+	docker pull registry.gitlab.com/vgg/vgg_frontend/vic
+
+The downloaded docker image contains the code in this repository along with the actual [image classification backend](https://gitlab.com/vgg/vgg_classifier), but it does not contain any image dataset or preprocessed data, which have to be provided separately.
+
+Usage instructions, along with sample data files for `VIC`, can be found at the [VIC docker deployment page](http://www.robots.ox.ac.uk/~vgg/software/vic/docker_deployment.htm).
+
+Native Installation
+-------------------
 
 Download the script `install_ubuntu.sh` located in the `install` folder and run it in your computer (**Ubuntu 14.04.5 LTS**) using a sudoer user. The script will automatically download all necessary dependencies and copy the application in the `/webapps/visorgen/` folder.
 
@@ -77,8 +90,7 @@ There is also an experimental installer for macOS Sierra in `install_vgg_classif
 
 Download the script `install_text-backend_ubuntu.sh` located in the `install` folder and run it in your computer (**Ubuntu 14.04.5 LTS**) using a sudoer user. The script will automatically download **and compile** all necessary dependencies and copy the application in the `/webapps/visorgen/text_search` folder. Before you can use this backend, you need to configure it and compute the features for your dataset. Please refer to <https://gitlab.com/vgg/text_search> for usage instructions. **Please NOTE that this repository is not open-source yet !, so only an authorized user will be able to access it. Please contact us for more information.**
 
-Configuration
--------------
+#### *Configuration*
 
 The main configuration file for the frontend is `/webapps/visorgen/vgg_frontend/visorgen/settings.py`, which contains a set of variables. If you have used the installers provided, you only need to change the engines configuration, under the **Visor web site options**.
 
@@ -102,8 +114,7 @@ If you did not install the `text` backend engine, comment out the corresponding 
 
 After this is done. The application should be ready to start.
 
-Usage Instructions
-------------------
+#### *Usage Instructions*
 
 Open a terminal and go to the folder where the Django application is located. If you have used the installers provided, that folder should be `/webapps/visorgen/visorgen`. The fist time you start the Django server, please enter the following commands:
 
