@@ -63,7 +63,9 @@ RUN wget https://gitlab.com/vgg/vgg_frontend/repository/archive.zip?ref=master -
     && wget https://gitlab.com/vgg/vgg_classifier/repository/archive.zip?ref=master -O /tmp/vgg_classifier.zip \
     && unzip /tmp/vgg_classifier.zip -d /webapps/visorgen/ \
     && mv /webapps/visorgen/vgg_classifier*  /webapps/visorgen/vgg_classifier \
-    && rm -rf /tmp/*.zip
+    && rm -rf /tmp/*.zip \
+    && cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_cpuvisor-srv.py /webapps/visorgen/vgg_frontend/visorgen/settings.py \
+    && sed -i 's/"\/vgg_frontend"/"\/vic"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py
 
 # Compile caffe
 RUN cd /webapps/visorgen/backend_dependencies/caffe-rc3/ \

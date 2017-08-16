@@ -94,23 +94,9 @@ Download the script `install_text-backend_ubuntu.sh` located in the `install` fo
 
 The main configuration file for the frontend is `/webapps/visorgen/vgg_frontend/visorgen/settings.py`, which contains a set of variables. If you have used the installers provided, you only need to change the engines configuration, under the **Visor web site options**.
 
-Configure your selected backend engine by commenting out the setting for the engine you **DID NOT** installed. If you did not install the `category` backend engine, comment out the corresponding settings as follows:
+If you have installed **ONLY** the `category` backend, overwrite `/webapps/visorgen/vgg_frontend/visorgen/settings.py` with `/webapps/visorgen/vgg_frontend/visorgen/settings_cpuvisor-srv.py`.
 
-```python
-#'cpuvisor-srv': { 'full_name' : 'Category',
-#                  ....
-#                  'engine_for_similar_search': 'cpuvisor-srv'
-#},
-```
-
-If you did not install the `text` backend engine, comment out the corresponding settings as follows:
-
-```python
-#'text' : { 'full_name' : 'Text',
-#           ....
-#           'engine_for_similar_search': 'cpuvisor-srv'
-#},
-```
+If you have installed **ONLY** the `text` backend, overwrite `/webapps/visorgen/vgg_frontend/visorgen/settings.py` with `/webapps/visorgen/vgg_frontend/visorgen/settings_text.py`.
 
 After this is done. The application should be ready to start.
 
