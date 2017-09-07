@@ -229,6 +229,9 @@ class VisorController:
                 else:
                     linewidth = 5
 
+                if (img.mode != 'RGB'):
+                    img = img.convert('RGB');
+
                 imd = ImageDraw.Draw(img)
                 for i in range(0, len(points)-1):
                     imd.line( (points[i][0], points[i][1], points[i+1][0], points[i+1][1]), fill=linecol, width=linewidth );
