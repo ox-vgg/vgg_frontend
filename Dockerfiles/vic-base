@@ -48,7 +48,7 @@ RUN printf "django==1.10\npython-memcached\nprotobuf==2.6.1\nPillow==2.3.0\ngree
     && echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
 
 # Download caffe, cpp-netlib and liblinear
-RUN wget https://github.com/BVLC/caffe/archive/rc3.zip -P /tmp \ 
+RUN wget https://github.com/BVLC/caffe/archive/rc3.zip -P /tmp \
     && unzip /tmp/rc3.zip -d /webapps/visorgen/backend_dependencies/ \
     && wget https://github.com/kencoken/cpp-netlib/archive/0.11-devel.zip -P /tmp \
     && unzip /tmp/0.11-devel.zip -d /webapps/visorgen/backend_dependencies/ \
@@ -109,11 +109,12 @@ RUN cd /webapps/visorgen/vgg_frontend/ \
     && rm -f super.py \
     && echo 'tail -f /dev/null' >> /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh
 
-# expose django port
-EXPOSE 8000
-VOLUME /webapps/visorgen/backend_data \
-       /webapps/visorgen/frontend_data \
-       /webapps/visorgen/datasets/images/mydataset \
-       /webapps/visorgen/datasets/negatives/mydataset \
-       /webapps/visorgen/datasets/metadata/mydataset
-ENTRYPOINT /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh category
+# The customizations below can be done via the command line and are not needed here.
+# If you need them create a new Docker image derived from this one and define them.
+#EXPOSE 8000
+#VOLUME /webapps/visorgen/backend_data \
+#       /webapps/visorgen/frontend_data \
+#       /webapps/visorgen/datasets/images/mydataset \
+#       /webapps/visorgen/datasets/negatives/mydataset \
+#       /webapps/visorgen/datasets/metadata/mydataset
+#ENTRYPOINT /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh category
