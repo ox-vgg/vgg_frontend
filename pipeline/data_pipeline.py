@@ -64,9 +64,13 @@ def preproc_chunk_thread(startIndex, endIndex, lock, feat_type, CONFIG_PROTO_PAT
         if fout:
             fout.write( ('DATA-PIPELINE [%s]: EXCEPTION %s\n') % ( time.strftime("%H:%M:%S"), e.message))
         pass
-    finally:
-        # release lock to give the chance to another thread
-        lock.release()
+
+    # release lock to give the chance to another thread
+    try:
+        lock.release() # this is in a try beacuse when invoked on an unlocked lock, a ThreadError is raised.
+    except Exception as e:
+        fout.write( str(e) )
+        pass
         ### UNLOCK
 
     if fout:
@@ -125,9 +129,15 @@ def data_processing_pipeline(inputListOfFrames, index, lock, feat_type, DATASET_
             fout.write( ('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN NEW FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), newLineCount))
         except Exception as e:
             fout.write( str(e) )
-        finally:
-            # release lock to give the chance to another thread
-            lock.release()
+            pass
+
+        # release lock to give the chance to another thread
+        try:
+            lock.release() # this is in a try beacuse when invoked on an unlocked lock, a ThreadError is raised.
+        except Exception as e:
+            fout.write( str(e) )
+            pass
+
         ### UNLOCK
 
         # Start processing chunks
