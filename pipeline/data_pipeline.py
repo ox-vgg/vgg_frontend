@@ -64,9 +64,13 @@ def preproc_chunk_thread(startIndex, endIndex, lock, feat_type, CONFIG_PROTO_PAT
         if fout:
             fout.write( ('DATA-PIPELINE [%s]: EXCEPTION %s\n') % ( time.strftime("%H:%M:%S"), e.message))
         pass
-    finally:
-        # release lock to give the chance to another thread
-        lock.release()
+
+    # release lock to give the chance to another thread
+    try:
+        lock.release() # this is in a try beacuse when invoked on an unlocked lock, a ThreadError is raised.
+    except Exception as e:
+        fout.write( str(e) )
+        pass
         ### UNLOCK
 
     if fout:
@@ -125,9 +129,15 @@ def data_processing_pipeline(inputListOfFrames, index, lock, feat_type, DATASET_
             fout.write( ('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN NEW FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), newLineCount))
         except Exception as e:
             fout.write( str(e) )
-        finally:
-            # release lock to give the chance to another thread
-            lock.release()
+            pass
+
+        # release lock to give the chance to another thread
+        try:
+            lock.release() # this is in a try beacuse when invoked on an unlocked lock, a ThreadError is raised.
+        except Exception as e:
+            fout.write( str(e) )
+            pass
+
         ### UNLOCK
 
         # Start processing chunks
@@ -166,11 +176,27 @@ def data_processing_pipeline(inputListOfFrames, index, lock, feat_type, DATASET_
 
     fout.close()
 
-#########
+######### The code below can be useful for testing or to perform data ingestion via the command-line
 #lock = threading.Lock()
 #CONFIG_PROTO_PATH= 'something'
 #DATASET_IM_BASE_PATH = 'something'
 #DATASET_IM_PATHS = 'something'
-#video_path= 'something'
-#preproc_video_thread(video_path, None, 0, lock, DATASET_IM_BASE_PATH, DATASET_IM_PATHS, CONFIG_PROTO_PATH)
+#CHUNK_SIZE = 50000 # divide the list of paths in smaller chunks
+#all_lines = []
+#group = []
+#with open(DATASET_IM_PATHS) as fin:
+    #for line in fin:
+        #if len(line)>0:
+            #line = line.replace('\n','')
+            #if len(group)<CHUNK_SIZE:
+                #group.append(line)
+            #else:
+                #all_lines.append(group)
+                #group=[]
+                #group.append(line)
 
+#all_lines.append(group)
+#for index in range(len(all_lines)):
+    #chunk_start = CHUNK_SIZE*int(index)
+    #print 'Processing chuck %d-%d' % ( chunk_start, chunk_start+CHUNK_SIZE-1)
+    #data_processing_pipeline( all_lines[index] , index, lock, 'positive', DATASET_IM_BASE_PATH, DATASET_IM_PATHS + '.copy', CONFIG_PROTO_PATH, CHUNK_SIZE)

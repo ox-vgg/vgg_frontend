@@ -290,7 +290,10 @@ class APIFunctions:
 
         img = self.visor_controller.get_image(real_path, roi_dict, as_thumbnail=(img_set=='thumbnails'))
         response = HttpResponse(content_type="image/*")
-        img.save(response, img.format)
+        if not img.format:
+            img.save(response, "JPEG")
+        else:
+            img.save(response, img.format)
         return response
 
 

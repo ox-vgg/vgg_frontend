@@ -37,9 +37,11 @@ All you need to do is to use the docker service installed on your PC to download
 
 	docker pull registry.gitlab.com/vgg/vgg_frontend/vic
 
-The downloaded docker image contains the code in this repository along with the actual [image classification backend](https://gitlab.com/vgg/vgg_classifier), but it does not contain any image dataset or preprocessed data, which have to be provided separately.
+Alternatively, build the image using the Dockerfile at `Dockerfiles/vic`.
 
-Usage instructions, along with sample data files for `VIC`, can be found at the [VIC docker deployment page](http://www.robots.ox.ac.uk/~vgg/software/vic/docker_deployment.htm).
+The downloaded (or built) docker image contains the code in this repository along with the actual [image classification backend](https://gitlab.com/vgg/vgg_classifier), but it does not contain any image dataset or preprocessed data, which have to be provided separately.
+
+Usage instructions, along with sample data files for `VIC`, can be found at the [Docker deployment](http://www.robots.ox.ac.uk/~vgg/software/vic/#docker_version) section on [VIC's VGG page](http://www.robots.ox.ac.uk/~vgg/software/vic/).
 
 Native Installation
 -------------------
