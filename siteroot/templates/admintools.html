@@ -13,6 +13,8 @@ The following variables are defined:
   RF_RANK_TOPN - If 'topn' RF type is used, this is the 'topn' number
   RF_TRAIN_TYPE - Relevance Feedback Train Type currently selected
   RF_TRAIN_TYPE_LIST - List of available Relevance Feedback Train Types
+  FEAT_DETECTOR_TYPE - Feature Detector Type currently selected for the backends
+  FEAT_DETECTOR_TYPE_LIST - List of available Feature Detector Types
   ENGINES_NAMES - Dictionary of engines names
   CPUVISOR_ENABLED - Boolean indicating the 'cpuvisor-srv' is included in the backend engines
   CACHED_TEXT_QUERIES - List of cached text queries
@@ -58,6 +60,15 @@ The following variables are defined:
                                 <dt>Number of Training Images:</dt>
                                 <dd>
                                     <input name="num_pos_train" type="number" size="6" min="1" max="200" value="{{NUM_POS_TRAIN}}" /> <small><em>(max 200)</em></small>
+                                </dd>
+                                <dt>Backend Feature Detector Type:</dt>
+                                <dd>
+                                    <select name="feat_detector_type">
+                                        {% for ITEM in FEAT_DETECTOR_TYPE_LIST %}
+                                            <option value="{{ITEM}}" {% if ITEM == FEAT_DETECTOR_TYPE %}selected="selected"{% endif %}>{{ITEM}}</option>
+                                        {% endfor %}
+                                    </select>
+                                     <small><em>(currently available only for the &quot;People&quot; search)</em></small>
                                 </dd>
                                  <dt>Query Download Timeout:</dt>
                                 <dd>

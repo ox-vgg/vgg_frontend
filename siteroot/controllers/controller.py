@@ -86,6 +86,10 @@ class VisorController:
             if num_pos_train > 0:
                 self.proc_opts.imsearchtools_opts['num_pos_train'] = num_pos_train
 
+        if 'feat_detector_type' in kwargs:
+            feat_detector_type = kwargs['feat_detector_type'][0]
+            self.proc_opts.feat_detector_type = feat_detector_type
+
         if 'improc_timeout' in kwargs:
             try:
                 improc_timeout = float(kwargs['improc_timeout'][0])

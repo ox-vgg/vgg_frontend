@@ -82,6 +82,7 @@ class CuratedQuery(object):
 
             # create the extra_params dictionary and add anything relevant
             extra_params = dict()
+            extra_params['detector'] = 'accurate' # use always the accurate detector for curated queries, if available in the backend
 
             # and register it for the next feature computation
             imgs_dict.append(

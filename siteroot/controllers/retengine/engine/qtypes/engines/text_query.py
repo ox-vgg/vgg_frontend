@@ -128,7 +128,13 @@ class TextQuery(object):
                               'backend_port': self.backend_port,
                               'query_id': self.query_id,
                               'featdir': featdir,
+                              'detector' : self.opts.feat_detector_type
                               }
+
+                improc_timeout = self.opts.imsearchtools_opts['improc_timeout']
+                # when using the 'accurate' detector, double the image processing timeout
+                if  self.opts.feat_detector_type == models.opts.feat_detector_type.accurate:
+                    improc_timeout = 2* improc_timeout
 
                 if zmq_impath_return_ch:
                     extra_prms['zmq_impath_return_ch'] = zmq_impath_return_ch
@@ -138,7 +144,7 @@ class TextQuery(object):
                                 'engine': self.opts.imsearchtools_opts['engine'],
                                 'custom_local_path': imagedir,
                                 'query_timeout': self.opts.imsearchtools_opts['query_timeout'],
-                                'improc_timeout': self.opts.imsearchtools_opts['improc_timeout'],
+                                'improc_timeout': improc_timeout,
                                 'per_image_timeout': self.opts.imsearchtools_opts['per_image_timeout'],
                                 'num_results': self.opts.imsearchtools_opts['num_pos_train'],
                                 'resize_width': self.opts.resize_width,

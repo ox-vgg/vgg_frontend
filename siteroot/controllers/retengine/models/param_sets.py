@@ -98,6 +98,7 @@ class VisorEngineProcessOpts(object):
                  rf_rank_type=retengine_opts.rf_rank_types.full,
                  rf_rank_topn=2000,
                  rf_train_type=retengine_opts.rf_train_types.regular,
+                 feat_detector_type=retengine_opts.feat_detector_type.fast
                  ):
         """
             Initializes the class
@@ -118,6 +119,7 @@ class VisorEngineProcessOpts(object):
                 rf_rank_type: Relevance feedback rank type
                 rf_rank_topn: Relevance feedback rank type - Top N
                 rf_train_type: Relevance feedback train type
+                feat_detector_type: feature detector type to be used in the backend
         """
         self.pool_workers = pool_workers
         self.resize_width = resize_width
@@ -127,3 +129,4 @@ class VisorEngineProcessOpts(object):
         self.rf_rank_type = rf_rank_type
         self.rf_rank_topn = rf_rank_topn
         self.rf_train_type = rf_train_type
+        self.feat_detector_type = feat_detector_type

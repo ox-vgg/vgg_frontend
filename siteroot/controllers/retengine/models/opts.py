@@ -37,6 +37,12 @@ class rf_train_types:
     augment = 'augment'
 
 
+class feat_detector_type:
+    """ Enum for identifying the different types of feature detectors supported """
+    fast = 'fast'
+    accurate = 'accurate'
+
+
 class vmode:
     """ Enum of the supported view modes in the frontend """
     grid = 'grid'

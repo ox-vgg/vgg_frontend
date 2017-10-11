@@ -60,6 +60,11 @@ class AdminPages:
                                if not (a.startswith('__') and a.endswith('__'))]
         rf_train_type = self.visor_controller.proc_opts.rf_train_type
 
+        fdt_objdict = retengine.models.opts.feat_detector_type.__dict__
+        feat_detector_type_list = [fdt_objdict[a] for a in fdt_objdict.keys()
+                               if not (a.startswith('__') and a.endswith('__'))]
+        feat_detector_type =  self.visor_controller.proc_opts.feat_detector_type
+
         disable_cache = self.visor_controller.proc_opts.disable_cache
 
         cached_text_queries = self.visor_controller.interface.get_cached_text_queries(user_ses_id=request.session.session_key)
@@ -86,6 +91,8 @@ class AdminPages:
         'RF_RANK_TOPN' : rf_rank_topn,
         'RF_TRAIN_TYPE' : rf_train_type,
         'RF_TRAIN_TYPE_LIST' : rf_train_type_list,
+        'FEAT_DETECTOR_TYPE' : feat_detector_type,
+        'FEAT_DETECTOR_TYPE_LIST' : feat_detector_type_list,
         'ENGINES_NAMES': engines_names,
         'CPUVISOR_ENABLED': 'cpuvisor-srv' in engines_names.keys(),
         'CACHED_TEXT_QUERIES' : cached_text_queries
