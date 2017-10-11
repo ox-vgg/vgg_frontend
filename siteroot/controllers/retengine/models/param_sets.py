@@ -15,7 +15,8 @@ class VisorOptions(object):
                  default_view=retengine_opts.vmode.grid,
                  results_per_page=20,
                  engines={},
-                 select_roi=True,
+                 select_roi=False,
+                 enable_viewsel=False,
                  disable_autocomplete=False):
         """
             Initializes the class
@@ -26,6 +27,7 @@ class VisorOptions(object):
                  results_per_page: Number of items per results page
                  engines: Dictionary of supported engines
                  select_roi: Boolean indicating whether ROIs can be selected in the details page
+                 enable_viewsel: Boolean indicating whether the view mode selector should be enable or not
                  disable_autocomplete: Boolean indicating whether autocomplete should be enable or not in the main query box
         """
         self.engines_dict = engines
@@ -34,6 +36,7 @@ class VisorOptions(object):
         self.default_view = default_view
         self.results_per_page = results_per_page
         self.select_roi = select_roi
+        self.enable_viewsel = enable_viewsel
         self.disable_autocomplete = disable_autocomplete
 
 

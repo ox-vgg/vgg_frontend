@@ -32,10 +32,38 @@ if (pathArray.length>=4) {
 var $activeDiv = $('#results_content_block_primary');
 var $contentLoadDiv = $('#results_content_block_secondary');
 
+function view_select_left_clicked()     {
+    $('.view_select_left').addClass('view_select_left_down').removeClass('view_select_left');
+    $('.view_select_right_down').addClass('view_select_right').removeClass('view_select_right_down');
+
+    $('.view_select_right').click(view_select_right_clicked);
+}
+
+function view_select_right_clicked() {
+    $('.view_select_right').addClass('view_select_right_down').removeClass('view_select_right');
+    $('.view_select_left_down').addClass('view_select_left').removeClass('view_select_left_down');
+
+    $('.view_select_left').click(view_select_left_clicked);
+}
+
 $(function() {
-    
+
+    /* linkify view mode switcher */
+    $('.view_select').divtransition('fadein', {fadeInElem: '#results_list'})
+    /* activate view mode switcher */
+    $('.view_select_left').click(view_select_left_clicked);
+    $('.view_select_right').click(view_select_right_clicked);
     /* load in initial result page */
-    var targeturl = fullHomeLocation + 'searchreslist';
+    var targeturl;
+    if ($('#rpViewmode').html() == 'grid')  {
+        targeturl = fullHomeLocation + 'searchreslist'
+    } else if ($('#rpViewmode').html() == 'rois') {
+        targeturl = fullHomeLocation + 'searchresroislist'
+    } else {
+        alert("Unknown view mode: '" + $('#rpViewmode').html() + "'")
+    }
+
+    /* load in initial result page */
     targeturl = targeturl + '?qsid='+escape($('#rpQuerySesId').html())+
         '&page='+$('#rpPage').html()+
         '&processingtime='+$('#rpProcessingtime').html()+

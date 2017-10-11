@@ -288,7 +288,8 @@ class APIFunctions:
         if not(os.path.exists(real_path)):
             raise Http404('Requested image ' + url_path + ' does not exist')
 
-        img = self.visor_controller.get_image(real_path, roi_dict, as_thumbnail=(img_set=='thumbnails'))
+        img = self.visor_controller.get_image(real_path, roi_dict, as_thumbnail=(img_set=='thumbnails'), just_ROI=(img_set=='regions'))
+
         response = HttpResponse(content_type="image/*")
         if not img.format:
             img.save(response, "JPEG")

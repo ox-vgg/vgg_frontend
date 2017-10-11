@@ -358,8 +358,20 @@ class UserPages:
         # get other parameters
         page = request.GET.get('page', 1)
         engine = request.GET.get('engine', None)
-
+        view = request.GET.get('view', None)
         page = int(page)
+
+        # get default view if no view specified
+        if not view:
+            try:
+                if request.session.get('viewmode'):
+                   view = request.session.get('viewmode')
+                else:
+                   view = self.visor_controller.opts.default_view
+            except:
+                view = self.visor_controller.opts.default_view
+            finally:
+                request.session['viewmode'] = view # store this value in the user session
 
         # get query result
         query_data = self.visor_controller.get_query_result(query, request.session.session_key, query_ses_id=query_id)
@@ -415,13 +427,33 @@ class UserPages:
         'RANKING_TIME' : '%.2f' % query_data.status.exectime_ranking,
         'DISABLE_AUTOCOMPLETE': VISOR_SETTINGS['disable_autocomplete'],
         'ENGINES_WITH_IMAGE_SEARCH_SUPPORT': str_engines_with_image_input_support,
+        'VIEWMODE': view,
+        'VIEWSEL': self.visor_controller.opts.enable_viewsel
         }
         return render_to_response(template, context)
 
 
     @method_decorator(cache_page(60 * 30)) # view will be cached for 30 minutes
     @method_decorator(require_GET)
-    def searchreslist(self, request, template='searchreslist.html'):
+    def searchresroislist(self, request):
+        """
+            Renders the list of results in roi view mode.
+            Only GET requests are allowed.
+            It reuses the code for the standard list in grid view mode, but
+            requesting to show roi-only images.
+            Arguments:
+               request: request object containing details of the user session
+               and the parameters for the search
+            Returns:
+               HTTP 200 if the page is successfully rendered.
+        """
+
+        return self.searchreslist(request, template='searchresroislist.html', rois=True)
+
+
+    @method_decorator(cache_page(60 * 30)) # view will be cached for 30 minutes
+    @method_decorator(require_GET)
+    def searchreslist(self, request, template='searchreslist.html', rois=False):
         """
             Renders the list of results in grid mode.
             Only GET requests are allowed.
@@ -498,6 +530,8 @@ class UserPages:
 
         # set paths of image thumbnails
         sa_thumbs = 'thumbnails/%s/' % query['dsetname']
+        if rois:
+            sa_thumbs = 'regions/%s/' % query['dsetname']
 
         # prepare the details of every item in the list, for rendering the page
         for ritem in rlist:
@@ -510,9 +544,12 @@ class UserPages:
                 ritem['desc'] = fname
             # add extra tags if necessary
             dsetresid = ritem['path']
+            if 'roi' in ritem:
+                thumbnailroi = ',roi:' + ritem['roi']
             if 'uri' in ritem:
                 dsetresid = dsetresid+ ',uri:%s' % ritem['uri']
             ritem['dsetresid'] = dsetresid
+            ritem['thumbnailroi'] = thumbnailroi
 
         # compute home location taking into account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
@@ -676,6 +713,7 @@ class UserPages:
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
         page = request.GET.get('page', 1)
+        viewmode = request.GET.get('view', None)
         dsetname = request.GET.get('dsetname', None)
         dsetresid = request.GET.get('dsetresid', None)
         roi = request.GET.get('roi', None)
@@ -690,7 +728,12 @@ class UserPages:
             home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         # setup target for 'Back to results' link
-        backpage = home_location + 'searchreslist'
+        if viewmode == 'grid':
+            backpage = home_location + 'searchreslist'
+        elif viewmode == 'rois':
+            backpage = home_location + 'searchresroislist'
+        else:
+            backpage = home_location + 'searchreslist'
 
         # get image name
         imagename = dsetresid.split(',')[0]

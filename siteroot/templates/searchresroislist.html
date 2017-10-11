@@ -23,14 +23,14 @@
     <div class="results_footer results_footer_top">
         <div id="results_prevpane_top">
             {% if PAGE != 1 %}
-            <a href="{{HOME_LOCATION}}searchreslist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"-1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
+            <a href="{{HOME_LOCATION}}searchresroislist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"-1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
                 &lt; Previous
             </a>
            {% endif %}
         </div>
         <div id="results_nextpane_top">
             {% if PAGE != PAGE_COUNT %}
-            <a href="{{HOME_LOCATION}}searchreslist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
+            <a href="{{HOME_LOCATION}}searchresroislist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
                 Next &gt;
             </a>
             {% endif %}
@@ -61,8 +61,8 @@
             <div class="results_box">
                 <div class="result_outer_wrapper">
                     <div class="result_inner_wrapper">
-                        <a class="result_image_link" href="{{HOME_LOCATION}}viewdetails?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;dsetresid={{RITEM.dsetresid}}&amp;dsetname={{QUERY.dsetname}}&amp;view=grid{% if RITEM.roi %}&amp;roi={{RITEM.roi}}{% endif %}">
-                            <img src="{{SA_THUMBS}}{{RITEM.path}}" />
+                        <a class="result_image_link" href="{{HOME_LOCATION}}viewdetails?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;dsetresid={{RITEM.dsetresid}}&amp;dsetname={{QUERY.dsetname}}&amp;view=rois{% if RITEM.roi %}&amp;roi={{RITEM.roi}}{% endif %}">
+                            <img src="{{SA_THUMBS}}{{RITEM.path}}{{RITEM.thumbnailroi}}" />
                         </a>
                         <div class="result_refinebtns">
                             <div class="result_refinebtn_url" style="display:none;">{{RITEM.dsetresid}}</div>
@@ -85,14 +85,14 @@
     <div class="results_footer">
         <div id="results_prevpane">
             {% if PAGE != 1 %}
-            <a href="{{HOME_LOCATION}}searchreslist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"-1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
+            <a href="{{HOME_LOCATION}}searchresroislist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"-1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
                 &lt; Previous
             </a>
             {% endif %}
         </div>
         <div id="results_nextpane">
             {% if PAGE != PAGE_COUNT %}
-            <a href="{{HOME_LOCATION}}searchreslist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
+            <a href="{{HOME_LOCATION}}searchresroislist?qsid={{QUERY_ID}}&amp;page={{PAGE|add:"1"}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
                 Next &gt;
             </a>
             {% endif %}
@@ -100,7 +100,7 @@
         <div id="results_pagespane">
             {% for ITEM in PAGES %}
                {% if ITEM != PAGE %}
-                    <a href="{{HOME_LOCATION}}searchreslist?qsid={{QUERY_ID}}&amp;page={{ITEM}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
+                    <a href="{{HOME_LOCATION}}searchresroislist?qsid={{QUERY_ID}}&amp;page={{ITEM}}&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINING_TIME}}&amp;rankingtime={{RANKING_TIME}}" class="result_link">
                         {{ITEM}}
                     </a>
                {% else %}

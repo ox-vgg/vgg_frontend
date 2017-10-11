@@ -14,6 +14,7 @@ urlpatterns = [
     url(r'^waitforit$', user_pages.waitforit_process, name='wait_for_it'),
     url(r'^searchres$', user_pages.searchres, name='searchres'),
     url(r'^searchreslist$', user_pages.searchreslist, name='searchreslist'),
+    url(r'^searchresroislist$', user_pages.searchresroislist, name='searchresroislist'),
     url(r'^viewdetails$', user_pages.viewdetails, name='viewdetails'),
     url(r'^trainingimages$', user_pages.get_trainingimages, name='trainingimages'),
     url(r'^nobackend', user_pages.nobackend, name='nobackend'),
@@ -36,7 +37,7 @@ urlpatterns = [
     url(r'^is_backend_reachable', api_functions.get_backend_reachable, name='backendreachable'),
     url(r'^execquery$', api_functions.exec_query, name='exec_query'),
     url(r'^uploadimage$', api_functions.upload_image, name='uploadimage'),
-    url(r'^(?P<img_set>thumbnails|datasets|postrainimgs|curatedtrainimgs|uploadedimgs)/(.*/)', api_functions.get_image, name='getimage'),
+    url(r'^(?P<img_set>thumbnails|datasets|postrainimgs|curatedtrainimgs|uploadedimgs|regions)/(.*/)', api_functions.get_image, name='getimage'),
     url(r'^text_suggestions', api_functions.get_text_suggestions, name='text_suggestions'),
 
     # API urls (restricted - requires user authentication)

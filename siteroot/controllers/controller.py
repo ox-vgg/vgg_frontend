@@ -171,7 +171,7 @@ class VisorController:
         self.interface.set_text_query_cache_exclude_list(inactive_text_queries, user_ses_id=user_session_id)
 
 
-    def get_image(self, path, roi=None, as_thumbnail=False):
+    def get_image(self, path, roi=None, as_thumbnail=False, just_ROI=False):
         """
             Returns an image from the server
             Arguments:
@@ -218,23 +218,37 @@ class VisorController:
                 for i in range(1, len(values), 2):
                     points.append( (values[i-1], values[i]) )
 
-                if 'roi_colour' in roi:
-                    r, g, b = [int(x) for x in  roi['roi_colour'].split('_')]
+                if just_ROI:
+
+                    img = img.crop((int(values[0]), int(values[1]), int(values[4]), int(values[5])))
+                    imW, imH = img.size
+                    maxW = 100
+                    maxH = 100
+                    maxW = float(maxW)
+                    maxH = float(maxH)
+                    scale = min(maxH/imH, maxW/imH)
+                    size = int(imW*scale), int(imH*scale)
+                    img = img.resize(size)
+
                 else:
-                    r, g, b = 255, 255, 0
-                linecol = (r,g,b)
 
-                if 'roi_linewidth' in roi:
-                    linewidth = int(roi['roi_linewidth'])
-                else:
-                    linewidth = 5
+                    if 'roi_colour' in roi:
+                        r, g, b = [int(x) for x in  roi['roi_colour'].split('_')]
+                    else:
+                        r, g, b = 255, 255, 0
+                    linecol = (r,g,b)
 
-                if (img.mode != 'RGB'):
-                    img = img.convert('RGB');
+                    if 'roi_linewidth' in roi:
+                        linewidth = int(roi['roi_linewidth'])
+                    else:
+                        linewidth = 5
 
-                imd = ImageDraw.Draw(img)
-                for i in range(0, len(points)-1):
-                    imd.line( (points[i][0], points[i][1], points[i+1][0], points[i+1][1]), fill=linecol, width=linewidth );
+                    if (img.mode != 'RGB'):
+                        img = img.convert('RGB');
+
+                    imd = ImageDraw.Draw(img)
+                    for i in range(0, len(points)-1):
+                        imd.line( (points[i][0], points[i][1], points[i+1][0], points[i+1][1]), fill=linecol, width=linewidth );
 
             return img
 

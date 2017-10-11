@@ -40,3 +40,4 @@ class rf_train_types:
 class vmode:
     """ Enum of the supported view modes in the frontend """
     grid = 'grid'
+    rois = 'rois'

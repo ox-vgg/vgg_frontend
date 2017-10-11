@@ -765,6 +765,102 @@ div.result_text {
 
 /* @end */
 
+/* @group Modality Selector */
+
+#view_select_box {
+    margin-top: 25px;
+    width: 90px;
+    float: right;
+}
+
+.view_select {
+    float: right;
+    height: 32px;
+    width: 36px;
+    -webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
+    box-shadow:inset 0px 1px 0px 0px #ffffff;
+    display:inline-block;
+    color:#777777;
+    text-decoration:none;
+    text-shadow:1px 1px 0px #ffffff;
+}
+
+.view_select_left {
+    display: block;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+    background: url(../images/view_grid_n.png) no-repeat 9px 8px, -moz-linear-gradient(center top, #ffffff 5%, #ffffff 100%) #ffffff;
+    background: url(../images/view_grid_n.png) no-repeat 9px 8px, -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #ffffff), to(#ffffff)) #ffffff;
+    border: 1px solid #a3a3a3;
+}
+
+.view_select_left:hover {
+    background: url(../images/view_grid_n.png) no-repeat 9px 8px, -moz-linear-gradient(center top, #f2f5f8 5%, #acb7c8 100%) #f2f5f8;
+    background: url(../images/view_grid_n.png) no-repeat 9px 8px, -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #f2f5f8), to(#acb7c8)) #f2f5f8;
+}
+
+.view_select_left:active, .view_select_left_down {
+    display: block;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+    background: url(../images/view_grid_n_active.png) no-repeat 9px 8px, -moz-linear-gradient(center top, #757575 0%, #9a9a9a 100%) #f2f5f8;
+    background: url(../images/view_grid_n_active.png) no-repeat 9px 8px, -webkit-gradient(linear, left top, left bottom, from(#757575), to(#9a9a9a)) #f2f5f8;
+    -webkit-box-shadow: inset 0 1px 5px #484848;
+    box-shadow: inset 0 1px 5px #484848;
+    border: 1px solid #a3a3a3;
+}
+
+.view_select_right {
+    display: block;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background: url(../images/view_regions_n.png) no-repeat 9px 8px, -moz-linear-gradient(center top, #ffffff 5%, #ffffff 100%) #ffffff;
+    background: url(../images/view_regions_n.png) no-repeat 9px 8px, -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #ffffff), to(#ffffff)) #ffffff;
+    border-top: 1px solid #a3a3a3;
+    border-right: 1px solid #a3a3a3;
+    border-bottom: 1px solid #a3a3a3;
+}
+
+.view_select_right:hover {
+    background: url(../images/view_regions_n.png) no-repeat 9px 8px, -moz-linear-gradient(center top, #f2f5f8 5%, #acb7c8 100%) #f2f5f8;
+    background: url(../images/view_regions_n.png) no-repeat 9px 8px, -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #f2f5f8), to(#acb7c8)) #f2f5f8;
+}
+
+.view_select_right:active, .view_select_right_down {
+    display: block;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background: url(../images/view_regions_n_active.png) no-repeat 9px 8px, -moz-linear-gradient(center top, #757575 0%, #9a9a9a 100%) #f2f5f8;
+    background: url(../images/view_regions_n_active.png) no-repeat 9px 8px, -webkit-gradient(linear, left top, left bottom, from(#757575), to(#9a9a9a)) #f2f5f8;
+    -webkit-box-shadow: inset 0 1px 5px #484848;
+    box-shadow: inset 0 1px 5px #484848;
+    border-top: 1px solid #a3a3a3;
+    border-right: 1px solid #a3a3a3;
+    border-bottom: 1px solid #a3a3a3;
+}
+
+.view_select_right:after, .view_select_right_selected:after {
+    clear: both;
+}
+
+/* @end */
+
+/* @group Toolbar Common */
+
+.toolbutton {
+    float: right;
+    height: 30px;
+    width: 36px;
+    -webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
+    box-shadow:inset 0px 1px 0px 0px #ffffff;
+    display:inline-block;
+    color:#777777;
+    text-decoration:none;
+    text-shadow:1px 1px 0px #ffffff;
+}
+
+/* @end */
+
 /* @group Lightbox */
 
 .lb {

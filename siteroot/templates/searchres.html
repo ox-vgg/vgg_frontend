@@ -72,6 +72,19 @@
                     </div>
                     <!-- end query box -->
                 </form>
+                <!-- view select box (if dataset is supported) -->
+                {%if VIEWSEL %}
+                <div id="view_select_box">
+                  <a alt="ROI View"
+                     href="searchresroislist?qsid={{QUERY_ID}}&amp;page=1&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINIG_TIME}}&amp;rankingtime={{RANKING_TIME}}"
+                     class="toolbutton view_select {% if VIEWMODE == 'roi' %}view_select_right_down{% else %}view_select_right{% endif %}"
+                     title="View Detections"></a>
+                  <a alt="Grid View"
+                     href="searchreslist?qsid={{QUERY_ID}}&amp;page=1&amp;processingtime={{PROCESSING_TIME}}&amp;trainingtime={{TRAINIG_TIME}}&amp;rankingtime={{RANKING_TIME}}"
+                     class="toolbutton view_select {% if VIEWMODE == 'grid' %}view_select_left_down{% else %}view_select_left{% endif %}"
+                     title="View Keyframes"></a>
+                </div>
+                {% endif %}
             </div>
             <br>
             <div id="results_content_block_primary"> </div>
@@ -81,6 +94,7 @@
                 accessible from within results-initial-load.js script -->
                 <div id="rpQuerySesId">{{QUERY_ID}}</div>
                 <div id="rpPage">{{PAGE}}</div>
+                <div id="rpViewmode">{{VIEWMODE}}</div>
                 <div id="rpProcessingtime">{{PROCESSING_TIME}}</div>
                 <div id="rpTrainingtime">{{TRAINING_TIME}}</div>
                 <div id="rpRankingtime">{{RANKING_TIME}}</div>
@@ -90,6 +104,7 @@
         <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.widgets.min.js"></script>
         <script type="text/javascript" src="static/scripts/lib/jquery.form.js"></script>
         <script type="text/javascript" src="static/scripts/widgets/jquery.ui.querybar.js"></script>
+        <script type="text/javascript" src="static/scripts/modality-selector.js"></script>
         <script type="text/javascript" src="static/scripts/widgets/jquery.ui.imageuploader.js"></script>
         <script type="text/javascript" src="static/scripts/make-querybar-imup.js"></script>
         <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.autocomplete.min.js"></script>
