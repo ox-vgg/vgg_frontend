@@ -299,11 +299,9 @@ class ResultCache(base_caches.SessionExcludeListCache):
         if self.Caches.disk in caches:
             if for_all_datasets:
                 cache_fname = self._get_disk_fname(query)
-                cache_fname = cache_fname.replace(query['dsetname'], '###')
-
                 a_dir = os.path.dirname(cache_fname)
                 a_files = os.listdir(a_dir)
-                cache_fname = cache_fname.split('###')[1] #we just added '###', so this should work
+                cache_fname = cache_fname.split(query['dsetname'])[-1]
 
                 all_fnames = [os.path.join(a_dir, a_file) for a_file in a_files]
                 # just get fnames which conform to regular expression
