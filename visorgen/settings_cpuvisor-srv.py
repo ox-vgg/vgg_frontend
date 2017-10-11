@@ -158,7 +158,6 @@ VISOR = {
     'title': 'My Visual Search Engine',
     'disable_autocomplete': True,
     'results_per_page' : 50,
-    'select_roi' : True,
     'datasets' : {  # Dictionary of datasets. Only one dataset at a time is supported.
                     # The key-name of the dataset is used to locate subfolders within
                     # the different PATHS used by the controller.
@@ -197,6 +196,7 @@ PATHS = {
     'curatedtrainimgs' : '/webapps/visorgen/frontend_data/curatedtrainimgs',
     'datasets' : '/webapps/visorgen/datasets/images',
     'thumbnails' : '/webapps/visorgen/datasets/images', # keep this one the same as 'datasets' unless thumbnails are really provided
+    'regions' : '/home/ernesto/Desktop/cameroon/cameroon/datasets/images', # The ROIs are defined over the original images
 }
 
 # Folders containing metadata

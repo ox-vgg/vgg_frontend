@@ -158,8 +158,8 @@ VISOR = {
     'title': 'My Visual Search Engine',
     'disable_autocomplete': True,
     'results_per_page' : 50,
-    #'select_roi' : True, #  only enable when the 'faces' is the only engine
-    #'enable_viewsel' : True, # only enable when the 'faces' is the only engine
+    'select_roi' : True, #  only enable when the 'faces' is the only engine
+    'enable_viewsel' : True, # only enable when the 'faces' is the only engine
     'datasets' : {  # Dictionary of datasets. Only one dataset at a time is supported.
                     # The key-name of the dataset is used to locate subfolders within
                     # the different PATHS used by the controller.
@@ -167,38 +167,6 @@ VISOR = {
                     'mydataset' : 'Common Objects in Context 2014'
                  },
     'engines' : {
-
-                # Describe each deployed engine. The key-name of each
-                # engine should not contain spaces or special characters
-
-                # Sample backend engine for object/category search.
-                # It support images and text as input.
-                'cpuvisor-srv': { 'full_name' : 'Category',
-                                  'url': '/',
-                                  'backend_port' : 35215,
-                                  'imgtools_postproc_module' : 'visor_category',
-                                  'imgtools_style': 'photo',
-                                  'pattern_fname_classifier' : '${query_strid}.bin',
-                                  'can_save_uber_classifier': True,
-                                  'skip_query_progress': False,
-                                  'engine_for_similar_search': 'cpuvisor-srv'
-                                },
-
-                # Sample backend engine for text search.
-                # It does not support images as input, just text.
-                'text' :        { 'full_name' : 'Text',
-                                  'url': '/',
-                                  'backend_port' : 55366,
-                                  'imgtools_postproc_module' : None, # Set to None to indicate the backend
-                                                                     # does not support images as input
-                                  'imgtools_style': None,
-                                  'pattern_fname_classifier' : 'dummy', # Not used in this engine,
-                                                                        # but cannot be 'None'
-                                  'can_save_uber_classifier': False,
-                                  'skip_query_progress': True,  # Set to True because this engine can return
-                                                                # results almost instantly
-                                  'engine_for_similar_search': 'cpuvisor-srv'
-                                },
 
                 # Sample backend engine for face search.
                 # It support images and text as input.
