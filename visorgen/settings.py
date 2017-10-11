@@ -158,7 +158,8 @@ VISOR = {
     'title': 'My Visual Search Engine',
     'disable_autocomplete': True,
     'results_per_page' : 50,
-    'select_roi' : True,
+    #'select_roi' : True, #  only enable when the 'faces' is the only engine
+    #'enable_viewsel' : True, # only enable when the 'faces' is the only engine
     'datasets' : {  # Dictionary of datasets. Only one dataset at a time is supported.
                     # The key-name of the dataset is used to locate subfolders within
                     # the different PATHS used by the controller.
@@ -198,6 +199,19 @@ VISOR = {
                                                                 # results almost instantly
                                   'engine_for_similar_search': 'cpuvisor-srv'
                                 },
+
+                # Sample backend engine for face search.
+                # It support images and text as input.
+                'faces' :   { 'full_name' : 'People',
+                              'url': '/',
+                              'backend_port' : 55302,
+                              'imgtools_postproc_module' : 'visor_faces',
+                              'imgtools_style': 'face',
+                              'pattern_fname_classifier' : '${query_strid}.mat',
+                              'can_save_uber_classifier': True,
+                              'skip_query_progress': False,
+                              'engine_for_similar_search': 'faces'
+                            },
                     },
 }
 
@@ -213,6 +227,7 @@ PATHS = {
     'curatedtrainimgs' : '/webapps/visorgen/frontend_data/curatedtrainimgs',
     'datasets' : '/webapps/visorgen/datasets/images',
     'thumbnails' : '/webapps/visorgen/datasets/images', # keep this one the same as 'datasets' unless thumbnails are really provided
+    'regions' : '/webapps/visorgen/datasets/images', # The ROIs are defined over the original images
 }
 
 # Folders containing metadata
