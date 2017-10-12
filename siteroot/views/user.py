@@ -544,12 +544,29 @@ class UserPages:
                 ritem['desc'] = fname
             # add extra tags if necessary
             dsetresid = ritem['path']
-            if 'roi' in ritem:
-                thumbnailroi = ',roi:' + ritem['roi']
             if 'uri' in ritem:
                 dsetresid = dsetresid+ ',uri:%s' % ritem['uri']
             ritem['dsetresid'] = dsetresid
-            ritem['thumbnailroi'] = thumbnailroi
+
+            if 'roi' in ritem:
+                thumbnailroi = ',roi:' + ritem['roi']
+                ritem['thumbnailroi'] = thumbnailroi
+            elif rois:
+                # If the ROI was not specified, do a final attempt to retrieve it
+                # from the backend
+                query = self.visor_controller.query_key_cache.get_query_details(query_id)
+                backend_port = self.visor_controller.opts.engines_dict[ engine ]['backend_port']
+                ses = retengine.engine.backend_client.Session( backend_port )
+                func_in = {}
+                func_in['func'] = 'getRoi'
+                func_in['frame_path'] = ritem['path']
+                func_in['query_string'] = query['qdef']
+                roi_request = json.dumps(func_in)
+                roi_response = ses.custom_request(roi_request)
+                json_response = json.loads(roi_response)
+                if 'roi' in json_response and len(json_response['roi'])>0:
+                    roi = json_response['roi']
+                    ritem['thumbnailroi'] = ',roi:' + roi
 
         # compute home location taking into account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
