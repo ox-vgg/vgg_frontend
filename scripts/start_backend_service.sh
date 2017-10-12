@@ -20,8 +20,17 @@ case "${1}" in
         # run image downloader tool
         screen -dm -S visorgen-img_downloader bash  -l -c 'cd /webapps/visorgen/; source ./bin/activate; cd /webapps/visorgen/vgg_frontend/vgg_img_downloader; ./start_service.sh'
     ;;
+    faces)
+        ## Start the faces engine ##
+
+        # run cpuvisor services
+        screen -dm -S faces-backend-service bash -l -c 'cd /webapps/visorgen/; source ./bin/activate; cd /webapps/visorgen/face_search/backend; ./start_backend_service.sh'
+
+        # run image downloader tool
+        screen -dm -S visorgen-img_downloader bash  -l -c 'cd /webapps/visorgen/; source ./bin/activate; cd /webapps/visorgen/vgg_frontend/vgg_img_downloader; ./start_service.sh'
+    ;;
     *)
-        echo "Usage: ${0} {text|cpuvisor-srv}" >&2
+        echo "Usage: ${0} {text|cpuvisor-srv|faces}" >&2
     ;;
 esac
 

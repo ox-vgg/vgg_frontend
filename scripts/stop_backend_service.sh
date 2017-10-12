@@ -19,7 +19,7 @@ case "${1}" in
     cpuvisor-srv)
         ## Stop the cpuvisor-srv engine ##
 
-        # stop cpuvisor_services
+        # stop cpuvisor_service
 
         GREP=$(ps -fe | grep "[c]puvisor_service")
         if [ "$GREP" ]; then
@@ -50,8 +50,33 @@ case "${1}" in
         fi
         pkill -9 -f 'imsearch'
     ;;
+    faces)
+        ## Stop the faces engine ##
+
+        # stop faces backend
+
+        GREP=$(ps -fe | grep ".*[f]aces-backend-service.*")
+        if [ "$GREP" ]; then
+            SESSION=$(screen -ls | grep -o ".*.faces-backend-service")
+            if [ "$SESSION" ]; then
+                screen -X -S $SESSION quit
+            fi
+        fi
+        pkill -9 -f 'python backend.py'
+
+        # stop image downloader tool
+
+        GREP=$(ps -fe | grep ".*[i]mg_downloader")
+        if [ "$GREP" ]; then
+            SESSION=$(screen -ls | grep -o ".*.visorgen-img_downloader")
+            if [ "$SESSION" ]; then
+                screen -X -S $SESSION quit
+            fi
+        fi
+        pkill -9 -f 'imsearch'
+    ;;
     *)
-        echo "Usage: ${0} {text|cpuvisor-srv}" >&2
+        echo "Usage: ${0} {text|cpuvisor-srv|faces}" >&2
     ;;
 esac
 
