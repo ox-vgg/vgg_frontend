@@ -158,13 +158,13 @@ VISOR = {
     'title': 'My Visual Search Engine',
     'disable_autocomplete': True,
     'results_per_page' : 50,
-    #'select_roi' : True, #  only enable when the 'faces' is the only engine
-    #'enable_viewsel' : True, # only enable when the 'faces' is the only engine
+    #'select_roi' : True, # enable only when the selected backend is able to receive ROIs as input
+    #'enable_viewsel' : True, # enable only when the selected backend is able to return ROIs
     'datasets' : {  # Dictionary of datasets. Only one dataset at a time is supported.
                     # The key-name of the dataset is used to locate subfolders within
                     # the different PATHS used by the controller.
 
-                    'mydataset' : 'Common Objects in Context 2014'
+                    'mydataset' : 'Any dataset'
                  },
     'engines' : {
 
@@ -197,7 +197,7 @@ VISOR = {
                                   'can_save_uber_classifier': False,
                                   'skip_query_progress': True,  # Set to True because this engine can return
                                                                 # results almost instantly
-                                  'engine_for_similar_search': 'cpuvisor-srv'
+                                  'engine_for_similar_search': None # Set to 'cpuvisor-srv' only if that engine is included in the settings
                                 },
 
                 # Sample backend engine for face search.

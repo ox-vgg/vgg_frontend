@@ -162,7 +162,7 @@ VISOR = {
                     # The key-name of the dataset is used to locate subfolders within
                     # the different PATHS used by the controller.
 
-                    'mydataset' : 'Common Objects in Context 2014'
+                    'mydataset' : 'Any dataset'
                  },
     'engines' : {
 
