@@ -76,7 +76,7 @@ def preproc_chunk_thread(startIndex, endIndex, lock, feat_type, CONFIG_PROTO_PAT
     if fout:
         fout.close()
 
-def data_processing_pipeline(inputListOfFrames, index, lock, feat_type, DATASET_IM_BASE_PATH, DATASET_IM_PATHS, CONFIG_PROTO_PATH, PREPROC_CHUNK_SIZE):
+def data_processing_pipeline_cpuvisor(inputListOfFrames, index, lock, feat_type, DATASET_IM_BASE_PATH, DATASET_IM_PATHS, CONFIG_PROTO_PATH, PREPROC_CHUNK_SIZE):
     """ Performs the ingestion of new data into the backend search engine.
         If a python list of frames is input, the paths must be with respect to the DATASET_IM_BASE_PATH path. This method does not validate that.
         Arguments:

@@ -95,6 +95,7 @@ class AdminPages:
         'FEAT_DETECTOR_TYPE_LIST' : feat_detector_type_list,
         'ENGINES_NAMES': engines_names,
         'CPUVISOR_ENABLED': 'cpuvisor-srv' in engines_names.keys(),
+        'FACES_ENABLED': 'faces' in engines_names.keys(),
         'CACHED_TEXT_QUERIES' : cached_text_queries
         }
         return render(request, "admintools.html", context)

@@ -238,3 +238,11 @@ PREPROC_CHUNK_SIZE = 500
 # Limit to the number of threads to be started when ingesting new data.
 # Each thread will be assigned one chunk of data.
 FRAMES_THREAD_NUM_LIMIT = 6
+
+# Particular constants for data ingestion via the faces engine
+FACES_DATASET_IM_BASE_PATH = os.path.join( PATHS['datasets'], VISOR['datasets'].keys()[0] )
+FACES_DATASET_IM_PATHS = '/webapps/visorgen/backend_data/faces/dsetpaths.txt'
+FACES_NEGATIVE_IM_PATHS = '/webapps/visorgen/backend_data/faces/negpaths.txt'
+FACES_NEGATIVE_IM_BASE_PATH = '/webapps/visorgen/backend_data/faces/neg_images'
+FACES_DATASET_FEATS_FILE = '/webapps/visorgen/backend_data/faces/features/features_combined_%s.mat' % VISOR['datasets'].keys()[0] 
+FACES_NEG_FEATS_FILE = '/webapps/visorgen/backend_data/faces/%s_negatives.mat' % VISOR['datasets'].keys()[0]

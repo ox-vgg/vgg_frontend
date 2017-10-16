@@ -17,6 +17,7 @@ The following variables are defined:
   FEAT_DETECTOR_TYPE_LIST - List of available Feature Detector Types
   ENGINES_NAMES - Dictionary of engines names
   CPUVISOR_ENABLED - Boolean indicating the 'cpuvisor-srv' is included in the backend engines
+  FACES_ENABLED - Boolean indicating the 'faces' is included in the backend engines
   CACHED_TEXT_QUERIES - List of cached text queries
   HOME_LOCATION - location of the root home page taking into account possible redirections
 {% endcomment %}
@@ -46,7 +47,8 @@ The following variables are defined:
             <ul class="tab">
                 <li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'Configuration')">Global Server Configuration</a></li>
                 <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'Manage')">Manage Backend Service</a></li>
-                {% if CPUVISOR_ENABLED %}<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'Process')">Manage Backend Data</a></li>{% endif %}
+                {% if CPUVISOR_ENABLED %}<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ProcessCategory')">Manage Category Backend Data</a></li>{% endif %}
+                {% if FACES_ENABLED %}<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ProcessFaces')">Manage Faces Backend Data</a></li>{% endif %}
             </ul>
 
             <!-- "Global Server Configuration" tab -->
@@ -198,8 +200,8 @@ The following variables are defined:
             </div>
 
             {% if CPUVISOR_ENABLED %}
-            <!-- "Manage Backend Data" tab -->
-            <div id="Process" class="tabcontent" style="display: none;">
+            <!-- "Manage Category Backend Data" tab -->
+            <div id="ProcessCategory" class="tabcontent" style="display: none;">
                 <form id="config_pipeline"  action="pipeline_start" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
                         <h2>Category search engine: DATA INGESTION</h2>
@@ -215,6 +217,7 @@ The following variables are defined:
                                     <dd>
                                         <input name="input_file" id="input_descriptor_file_input" type="file" multiple="true"/>
                                     </dd>
+                                    <input type="hidden" name="engine" value="cpuvisor-srv" />
                                 </dl>
                         </div>
                         <strong>If no specific files are selected for ingestion, the full content of the images folder will be processed</strong>
@@ -234,6 +237,55 @@ The following variables are defined:
                                           <input type="radio" name="input_type" value="positive" checked> Positive Images<br>
                                           <input type="radio" name="input_type" value="negative"> Negative Images<br>
                                     </dd>
+                                    <input type="hidden" name="engine" value="cpuvisor-srv"/>
+                                </dl>
+                        </div>
+                        <input type="submit" value="Clear"/>
+                    </div>
+                </form>
+                <br/>
+            </div>
+            {% endif %}
+
+            {% if FACES_ENABLED %}
+            <!-- "Manage Face Backend Data" tab -->
+            <div id="ProcessFaces" class="tabcontent" style="display: none;">
+                <form id="config_pipeline"  action="pipeline_start" enctype="multipart/form-data" method="post">{% csrf_token %}
+                    <div id="config-options-container">
+                        <h2>Face search engine: DATA INGESTION</h2>
+                        <div id="config-options-container">
+                                <dl>
+                                    <dt>Input type:</dt>
+                                    <dd>
+                                          <input type="radio" name="input_type" value="positive" checked> Positive Images<br>
+                                          <input type="radio" name="input_type" value="negative"> Negative Images<br>
+                                    </dd>
+                                    <br/>
+                                    <dt>(OPTIONAL) Select specific files to be ingested:</dt>
+                                    <dd>
+                                        <input name="input_file" id="input_descriptor_file_input" type="file" multiple="true"/>
+                                    </dd>
+                                    <input type="hidden" name="engine" value="faces" />
+                                </dl>
+                        </div>
+                        <strong>If no specific files are selected for ingestion, the full content of the images folder will be processed</strong>
+                        <br/>
+                        <br/>
+                        <input type="submit" value="Ingest"/>
+                    </div>
+                </form>
+                <br/>
+                <form id="config_pipeline" action="clear_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
+                    <div id="config-options-container">
+                        <h2>Face search engine: CLEAR BACKEND DATA</h2>
+                        <div id="config-options-container">
+                                <dl>
+                                    <dt>Input type:</dt>
+                                    <dd>
+                                          <input type="radio" name="input_type" value="positive" checked> Positive Images<br>
+                                          <input type="radio" name="input_type" value="negative"> Negative Images<br>
+                                    </dd>
+                                    <input type="hidden" name="engine" value="faces" />
                                 </dl>
                         </div>
                         <input type="submit" value="Clear"/>

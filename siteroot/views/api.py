@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import HttpResponse, FileResponse, HttpResponseBadRequest, Http404
+from django.http import HttpResponse, HttpResponseBadRequest, Http404
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render_to_response, render
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
@@ -21,7 +21,8 @@ if os.path.exists(PATH_TO_CAFFE_BACKEND_PROTO):
     import cpuvisor_config_pb2
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../pipeline')) # add this to be able to load object_pipeline_single_thread
-from data_pipeline import data_processing_pipeline
+from data_pipeline_cpuvisor import data_processing_pipeline_cpuvisor
+from data_pipeline_faces import data_processing_pipeline_faces
 
 import retengine.engine.backend_client
 
@@ -30,6 +31,7 @@ import retengine.engine.backend_client
 # of images are ingested.
 VALID_IMG_EXTENSIONS = { ".jpeg", ".jpg", ".png", ".bmp", ".dib", ".tiff", ".tif", ".ppm" }
 VALID_IMG_EXTENSIONS_STR = 'jpeg, jpg, png, bmp, dib, tiff, tif, ppm'
+ENGINES_WITH_PIPELINE = [ 'cpuvisor-srv' , 'faces']
 
 def start_backend_service(engine):
     """ Body of the thread that runs the script to start the backend service """
@@ -60,7 +62,6 @@ class APIFunctions:
         """
         self.visor_controller =  visor_controller
         available_engines =  self.visor_controller.opts.engines_dict
-        self.cpuvisor_srv_enabled = False
 
         # init paths to negative/positive dirs
         self.DATASET_IM_BASE_PATH = None
@@ -76,12 +77,16 @@ class APIFunctions:
         self.pipeline_frame_list = []
         self.global_input_index = -1
         self.pipeline_input_type = ''
+        self.pipeline_engine = ''
 
         # init vars to support backen service management
         self.backend_thread = None
 
-        if 'cpuvisor-srv' in available_engines.keys():
-            self.cpuvisor_srv_enabled = True
+
+    def get_engine_config(self, engine):
+
+        if engine == 'cpuvisor-srv':
+
             # read cpuvisor configuration file
             cpuvisorConfigProto = cpuvisor_config_pb2.Config()
             cpuvisorConfigFile = open(settings.CONFIG_PROTO_PATH, "r")
@@ -89,12 +94,22 @@ class APIFunctions:
             cpuvisorConfigFile.close()
 
             # Get some info from the proto config
-            self.DATASET_IM_BASE_PATH = cpuvisorConfigProto.preproc_config.dataset_im_base_path
-            self.DATASET_IM_PATHS = cpuvisorConfigProto.preproc_config.dataset_im_paths
-            self.NEGATIVE_IM_PATHS = cpuvisorConfigProto.preproc_config.neg_im_paths
-            self.NEGATIVE_IM_BASE_PATH = cpuvisorConfigProto.preproc_config.neg_im_base_path
-            self.DATASET_FEATS_FILE =  cpuvisorConfigProto.preproc_config.dataset_feats_file
-            self.NEG_FEATS_FILE = cpuvisorConfigProto.preproc_config.neg_feats_file
+            return  (cpuvisorConfigProto.preproc_config.dataset_im_base_path,
+            cpuvisorConfigProto.preproc_config.dataset_im_paths,
+            cpuvisorConfigProto.preproc_config.neg_im_paths,
+            cpuvisorConfigProto.preproc_config.neg_im_base_path,
+            cpuvisorConfigProto.preproc_config.dataset_feats_file,
+            cpuvisorConfigProto.preproc_config.neg_feats_file)
+
+        if engine == 'faces':
+
+            # Get the info from the settings
+            return  ( settings.FACES_DATASET_IM_BASE_PATH,
+                settings.FACES_DATASET_IM_PATHS,
+                settings.FACES_NEGATIVE_IM_PATHS,
+                settings.FACES_NEGATIVE_IM_BASE_PATH,
+                settings.FACES_DATASET_FEATS_FILE,
+                settings.FACES_NEG_FEATS_FILE)
 
 
     @method_decorator(require_GET)
@@ -444,20 +459,27 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
-        self.pipeline_input_type = request.POST['input_type']
-        img_base_path = self.DATASET_IM_BASE_PATH
-        file_with_list_of_paths =  self.DATASET_IM_PATHS
-        if self.pipeline_input_type == 'negative':
-            img_base_path = self.NEGATIVE_IM_BASE_PATH
-            file_with_list_of_paths =  self.NEGATIVE_IM_PATHS
-
-        if not img_base_path or not file_with_list_of_paths:
-            message = 'The image source paths for the current engine are not properly set. The pipeline cannot be started.'
+        if ('engine' not in request.POST) or (request.POST['engine'] not in ENGINES_WITH_PIPELINE):
+            message = 'There is no data pipeline defined for the selected engine. A pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
-        if not self.cpuvisor_srv_enabled:
-            message = 'Only the caffe engine pipeline is currently supported. The pipeline cannot be started.'
+        # get engine config
+        (self.DATASET_IM_BASE_PATH, self.DATASET_IM_PATHS,
+        self.NEGATIVE_IM_PATHS, self.NEGATIVE_IM_BASE_PATH,
+        self.DATASET_FEATS_FILE, self.NEG_FEATS_FILE) = self.get_engine_config( request.POST['engine'] )
+
+        self.pipeline_input_type = request.POST['input_type']
+        img_base_path = self.DATASET_IM_BASE_PATH
+        file_with_list_of_paths =  self.DATASET_IM_PATHS
+        dataset_features_out_file = self.DATASET_FEATS_FILE
+        if self.pipeline_input_type == 'negative':
+            img_base_path = self.NEGATIVE_IM_BASE_PATH
+            file_with_list_of_paths =  self.NEGATIVE_IM_PATHS
+            dataset_features_out_file = self.NEG_FEATS_FILE
+
+        if not img_base_path or not file_with_list_of_paths:
+            message = 'The image source paths for the current engine are not properly set. The pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
@@ -563,28 +585,49 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
-        # Calculate number of threads. Set to a maximum of settings.FRAMES_THREAD_NUM_LIMIT and a minimum of 1.
-        num_threads = max(1, min( len(self.pipeline_frame_list)/settings.PREPROC_CHUNK_SIZE, settings.FRAMES_THREAD_NUM_LIMIT ) )
+        # finally ready to start ..
+        self.pipeline_engine = request.POST['engine']
+        if self.pipeline_engine == 'cpuvisor-srv':
 
-        # if the 'negative' features are being computed, always use one thread,
-        # as 'cpuvisor_preproc' does not support chunks for negative features
-        chunk_size = settings.PREPROC_CHUNK_SIZE
-        if self.pipeline_input_type == 'negative':
+            # Calculate number of threads. Set to a maximum of settings.FRAMES_THREAD_NUM_LIMIT and a minimum of 1.
+            num_threads = max(1, min( len(self.pipeline_frame_list)/settings.PREPROC_CHUNK_SIZE, settings.FRAMES_THREAD_NUM_LIMIT ) )
+
+            # if the 'negative' features are being computed, always use one thread,
+            # as 'cpuvisor_preproc' does not support chunks for negative features
+            chunk_size = settings.PREPROC_CHUNK_SIZE
+            if self.pipeline_input_type == 'negative':
+                num_threads = 1
+                chunk_size = len(self.pipeline_frame_list) + 1
+
+            # Start pipeline.
+            self.global_input_index = 0
+            for i in range(0, num_threads):
+                list_end = min(self.global_input_index + chunk_size, len(self.pipeline_frame_list))
+                frame_list = self.pipeline_frame_list[ self.global_input_index : list_end]
+                t = threading.Thread( target=data_processing_pipeline_cpuvisor,
+                            args=(  frame_list, self.global_input_index, self.lock, self.pipeline_input_type,
+                                    img_base_path, file_with_list_of_paths,
+                                    settings.CONFIG_PROTO_PATH, chunk_size) )
+                t.start()
+                self.threads_map[ self.global_input_index ] = t
+                self.global_input_index = list_end
+
+        if self.pipeline_engine == 'faces':
+
+            # The 'faces' pipeline is not multi-threaded
             num_threads = 1
             chunk_size = len(self.pipeline_frame_list) + 1
 
-        # Start pipeline.
-        self.global_input_index = 0
-        for i in range(0, num_threads):
-            list_end = min(self.global_input_index + chunk_size, len(self.pipeline_frame_list))
-            frame_list = self.pipeline_frame_list[ self.global_input_index : list_end]
-            t = threading.Thread( target=data_processing_pipeline,
-                        args=(  frame_list, self.global_input_index, self.lock, self.pipeline_input_type,
-                                img_base_path, file_with_list_of_paths,
-                                settings.CONFIG_PROTO_PATH, chunk_size) )
+            ## Start pipeline
+            self.global_input_index = 0
+            t = threading.Thread( target=data_processing_pipeline_faces,
+                            args=(  self.pipeline_frame_list, self.lock, self.pipeline_input_type,
+                                    file_with_list_of_paths, img_base_path, dataset_features_out_file ) )
             t.start()
             self.threads_map[ self.global_input_index ] = t
-            self.global_input_index = list_end
+            self.global_input_index = len(self.pipeline_frame_list)
+
+            #return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': settings.SITE_PREFIX + '/admintools', 'MESSAGE': 'Up to here 2 ' + self.pipeline_engine } )
 
         return redirect('pipeline_status')
 
@@ -613,36 +656,48 @@ class APIFunctions:
 
         numberOfFrames = len(self.pipeline_frame_list)
         processingFrames = numberOfFrames>0
-        numberOfFrameChunks = int ( round( ( numberOfFrames /settings.PREPROC_CHUNK_SIZE*1.0 ) + 0.5 ) )
 
-        # if the 'negative' features are being computed, we always use one thread,
-        # as 'cpuvisor_preproc' does not support chunks for negative features
-        if self.pipeline_input_type == 'negative':
-            numberOfFrameChunks = 1 # so there is always one one chunk
+        if self.pipeline_engine == 'faces':
 
-        if aliveThreadCounter == 0 and processingFrames and self.global_input_index + 1 >= numberOfFrames:
-            message = 'The data pipeline has finished !.'
-            redirect_to = settings.SITE_PREFIX + '/admintools'
-            return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
-        elif processingFrames and aliveThreadCounter < settings.FRAMES_THREAD_NUM_LIMIT and self.global_input_index + 1 < numberOfFrames:
-            # since we are under the FRAMES_THREAD_NUM_LIMIT quota, let's try to start a new thread for the next chunk of frames
+            # The 'faces' pipeline is not multi-threaded, so there is always 1 chunk
+            numberOfFrameChunks = 1
+            if aliveThreadCounter == 0 and processingFrames and self.global_input_index + 1 >= numberOfFrames:
+                message = 'The data pipeline has finished !.'
+                redirect_to = settings.SITE_PREFIX + '/admintools'
+                return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
-            img_base_path = self.DATASET_IM_BASE_PATH
-            file_with_list_of_paths =  self.DATASET_IM_PATHS
+        if self.pipeline_engine == 'cpuvisor-srv':
+
+            numberOfFrameChunks = int ( round( ( numberOfFrames /settings.PREPROC_CHUNK_SIZE*1.0 ) + 0.5 ) )
+
+            # if the 'negative' features are being computed, we always use one thread,
+            # as 'cpuvisor_preproc' does not support chunks for negative features
             if self.pipeline_input_type == 'negative':
-                img_base_path = self.NEGATIVE_IM_BASE_PATH
-                file_with_list_of_paths =  self.NEGATIVE_IM_PATHS
+                numberOfFrameChunks = 1 # so there is always one one chunk
 
-            list_end = min(self.global_input_index + settings.PREPROC_CHUNK_SIZE, numberOfFrames)
-            frame_list = self.pipeline_frame_list[ self.global_input_index : list_end ]
-            if len(frame_list)>0:
-                t = threading.Thread( target=data_processing_pipeline,
-                        args=(  frame_list, self.global_input_index, self.lock, self.pipeline_input_type,
-                                img_base_path, file_with_list_of_paths,
-                                settings.CONFIG_PROTO_PATH, settings.PREPROC_CHUNK_SIZE) )
-                t.start()
-                self.threads_map[ self.global_input_index ] = t
-                self.global_input_index = list_end
+            if aliveThreadCounter == 0 and processingFrames and self.global_input_index + 1 >= numberOfFrames:
+                message = 'The data pipeline has finished !.'
+                redirect_to = settings.SITE_PREFIX + '/admintools'
+                return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+            elif processingFrames and aliveThreadCounter < settings.FRAMES_THREAD_NUM_LIMIT and self.global_input_index + 1 < numberOfFrames:
+                # since we are under the FRAMES_THREAD_NUM_LIMIT quota, let's try to start a new thread for the next chunk of frames
+
+                img_base_path = self.DATASET_IM_BASE_PATH
+                file_with_list_of_paths =  self.DATASET_IM_PATHS
+                if self.pipeline_input_type == 'negative':
+                    img_base_path = self.NEGATIVE_IM_BASE_PATH
+                    file_with_list_of_paths =  self.NEGATIVE_IM_PATHS
+
+                list_end = min(self.global_input_index + settings.PREPROC_CHUNK_SIZE, numberOfFrames)
+                frame_list = self.pipeline_frame_list[ self.global_input_index : list_end ]
+                if len(frame_list)>0:
+                    t = threading.Thread( target=data_processing_pipeline_cpuvisor,
+                            args=(  frame_list, self.global_input_index, self.lock, self.pipeline_input_type,
+                                    img_base_path, file_with_list_of_paths,
+                                    settings.CONFIG_PROTO_PATH, settings.PREPROC_CHUNK_SIZE) )
+                    t.start()
+                    self.threads_map[ self.global_input_index ] = t
+                    self.global_input_index = list_end
 
 
         home_location = settings.SITE_PREFIX + '/'
@@ -672,10 +727,15 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
-        if not self.cpuvisor_srv_enabled:
-            message = 'Only the caffe engine pipeline is currently supported. The clearing cannot be started.'
+        if ('engine' not in request.POST) or (request.POST['engine'] not in ENGINES_WITH_PIPELINE):
+            message = 'There is no data pipeline defined for the selected engine. A pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+
+        # get engine config
+        (self.DATASET_IM_BASE_PATH, self.DATASET_IM_PATHS,
+        self.NEGATIVE_IM_PATHS, self.NEGATIVE_IM_BASE_PATH,
+        self.DATASET_FEATS_FILE, self.NEG_FEATS_FILE) = self.get_engine_config( request.POST['engine'] )
 
         clear_backend_type = request.POST['input_type']
         feats_file = self.DATASET_FEATS_FILE
