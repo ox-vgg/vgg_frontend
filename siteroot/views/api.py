@@ -113,6 +113,48 @@ class APIFunctions:
 
 
     @method_decorator(require_GET)
+    def save_as_text(self, request):
+        """
+            Saves a specified query as a list of items in plain text
+            Only GET requests are allowed.
+            Arguments:
+               request: request object specifying the id of the query to be saved
+            Returns:
+               Redirects to a text file in the static area of the site
+               HTTP 400 if the query id is missing or something else goes wrong.
+        """
+        query_id = request.GET.get('qsid', None)
+
+        if query_id==None:
+           return HttpResponseBadRequest("Query ID not specified")
+
+        try:
+
+            # get query definition dict from query_ses_id
+            query = self.visor_controller.query_key_cache.get_query_details(query_id)
+
+            # get query result
+            query_data = self.visor_controller.get_query_result(query, request.session.session_key, query_ses_id=query_id)
+
+            # create file using query_id
+            rlist = query_data.rlist
+            with open( os.path.join(os.path.dirname(__file__), '../static/lists/%s.txt' % query_id), 'w' ) as fout:
+                for ritem in rlist:
+                    fout.write(ritem['path'] + '\n')
+
+            # respond with a redirect
+            home_location = settings.SITE_PREFIX + '/'
+            if 'HTTP_X_FORWARDED_HOST' in request.META:
+                home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+
+            return redirect(home_location + ('static/lists/%s.txt' % query_id))
+
+        except Exception as e:
+
+            return HttpResponseBadRequest(str(e))
+
+
+    @method_decorator(require_GET)
     def save_uber_classifier(self, request):
         """
             Saves a specified query as an Uber Classifier
