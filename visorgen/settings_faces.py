@@ -212,7 +212,7 @@ RETENGINE = {
     'rf_rank_type' : 'full',
     'rf_rank_topn' : 2000,
     'rf_train_type' : 'regular',
-
+    'feat_detector_type': 'fast'
 }
 
 # Settings for image search tool

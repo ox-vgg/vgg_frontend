@@ -76,6 +76,9 @@ class BaseQuery(object):
             if not 'extra_params' in image:
                 image['extra_params'] = {}
 
+            # use the detector selected in the options
+            image['extra_params']['detector'] = self.opts.feat_detector_type
+
             # move anno to outside of extra_params dict, as it is always required
             # when computing features (and also convert it to an integer)
             if 'anno' in image['extra_params']:
