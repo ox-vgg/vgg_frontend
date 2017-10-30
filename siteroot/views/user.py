@@ -794,7 +794,7 @@ class UserPages:
         # add roi to URL, if available
         imgurl = imloc
         if roi:
-            imgurl = imgurl + ',roi:' + roi
+            #imgurl = imgurl + ',roi:' + roi  # Disable. Now the ROI is drawn with javascript.
             roi = roi.split('_')
 
         # set up rendering context and render the page
