@@ -28,9 +28,13 @@
             <!-- ROI selection -->
             <script type="text/javascript" src="static/scripts/lib/jcrop/jquery.Jcrop.min.js"></script>
             <script language="javascript">
-            // the following (and closing tag) is needed for ampersand to work with javascript
-            //<![CDATA[
-            jQuery(function(){ jQuery('#detailimg').Jcrop({ onChange: recCoords, onSelect: recCoords}); });
+            var jcrop_api_detailimg = null;
+            var jcrop_api_canvas = null;
+            if (jcrop_api_detailimg == null) {
+                $('#detailimg').Jcrop({ onChange: recCoords, onSelect: recCoords}, function () {
+                      jcrop_api_detailimg = this;
+                });
+            }
             {% if ROI %}
                 selXMin = {{ROI.0}}; selYMin = {{ROI.1}};
             {% else %}
@@ -39,7 +43,6 @@
             imWidth = {{IMAGE_WIDTH}};
             imHeight = {{IMAGE_HEIGHT}};
             function recCoords(c){ selXMin = c.x; selYMin = c.y; selXMax = c.x2; selYMax = c.y2; selWidth = c.w; selHeight = c.h; }
-            // ]]>
             </script>
         {% endif %}
 
@@ -49,8 +52,15 @@
                         <table>
                                 <tr align="center">
                                          <td valign="bottom" align="center">
-                                                <img id="detailimg" src="datasets/{{IMAGE_URL}}" alt="" />
-                                         </td>
+                                               <input id="show_roi" type="checkbox" onchange="toggleCheckbox(this)">
+                                               <label for="show_roi">Show detection</label>
+                                               <div id="div_detailimg" >
+                                                    <img id="detailimg" src="datasets/{{IMAGE_URL}}" alt="">
+                                               </div>
+                                                <div id="div_canvas"  style="display:none;">
+                                                    <canvas id="canvas"></canvas>
+                                               </div>
+                                           </td>
                                 </tr>
                                 {% if ROI_ENGINE %}
                                     <tr align="center">
@@ -98,9 +108,8 @@
             <a class="back_to_results" href="{{BACKPAGE}}?qsid={{QUERY_ID}}&amp;page={{PAGE}}">&lt;- Back to results</a>
         </p>
     </div>
-    <canvas id="snap_canvas" width="480" height="270" style="visibility:hidden;"></canvas>
-    <!-- dynamically load in styles associated specifically with this page -->
 
+    <!-- dynamically load in styles associated specifically with this page -->
     <script type="text/javascript">
     $(function() {
         $('head').append('<link href="static/styles/details.css" rel="stylesheet" type="text/css" />');
@@ -117,4 +126,41 @@
     <script type="text/javascript" src="static/scripts/results-linkify.js"></script>
     <script type="text/javascript" src="static/scripts/ajax_setup.js"></script>
     <script type="text/javascript" src="static/scripts/roi-search.js"></script>
+    <script type="text/javascript">
+    function toggleCheckbox() {
+      canvas=document.getElementById("canvas");
+      context=canvas.getContext("2d");
+      img=document.getElementById("detailimg");
+      divCanvas=document.getElementById("div_canvas");
+      divImg=document.getElementById("div_detailimg");
+      if (divCanvas.style.display === "none") {
+            divImg.style.display = "none";
+            divCanvas.style.display = "block";
+            canvas.height = {{IMAGE_HEIGHT}};
+            canvas.width = {{IMAGE_WIDTH}};
+            context.drawImage(img, 0, 0, {{IMAGE_WIDTH}}, {{IMAGE_HEIGHT}});
+            context.beginPath();
+            context.rect({{ROI.0}},{{ROI.1}},{{ROI.2}}-{{ROI.0}},{{ROI.5}}-{{ROI.1}});
+            context.lineWidth=4;
+            context.strokeStyle = "yellow";
+            context.stroke();
+            if (jcrop_api_canvas == null) {
+                $('#canvas').Jcrop({ onChange: recCoords, onSelect: recCoords}, function () {
+                      jcrop_api_canvas = this;
+                });
+            }
+            else {
+                jcrop_api_canvas.enable();
+            }
+            jcrop_api_detailimg.release();
+    } else {
+        canvas.height = 0;
+        canvas.width = 0;
+        divCanvas.style.display = "none";
+        divImg.style.display = "block";
+        jcrop_api_canvas.release();
+        jcrop_api_detailimg.enable();
+    }
+   };
+   </script>
 </html>

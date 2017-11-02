@@ -625,6 +625,7 @@ class UserPages:
             redirect_to = settings.SITE_PREFIX
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
+        viewmode = request.GET.get('view', None)
         page = request.GET.get('page', None)
         if page:
             page = int(page)
@@ -653,7 +654,12 @@ class UserPages:
             home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         # setup target for 'Back to results' link
-        backpage = home_location + 'searchreslist'
+        if viewmode == 'grid':
+            backpage = home_location + 'searchreslist'
+        elif viewmode == 'rois':
+            backpage = home_location + 'searchresroislist'
+        else:
+            backpage = home_location + 'searchreslist'
 
         # prepare the details of every image in the list, for rendering the page
         if trainimgs:
@@ -788,7 +794,7 @@ class UserPages:
         # add roi to URL, if available
         imgurl = imloc
         if roi:
-            imgurl = imgurl + ',roi:' + roi
+            #imgurl = imgurl + ',roi:' + roi  # Disable. Now the ROI is drawn with javascript.
             roi = roi.split('_')
 
         # set up rendering context and render the page
