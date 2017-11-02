@@ -55,9 +55,9 @@ case "${1}" in
 
         # stop faces backend
 
-        GREP=$(ps -fe | grep ".*[f]aces-backend-service.*")
+        GREP=$(ps -fe | grep ".*[v]isorgen-faces-backend-service.*")
         if [ "$GREP" ]; then
-            SESSION=$(screen -ls | grep -o ".*.faces-backend-service")
+            SESSION=$(screen -ls | grep -o ".*.visorgen-faces-backend-service")
             if [ "$SESSION" ]; then
                 screen -X -S $SESSION quit
             fi

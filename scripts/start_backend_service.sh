@@ -23,8 +23,8 @@ case "${1}" in
     faces)
         ## Start the faces engine ##
 
-        # run cpuvisor services
-        screen -dm -S faces-backend-service bash -l -c 'cd /webapps/visorgen/; source ./bin/activate; cd /webapps/visorgen/face_search/backend; ./start_backend_service.sh'
+        # run faces backend
+        screen -dm -S visorgen-faces-backend-service bash -l -c 'cd /webapps/visorgen/; source ./bin/activate; cd /webapps/visorgen/face_search/backend; ./start_backend_service.sh'
 
         # run image downloader tool
         screen -dm -S visorgen-img_downloader bash  -l -c 'cd /webapps/visorgen/; source ./bin/activate; cd /webapps/visorgen/vgg_frontend/vgg_img_downloader; ./start_service.sh'
