@@ -758,6 +758,22 @@ class UserPages:
         else:
             backpage = home_location + 'searchreslist'
 
+        # get engines info, for including it in the page
+        available_engines = copy.deepcopy( self.visor_controller.opts.engines_dict )
+        for engine in available_engines:
+            if available_engines[engine]['url']=='/':
+                available_engines[engine]['url'] = home_location
+
+        # For now, we cannot trigger a search with the 'text' engine
+        # from the image details page
+        if 'text' in available_engines.keys():
+            del available_engines['text']
+
+        # if there is no more than one engine, there is no point on passing
+        # this info to the renderer
+        if len( available_engines.keys() )==1:
+            available_engines = None
+
         # get image name
         imagename = dsetresid.split(',')[0]
         imloc  = dsetname + '/' + imagename
@@ -804,6 +820,7 @@ class UserPages:
         'PAGE': page,
         'BACKPAGE': backpage,
         'ROI_ENGINE' : roi_engine,
+        'AVAILABLE_ENGINES' : available_engines,
         'IMAGE_NAME' : imagename,
         'IMAGE_URL': imgurl,
         'IMAGE_LOCATION' : imloc,

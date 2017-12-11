@@ -8,6 +8,7 @@
         PAGE - page of results to display
         BACKPAGE - Page to go back to
         ROI_ENGINE - currently selected engine
+        AVAILABLE_ENGINES - engines info
         IMAGE_NAME - image name
         IMAGE_URL - full URL of the image
         IMAGE_LOCATION - image location
@@ -67,9 +68,17 @@
                                             <td valign="bottom" align="center">
                                                     <input id="imageroi_dsetname" type ="hidden" value="{{DATASET_NAME}}"/>
                                                     <input id="imageroi_query_box_submit" type="button" value="Search" />
+                                                    {% if AVAILABLE_ENGINES %}
+                                                        <select id="imageroi_engine">
+                                                            {% for key,value in AVAILABLE_ENGINES.items %}
+                                                                <option value="{{key}}" {% if key == ROI_ENGINE %}selected="selected"{% endif %}>{{value.full_name}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    {% else %}
+                                                    <input id="imageroi_engine" type ="hidden" value="{{ROI_ENGINE}}"/>
+                                                    {% endif %}
                                                     <input id="imageroi_imagename" type ="hidden" value="{{IMAGE_NAME}}"/>
                                                     <input id="imageroi_dsetresid" type ="hidden" value="{{DSET_RES_ID}}"/>
-                                                    <input id="imageroi_engine" type ="hidden" value="{{ROI_ENGINE}}"/>
                                             </td>
                                     </tr>
                                 {% endif %}
