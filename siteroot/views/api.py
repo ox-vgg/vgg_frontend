@@ -405,7 +405,7 @@ class APIFunctions:
             print 'Starting backend service...'
             self.backend_thread = threading.Thread(target=start_backend_service, args=( engine,) )
             self.backend_thread.start()
-            message = 'Starting backend service. This process migth take a couple of minutes.'
+            message = 'Starting backend service. This process might take a couple of minutes.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
         elif self.backend_thread.is_alive():
@@ -437,7 +437,7 @@ class APIFunctions:
             print 'Stopping backend service...'
             self.backend_thread = threading.Thread(target=stop_backend_service, args=( engine,) )
             self.backend_thread.start()
-            message = 'Stopping backend service. This process migth take a few seconds.'
+            message = 'Stopping backend service. This process might take a few seconds.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
         elif self.backend_thread.is_alive():
