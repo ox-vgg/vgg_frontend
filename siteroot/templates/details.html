@@ -53,8 +53,10 @@
                         <table>
                                 <tr align="center">
                                          <td valign="bottom" align="center">
+                                               {% if ROI %}
                                                <input id="show_roi" type="checkbox" onchange="toggleCheckbox(this)">
                                                <label for="show_roi">Show detection</label>
+                                               {% endif %}
                                                <div id="div_detailimg" >
                                                     <img id="detailimg" src="datasets/{{IMAGE_URL}}" alt="">
                                                </div>
@@ -135,6 +137,7 @@
     <script type="text/javascript" src="static/scripts/results-linkify.js"></script>
     <script type="text/javascript" src="static/scripts/ajax_setup.js"></script>
     <script type="text/javascript" src="static/scripts/roi-search.js"></script>
+    {% if ROI %}
     <script type="text/javascript">
     function toggleCheckbox() {
       canvas=document.getElementById("canvas");
@@ -149,7 +152,11 @@
             canvas.width = {{IMAGE_WIDTH}};
             context.drawImage(img, 0, 0, {{IMAGE_WIDTH}}, {{IMAGE_HEIGHT}});
             context.beginPath();
-            context.rect({{ROI.0}},{{ROI.1}},{{ROI.2}}-{{ROI.0}},{{ROI.5}}-{{ROI.1}});
+            context.moveTo({{ROI.0}},{{ROI.1}});
+            context.lineTo({{ROI.2}},{{ROI.3}});
+            context.lineTo({{ROI.4}},{{ROI.5}});
+            context.lineTo({{ROI.6}},{{ROI.7}});
+            context.lineTo({{ROI.8}},{{ROI.9}});
             context.lineWidth=4;
             context.strokeStyle = "yellow";
             context.stroke();
@@ -172,4 +179,5 @@
     }
    };
    </script>
+   {% endif %}
 </html>

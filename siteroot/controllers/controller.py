@@ -224,7 +224,12 @@ class VisorController:
 
                 if just_ROI:
 
-                    img = img.crop((int(values[0]), int(values[1]), int(values[4]), int(values[5])))
+                    img = img.crop((
+                                int(  min(values[0],values[2],values[4],values[6],values[8]) ),
+                                int(  min(values[1],values[3],values[5],values[7],values[9]) ),
+                                int(  max(values[0],values[2],values[4],values[6],values[8]) ),
+                                int(  max(values[1],values[3],values[5],values[7],values[9]) )
+                                ))
                     imW, imH = img.size
                     maxW = 100
                     maxH = 100
