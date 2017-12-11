@@ -229,9 +229,6 @@ IMSEARCHTOOLS = {
 # Base folder of scripts to manage the service
 MANAGE_SERVICE_SCRIPTS_BASE_PATH = '/webapps/visorgen/vgg_frontend/scripts'
 
-# Path to the config.prototxt file of the object-search engine.
-CONFIG_PROTO_PATH = os.path.join(BASE_DIR,'../vgg_classifier/config.prototxt')
-
 # Size of the chunks in which list of frames will be divided.
 PREPROC_CHUNK_SIZE = 500
 

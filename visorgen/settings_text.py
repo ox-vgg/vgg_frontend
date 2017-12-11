@@ -233,13 +233,3 @@ IMSEARCHTOOLS = {
 
 # Base folder of scripts to manage the service
 MANAGE_SERVICE_SCRIPTS_BASE_PATH = '/webapps/visorgen/vgg_frontend/scripts'
-
-# Path to the config.prototxt file of the object-search engine.
-CONFIG_PROTO_PATH = os.path.join(BASE_DIR,'../vgg_classifier/config.prototxt')
-
-# Size of the chunks in which list of frames will be divided.
-PREPROC_CHUNK_SIZE = 500
-
-# Limit to the number of threads to be started when ingesting new data.
-# Each thread will be assigned one chunk of data.
-FRAMES_THREAD_NUM_LIMIT = 6
