@@ -500,11 +500,24 @@ class UserPages:
         trainingtime = float(trainingtime)
         rankingtime = float(rankingtime)
 
+        # get current engine from session
+        engine = request.session['engine']
+
         # get query result
         query_data = self.visor_controller.get_query_result(query, request.session.session_key, query_ses_id=query_id)
 
+        # For the instances engine, if the query included a ROI, remove results without ROI
+        query_string = retengine.query_translations.query_to_querystr(query)
+        if 'roi' in query_string and engine=='instances':
+            rlist = []
+            for ritem in query_data.rlist:
+                if 'roi' in ritem:
+                    rlist.append(ritem)
+        else:
+            rlist = query_data.rlist
+
         # if there is no query_data, ...
-        if not query_data.rlist:
+        if not rlist:
             # ... if the query is done, then it must have returned no results. Show message and redirect to home page
             if query_data.status.state == retengine.models.opts.states.results_ready:
                 message = 'This query did not return any results. Please enter a diferent query in the home page.'
@@ -516,11 +529,6 @@ class UserPages:
                     q = q.replace('#', '%23') #  html-encode curated search character
                     qtype = retengine.models.opts.qtypes.text # every curated query is a text query
                 return redirect( settings.SITE_PREFIX + '/searchproc_qstr?q=%s&qtype=%s&dsetname=%s&engine=%s' % ( q, qtype, dsetname, engine) )
-
-        # get current engine from session
-        engine = request.session['engine']
-
-        rlist = query_data.rlist
 
         # Get the image count here, but watch out for modifications afterwards.
         # When the image_count == None some information won't be displayed in the results page.
