@@ -277,7 +277,10 @@ class UserPages:
                 return redirect( settings.SITE_PREFIX + '/searchres?qsid='+ query_ses_info['query_ses_id'])
             else:
                 skip_query_progress = self.visor_controller.opts.engines_dict[engine].get('skip_query_progress', False)
-                if skip_query_progress:
+                if skip_query_progress or (
+                    engine=='instances' and  query_type=='dsetimage' # For this specific case, we can also skip the query progress
+                                                                     # because results are instant
+                    ):
                     # NOTE: The code in this if-statement replaces the process implemented in 'searchproc.html', which
                     # performs the query with a visual feedback and downloading images. In cases when the backend does
                     # not need images as input, and the results are obtained almost instantly, you can use this code to
@@ -285,11 +288,12 @@ class UserPages:
                     # to let the code in 'searchproc.html' run.
                     try:
                         search_finished = False
-                        seconds_between_requests = 0.5 # Adjust to your needs, but if results are almost instant this should be ok.
-                        host = 'http://' + request.META['HTTP_HOST']
+                        seconds_between_requests = 0.25 # Adjust to your needs, but if results are almost instant this should be ok.
+                        if 'HTTP_X_FORWARDED_HOST' not in request.META:
+                            home_location = 'http://' + request.META['HTTP_HOST'] + home_location
                         while not search_finished:
                             # Start query or get query status
-                            r = requests.get( host + home_location + 'execquery?qsid=' + query_ses_info['query_ses_id'])
+                            r = requests.get( home_location + 'execquery?qsid=' + query_ses_info['query_ses_id'])
                             response = r.json()
                             # Check response
                             if response['state'] >= retengine.models.opts.states.fatal_error_or_socket_timeout:
