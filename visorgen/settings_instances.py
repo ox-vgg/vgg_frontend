@@ -158,8 +158,8 @@ VISOR = {
     'title': 'My Visual Search Engine',
     'disable_autocomplete': True,
     'results_per_page' : 50,
-    #'select_roi' : True, # enable only when the selected backend is able to receive ROIs as input
-    #'enable_viewsel' : True, # enable only when the selected backend is able to return ROIs
+    'select_roi' : True,  # enable only when the selected backend is able to receive ROIs as input
+    'enable_viewsel' : True,  # enable only when the selected backend is able to return ROIs
     'datasets' : {  # Dictionary of datasets. Only one dataset at a time is supported.
                     # The key-name of the dataset is used to locate subfolders within
                     # the different PATHS used by the controller.
@@ -168,50 +168,6 @@ VISOR = {
                  },
     'engines' : {
 
-                # Describe each deployed engine. The key-name of each
-                # engine should not contain spaces or special characters
-
-                # Sample backend engine for object/category search.
-                # It support images and text as input.
-                'cpuvisor-srv': { 'full_name' : 'Category',
-                                  'url': '/',
-                                  'backend_port' : 35215,
-                                  'imgtools_postproc_module' : 'visor_category',
-                                  'imgtools_style': 'photo',
-                                  'pattern_fname_classifier' : '${query_strid}.bin',
-                                  'can_save_uber_classifier': True,
-                                  'skip_query_progress': False,
-                                  'engine_for_similar_search': 'cpuvisor-srv'
-                                },
-
-                # Sample backend engine for text search.
-                # It does not support images as input, just text.
-                'text' :        { 'full_name' : 'Text',
-                                  'url': '/',
-                                  'backend_port' : 55366,
-                                  'imgtools_postproc_module' : None, # Set to None to indicate the backend
-                                                                     # does not support images as input
-                                  'imgtools_style': None,
-                                  'pattern_fname_classifier' : 'dummy', # Not used in this engine,
-                                                                        # but cannot be 'None'
-                                  'can_save_uber_classifier': False,
-                                  'skip_query_progress': True,  # Set to True because this engine can return
-                                                                # results almost instantly
-                                  'engine_for_similar_search': None # Set to 'cpuvisor-srv' only if that engine is included in the settings
-                                },
-
-                # Sample backend engine for face search.
-                # It support images and text as input.
-                'faces' :   { 'full_name' : 'People',
-                              'url': '/',
-                              'backend_port' : 55302,
-                              'imgtools_postproc_module' : 'visor_faces',
-                              'imgtools_style': 'face',
-                              'pattern_fname_classifier' : '${query_strid}.mat',
-                              'can_save_uber_classifier': True,
-                              'skip_query_progress': False,
-                              'engine_for_similar_search': 'faces'
-                            },
                 # Sample backend engine for instance search.
                 # It support images and text as input.
                 'instances':{ 'full_name' : 'Instances',
@@ -256,7 +212,6 @@ RETENGINE = {
     'rf_rank_type' : 'full',
     'rf_rank_topn' : 2000,
     'rf_train_type' : 'regular',
-
 }
 
 # Settings for image search tool
@@ -272,21 +227,3 @@ IMSEARCHTOOLS = {
 
 # Base folder of scripts to manage the service
 MANAGE_SERVICE_SCRIPTS_BASE_PATH = '/webapps/visorgen/vgg_frontend/scripts'
-
-# Path to the config.prototxt file of the object-search engine.
-CONFIG_PROTO_PATH = os.path.join(BASE_DIR,'../vgg_classifier/config.prototxt')
-
-# Size of the chunks in which list of frames will be divided.
-PREPROC_CHUNK_SIZE = 500
-
-# Limit to the number of threads to be started when ingesting new data.
-# Each thread will be assigned one chunk of data.
-FRAMES_THREAD_NUM_LIMIT = 6
-
-# Particular constants for data ingestion via the faces engine
-FACES_DATASET_IM_BASE_PATH = os.path.join( PATHS['datasets'], VISOR['datasets'].keys()[0] )
-FACES_DATASET_IM_PATHS = '/webapps/visorgen/backend_data/faces/dsetpaths.txt'
-FACES_NEGATIVE_IM_PATHS = '/webapps/visorgen/backend_data/faces/negpaths.txt'
-FACES_NEGATIVE_IM_BASE_PATH = '/webapps/visorgen/backend_data/faces/neg_images'
-FACES_DATASET_FEATS_FILE = '/webapps/visorgen/backend_data/faces/features/features_combined_%s.mat' % VISOR['datasets'].keys()[0] 
-FACES_NEG_FEATS_FILE = '/webapps/visorgen/backend_data/faces/%s_negatives.mat' % VISOR['datasets'].keys()[0]
