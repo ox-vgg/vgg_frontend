@@ -4,24 +4,14 @@ import sys
 from subprocess import Popen, PIPE
 import threading
 
-# Get the path to this file
+# Add the path to the vgg_face_search feature computation
 file_dir = os.path.dirname(os.path.realpath(__file__))
-
-# Set MATLAB absolute path
-MATLAB_RUN_TIME = '/usr/local/matlab/MCR_R2015b/v90'
-
-# Set some relative paths
-COMPUTE_POSITIVE_FEATURES_MATLAB_SCRIPT = os.path.join(file_dir,'../../face_search/pipeline/compute_pos_features/for_redistribution_files_only/run_compute_pos_features.sh')
-COMPUTE_NEGATIVE_FEATURES_MATLAB_SCRIPT = os.path.join(file_dir,'../../face_search/pipeline/compute_neg_features/for_redistribution_files_only/run_compute_neg_features.sh')
-FACE_TOOLS_PATH = os.path.join(file_dir,'../../face_search/tools')
-
-# Enable/disable use of GPU for feature computation
-USE_GPU_FLAG = '0' # Set to zero to disable
+COMPUTE_POSITIVE_FEATURES_SCRIPT = os.path.join(file_dir,'../../vgg_face_search/pipeline/compute_pos_features.py')
 
 # Data pipeline definition
-def data_processing_pipeline_faces(inputListOfFrames, lock, feat_type, DATASET_IM_PATHS, DATASET_IM_BASE_PATH, OUTPUT_MAT_FILE):
+def data_processing_pipeline_faces(inputListOfFrames, lock, DATASET_IM_PATHS, DATASET_IM_BASE_PATH, OUTPUT_FILE):
 
-    PQ_ENCODER_CONTAINER = os.path.join(os.path.dirname(OUTPUT_MAT_FILE), 'pq_norm_pad.mat')
+
 
     # Create/clear the log file
     LOG_OUTPUT_FILE = '/tmp/prepro_input.log'
@@ -37,7 +27,7 @@ def data_processing_pipeline_faces(inputListOfFrames, lock, feat_type, DATASET_I
         else:
             raise Exception('Cannot process an empty list of frames !')
 
-        # Frame path should be with respect to the DATASET_IM_PATHS folder
+        # Frames path should be with respect to the DATASET_IM_PATHS folder
         frameList = inputListOfFrames
         frameList.sort()
 
@@ -80,31 +70,12 @@ def data_processing_pipeline_faces(inputListOfFrames, lock, feat_type, DATASET_I
 
         ### UNLOCK
 
-        if feat_type == 'negative':
-
-            pOpenCmd = [
-                COMPUTE_NEGATIVE_FEATURES_MATLAB_SCRIPT,
-                MATLAB_RUN_TIME,
-                NEW_FILES_LIST, # use just the new files, the script will append them to the previous
+        pOpenCmd = [ 'python',
+                COMPUTE_POSITIVE_FEATURES_SCRIPT,
                 DATASET_IM_BASE_PATH,
-                FACE_TOOLS_PATH,
-                USE_GPU_FLAG,
-                OUTPUT_MAT_FILE
-            ]
-
-        else:
-
-            pOpenCmd = [
-                COMPUTE_POSITIVE_FEATURES_MATLAB_SCRIPT,
-                MATLAB_RUN_TIME,
                 NEW_FILES_LIST, # use just the new files, the script will append them to the previous
-                DATASET_IM_BASE_PATH,
-                FACE_TOOLS_PATH,
-                OUTPUT_MAT_FILE,
-                PQ_ENCODER_CONTAINER,
-                USE_GPU_FLAG
+                '-o', OUTPUT_FILE
             ]
-
         fout.write( ('FACE-PIPELINE [%s]: %s\n') % ( time.strftime("%H:%M:%S"), str(pOpenCmd)) )
         p = Popen(pOpenCmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate()
@@ -128,7 +99,6 @@ def data_processing_pipeline_faces(inputListOfFrames, lock, feat_type, DATASET_I
 #inputListOfFrames = [ 'pic00001.jpg', 'pic00002.jpg', 'pic00005.jpg', 'pic00007.jpg']
 #DATASET_IM_PATHS = '/webapps/visorgen/face_search/test/images.txt'
 #DATASET_IM_BASE_PATH = '/webapps/visorgen/face_search/test/images'
-#OUTPUT_MAT_FILE = '/webapps/visorgen/face_search/test/features/out.mat'
-#feat_type = 'positive'
-#data_processing_pipeline_faces(inputListOfFrames, lock, feat_type,m DATASET_IM_PATHS, DATASET_IM_BASE_PATH, OUTPUT_MAT_FILE)
+#OUTPUT_FILE = '/webapps/visorgen/face_search/test/features/database.pkl'
+#data_processing_pipeline_faces(inputListOfFrames, lock, DATASET_IM_PATHS, DATASET_IM_BASE_PATH, OUTPUT_FILE)
 
