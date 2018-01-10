@@ -6,15 +6,11 @@ $(function() {
     anno = div_ele.attr('anno')
 
     if (anno == '+1' || anno == '1') {
-        div_ele.attr('anno', '-1')
+        div_ele.attr('anno', '0')
             div_ele.removeClass('roi_box_positive');
-            div_ele.addClass('roi_box_negative');
-    } else if (anno == '-1') {
-            div_ele.attr('anno', '0');
-            div_ele.removeClass('roi_box_negative');
             div_ele.addClass('roi_box_skip');
     } else {
-            div_ele.attr('anno', '+1')
+            div_ele.attr('anno', '1');
             div_ele.removeClass('roi_box_skip');
             div_ele.addClass('roi_box_positive');
     }

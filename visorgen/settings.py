@@ -212,6 +212,19 @@ VISOR = {
                               'skip_query_progress': False,
                               'engine_for_similar_search': 'faces'
                             },
+
+                # Sample backend engine for instance search.
+                # It support images and text as input.
+                'instances':{ 'full_name' : 'Instances',
+                              'url': '/',
+                              'backend_port' : 45288,
+                              'imgtools_postproc_module' : 'visor_category',
+                              'imgtools_style': 'photo',
+                              'pattern_fname_classifier' : '${query_strid}.bin',
+                              'can_save_uber_classifier': False,
+                              'skip_query_progress': False,
+                              'engine_for_similar_search': 'instances'
+                            },
                     },
 }
 
@@ -264,17 +277,18 @@ MANAGE_SERVICE_SCRIPTS_BASE_PATH = '/webapps/visorgen/vgg_frontend/scripts'
 # Path to the config.prototxt file of the object-search engine.
 CONFIG_PROTO_PATH = os.path.join(BASE_DIR,'../vgg_classifier/config.prototxt')
 
+# Setup settings for face-search engine
+FACE_ENGINE_SETTINGS = {}
+FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'] = os.path.join( PATHS['datasets'], VISOR['datasets'].keys()[0] )
+FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'] = '/webapps/visorgen/backend_data/faces/dsetpaths.txt'
+FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_PATHS'] = None
+FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_BASE_PATH'] = None
+FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'] = '/webapps/visorgen/backend_data/faces/database.pkl'
+FACE_ENGINE_SETTINGS['FACES_NEG_FEATS_FILE'] = None
+
 # Size of the chunks in which list of frames will be divided.
 PREPROC_CHUNK_SIZE = 500
 
 # Limit to the number of threads to be started when ingesting new data.
 # Each thread will be assigned one chunk of data.
 FRAMES_THREAD_NUM_LIMIT = 6
-
-# Particular constants for data ingestion via the faces engine
-FACES_DATASET_IM_BASE_PATH = os.path.join( PATHS['datasets'], VISOR['datasets'].keys()[0] )
-FACES_DATASET_IM_PATHS = '/webapps/visorgen/backend_data/faces/dsetpaths.txt'
-FACES_NEGATIVE_IM_PATHS = '/webapps/visorgen/backend_data/faces/negpaths.txt'
-FACES_NEGATIVE_IM_BASE_PATH = '/webapps/visorgen/backend_data/faces/neg_images'
-FACES_DATASET_FEATS_FILE = '/webapps/visorgen/backend_data/faces/features/features_combined_%s.mat' % VISOR['datasets'].keys()[0] 
-FACES_NEG_FEATS_FILE = '/webapps/visorgen/backend_data/faces/%s_negatives.mat' % VISOR['datasets'].keys()[0]

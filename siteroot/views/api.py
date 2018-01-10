@@ -20,7 +20,7 @@ if os.path.exists(PATH_TO_CAFFE_BACKEND_PROTO):
     sys.path.append(PATH_TO_CAFFE_BACKEND_PROTO) # add this to be able to load cpuvisor_config_pb2
     import cpuvisor_config_pb2
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../pipeline')) # add this to be able to load object_pipeline_single_thread
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../pipeline')) # add this to be able to load all data ingestion pipelines
 from data_pipeline_cpuvisor import data_processing_pipeline_cpuvisor
 from data_pipeline_faces import data_processing_pipeline_faces
 
@@ -104,12 +104,12 @@ class APIFunctions:
         if engine == 'faces':
 
             # Get the info from the settings
-            return  ( settings.FACES_DATASET_IM_BASE_PATH,
-                settings.FACES_DATASET_IM_PATHS,
-                settings.FACES_NEGATIVE_IM_PATHS,
-                settings.FACES_NEGATIVE_IM_BASE_PATH,
-                settings.FACES_DATASET_FEATS_FILE,
-                settings.FACES_NEG_FEATS_FILE)
+            return  ( settings.FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'],
+                settings.FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'],
+                settings.FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_PATHS'],
+                settings.FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_BASE_PATH'],
+                settings.FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'],
+                settings.FACE_ENGINE_SETTINGS['FACES_NEG_FEATS_FILE'])
 
 
     @method_decorator(require_GET)
@@ -663,13 +663,11 @@ class APIFunctions:
             ## Start pipeline
             self.global_input_index = 0
             t = threading.Thread( target=data_processing_pipeline_faces,
-                            args=(  self.pipeline_frame_list, self.lock, self.pipeline_input_type,
+                            args=(  self.pipeline_frame_list, self.lock,
                                     file_with_list_of_paths, img_base_path, dataset_features_out_file ) )
             t.start()
             self.threads_map[ self.global_input_index ] = t
             self.global_input_index = len(self.pipeline_frame_list)
-
-            #return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': settings.SITE_PREFIX + '/admintools', 'MESSAGE': 'Up to here 2 ' + self.pipeline_engine } )
 
         return redirect('pipeline_status')
 

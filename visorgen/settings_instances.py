@@ -168,17 +168,17 @@ VISOR = {
                  },
     'engines' : {
 
-                # Sample backend engine for face search.
+                # Sample backend engine for instance search.
                 # It support images and text as input.
-                'faces' :   { 'full_name' : 'People',
+                'instances':{ 'full_name' : 'Instances',
                               'url': '/',
-                              'backend_port' : 55302,
-                              'imgtools_postproc_module' : 'visor_faces',
-                              'imgtools_style': 'face',
-                              'pattern_fname_classifier' : '${query_strid}.mat',
-                              'can_save_uber_classifier': True,
+                              'backend_port' : 45288,
+                              'imgtools_postproc_module' : 'visor_category',
+                              'imgtools_style': 'photo',
+                              'pattern_fname_classifier' : '${query_strid}.bin',
+                              'can_save_uber_classifier': False,
                               'skip_query_progress': False,
-                              'engine_for_similar_search': 'faces'
+                              'engine_for_similar_search': 'instances'
                             },
                     },
 }
@@ -212,7 +212,6 @@ RETENGINE = {
     'rf_rank_type' : 'full',
     'rf_rank_topn' : 2000,
     'rf_train_type' : 'regular',
-    'feat_detector_type': 'fast'
 }
 
 # Settings for image search tool
@@ -228,19 +227,3 @@ IMSEARCHTOOLS = {
 
 # Base folder of scripts to manage the service
 MANAGE_SERVICE_SCRIPTS_BASE_PATH = '/webapps/visorgen/vgg_frontend/scripts'
-
-# Size of the chunks in which list of frames will be divided.
-PREPROC_CHUNK_SIZE = 500
-
-# Limit to the number of threads to be started when ingesting new data.
-# Each thread will be assigned one chunk of data.
-FRAMES_THREAD_NUM_LIMIT = 6
-
-# Setup settings for face-search engine
-FACE_ENGINE_SETTINGS = {}
-FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'] = os.path.join( PATHS['datasets'], VISOR['datasets'].keys()[0] )
-FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'] = '/webapps/visorgen/backend_data/faces/dsetpaths.txt'
-FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_PATHS'] = None
-FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_BASE_PATH'] = None
-FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'] = '/webapps/visorgen/backend_data/faces/database.pkl'
-FACE_ENGINE_SETTINGS['FACES_NEG_FEATS_FILE'] = None
