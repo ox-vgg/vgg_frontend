@@ -4,16 +4,17 @@ $(function() {
     div_ele = $(this).parent()
 
     anno = div_ele.attr('anno')
-
     if (anno == '+1' || anno == '1') {
         div_ele.attr('anno', '0')
-            div_ele.removeClass('roi_box_positive');
-            div_ele.addClass('roi_box_skip');
-    } else {
-            div_ele.attr('anno', '1');
-            div_ele.removeClass('roi_box_skip');
-            div_ele.addClass('roi_box_positive');
+        div_ele.removeClass('roi_box_positive');
+        div_ele.addClass('roi_box_skip');
     }
+    if (anno == 0) {
+        div_ele.attr('anno', '1');
+        div_ele.removeClass('roi_box_skip');
+        div_ele.addClass('roi_box_positive');
+    }
+
     });
 
     $('#selection_search').bind('click', function() {
@@ -27,14 +28,12 @@ $(function() {
             engine = $(this).attr('engine');
         });
         query = query.substr(0,query.length-1);
-        sendRequest(engine, query,dsetname,qtype);
+        startQuery(engine, query, dsetname, qtype);
     });
-
 
 });
 
-
-function sendRequest(engine, query, dsetname, prev_qtype) {
+function startQuery(engine, query, dsetname, prev_qtype) {
 
     if (prev_qtype == 'text' || prev_qtype == 'refine') {
         qtype = 'refine';
