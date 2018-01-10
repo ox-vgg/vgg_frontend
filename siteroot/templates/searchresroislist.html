@@ -116,8 +116,10 @@
                 &middot;
                 <a id="save_uber_classif" onclick="save_uber()" href="#">Save as Uber Classifier</a>
             {% endif %}
+            {% if IMAGE_COUNT > 0 %}
                 &middot;
-                <a href="{{HOME_LOCATION}}save_as_text?qsid={{QUERY_ID}}" target="_blank">Save as Text List</a>
+                <a class="results_nav_centre_link" href="{{HOME_LOCATION}}selectpageimages?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;view=rois">Save page as Text List</a>
+            {% endif %}
             <br/>
         </div>
         <div class="results_nav_ack">

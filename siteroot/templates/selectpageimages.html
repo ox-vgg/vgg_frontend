@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <!-- Training images page. Loaded as subpage into searchres.html -->
+    {% comment %}
+     The following variables are defined:
+         QUERY_ID - query_id
+         DATASET_NAME - dataset name
+         QUERY_TYPE - query type (text or image)
+         IMAGE_LIST - list of images
+         PAGE - page of results to display
+         BACKPAGE - Page to go back to
+         SA_THUMBS - location of thumbnail images
+         ENGINE - currently selected engine
+    {% endcomment %}
+    {% load siteroot_extras %}
+     <div id="results_header_borderless">
+        <h1>Save results as Text List</h1>
+        <p>Only the images surrounded in green are considered selected. Click on each image to select/unselect it or use the buttons below to select/unselect all images. <strong>Only the paths to images surrounded in green will be saved</strong>.</p>
+        {% if IMAGE_LIST %}<input id="set_all_images_green" type="button" value="Select all images"></input>{% endif %}
+        {% if IMAGE_LIST %}<input id="set_all_images_yellow" type="button" value="Unselect all images"></input><br/><br/>{% endif %}
+        <a class="back_to_results" href="{{BACKPAGE}}?qsid={{QUERY_ID}}&amp;page={{PAGE}}">&lt;- Back to results</a>
+    </div>
+    <div id="content">
+        <div id="results_list" class="grid_list">
+           {% for RITEM in IMAGE_LIST %}
+            <div class="results_box">
+                <div class="result_outer_wrapper">
+                    <div class="result_inner_wrapper">
+                        <div id="{{forloop.counter0}}" class="roi_box {{RITEM.anno_style}}" qsid="{{QUERY_ID}}" anno="{{RITEM.anno}}" page="{{PAGE}}">
+                            <a anno="{{RITEM.anno}}" class="result_image_link" >
+                                <img src="{{SA_THUMBS}}{{RITEM.path}}" />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+    <div>
+    <div id="results_header_borderless">
+        {% if IMAGE_LIST %}<input id="selection_save" type="button" value="Save selection"></input>{% endif %}
+        <br><br>
+        <a class="back_to_results" href="{{BACKPAGE}}?qsid={{QUERY_ID}}&amp;page={{PAGE}}">&lt;- Back to results</a>
+    </div>
+    <!-- dynamically load in styles associated specifically with this page -->
+    <script type="text/javascript">
+    $(function() {
+        $('head').append('<link href="static/styles/trainingimages.css" rel="stylesheet" type="text/css" />');
+    });
+    </script>
+    <!-- utility script for dynamically reflowing grid so that each row fills the width of the current page -->
+    <script type="text/javascript" src="static/scripts/results-refine.js"></script>
+    <script type="text/javascript" src="static/scripts/results-select.js"></script>
+    <script type="text/javascript" src="static/scripts/results-grid-resize.js"></script>
+    <!-- JQuery plugin for transitions between subpages. Requires JQuery UI Transitions module.
+    Also handles update of history queue when browsing between subpages -->
+    <script type="text/javascript" src="static/scripts/plugins/jquery.divtransition.js"></script>
+    <!-- script which modifies standard links into AJAX subpage links. Should be updated if new pages are added -->
+    <script type="text/javascript" src="static/scripts/results-linkify.js"></script>
+</html>

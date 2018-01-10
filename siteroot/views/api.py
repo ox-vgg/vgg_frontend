@@ -113,7 +113,7 @@ class APIFunctions:
 
 
     @method_decorator(require_GET)
-    def save_as_text(self, request):
+    def savelistastext(self, request):
         """
             Saves a specified query as a list of items in plain text
             Only GET requests are allowed.
@@ -125,8 +125,19 @@ class APIFunctions:
         """
         query_id = request.GET.get('qsid', None)
 
-        if query_id==None:
+        if query_id==None or len(query_id)==0:
            return HttpResponseBadRequest("Query ID not specified")
+
+        page = request.GET.get('page', None)
+        if page == None  or len(page)==0:
+           return HttpResponseBadRequest("Page not specified")
+        page = int(page)
+
+        idx_list = request.GET.get('list', None)
+        if idx_list == None or len(idx_list)==0 :
+            return HttpResponseBadRequest("List not specified")
+        idx_list = idx_list.split(';')
+        idx_list = idx_list[:-1]
 
         try:
 
@@ -135,19 +146,25 @@ class APIFunctions:
 
             # get query result
             query_data = self.visor_controller.get_query_result(query, request.session.session_key, query_ses_id=query_id)
-
-            # create file using query_id
             rlist = query_data.rlist
-            with open( os.path.join(os.path.dirname(__file__), '../static/lists/%s.txt' % query_id), 'w' ) as fout:
-                for ritem in rlist:
-                    fout.write(ritem['path'] + '\n')
+
+            # extract page
+            (rlist, page_count) = self.visor_controller._page_manager.get_page(rlist, page)
+            if page > page_count:
+                return HttpResponseBadRequest("Incorrect page specified")
+
+            # create file using query_id and only the items with indexes included in the idx_list
+            with open( os.path.join(os.path.dirname(__file__), '../static/lists/%s_%s.txt' % (query_id, page)), 'w' ) as fout:
+                for idx in idx_list:
+                    int_idx = int(idx)
+                    fout.write(rlist[int_idx]['path'] + '\n')
 
             # respond with a redirect
             home_location = settings.SITE_PREFIX + '/'
             if 'HTTP_X_FORWARDED_HOST' in request.META:
                 home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
-            return redirect(home_location + ('static/lists/%s.txt' % query_id))
+            return redirect(home_location + ('static/lists/%s_%s.txt' % (query_id, page)))
 
         except Exception as e:
 

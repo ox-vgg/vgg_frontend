@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^trainingimages$', user_pages.get_trainingimages, name='trainingimages'),
     url(r'^nobackend', user_pages.nobackend, name='nobackend'),
     url(r'^accounts/profile/$', user_pages.user_profile, name='user_profile'),
+    url(r'^selectpageimages$', user_pages.selectpageimages, name='selectpageimages'),
 
     # Admin pages (requires user authentication)
 
@@ -39,7 +40,7 @@ urlpatterns = [
     url(r'^uploadimage$', api_functions.upload_image, name='uploadimage'),
     url(r'^(?P<img_set>thumbnails|datasets|postrainimgs|curatedtrainimgs|uploadedimgs|regions)/(.*/)', api_functions.get_image, name='getimage'),
     url(r'^text_suggestions', api_functions.get_text_suggestions, name='text_suggestions'),
-    url(r'^save_as_text$', api_functions.save_as_text, name='save_as_text'),
+    url(r'^savelistastext$', api_functions.savelistastext, name='savelistastext'),
 
     # API urls (restricted - requires user authentication)
 

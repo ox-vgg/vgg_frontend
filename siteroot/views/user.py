@@ -726,6 +726,105 @@ class UserPages:
 
 
     @method_decorator(require_GET)
+    def selectpageimages(self, request, template='selectpageimages.html'):
+        """
+            Renders an image result page and allows the user to select each image.
+            Only GET requests are allowed.
+            Arguments:
+               request: request object containing details of the user session, the query id and the page to be rendered
+            Returns:
+               HTTP 200 if the page is successfully rendered. HTTP 404 if the query id is missing.
+        """
+        query_id = request.GET.get('qsid', None)
+        if query_id==None:
+           raise Http404("Query ID not specified. Query does not exist")
+
+        # get query definition dict from query_ses_id
+        query = self.visor_controller.query_key_cache.get_query_details(query_id)
+
+        # check that the query is still valid (not expired)
+        if query==None:
+            message = 'This query has expired. Please enter your query again in the home page.'
+            redirect_to = settings.SITE_PREFIX
+            return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+
+        viewmode = request.GET.get('view', None)
+        page = request.GET.get('page', 1)
+        if page:
+            page = int(page)
+
+        # get current engine from session
+        engine = request.session['engine']
+
+        # get query result
+        query_data = self.visor_controller.get_query_result(query, request.session.session_key, query_ses_id=query_id)
+
+        # For the instances engine, if the query included a ROI, remove results without ROI
+        query_string = retengine.query_translations.query_to_querystr(query)
+        if 'roi' in query_string and engine=='instances':
+            rlist = []
+            for ritem in query_data.rlist:
+                if 'roi' in ritem:
+                    rlist.append(ritem)
+        else:
+            rlist = query_data.rlist
+
+        # if there is no query_data, ...
+        if not rlist:
+            # ... if the query is done, then it must have returned no results. Show message and redirect to home page
+            if query_data.status.state == retengine.models.opts.states.results_ready:
+                message = 'This query did not return any results. Please enter a diferent query in the home page.'
+                redirect_to = settings.SITE_PREFIX
+                return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+            else:  # ... otherwise redirect to searchproc_qstr to continue the query
+                (q, qtype, dsetname, engine) = retengine.query_translations.query_to_querystr_tuple(query)
+                if q[0] == '#':
+                    q = q.replace('#', '%23') #  html-encode curated search character
+                    qtype = retengine.models.opts.qtypes.text # every curated query is a text query
+                return redirect( settings.SITE_PREFIX + '/searchproc_qstr?q=%s&qtype=%s&dsetname=%s&engine=%s' % ( q, qtype, dsetname, engine) )
+
+        # extract pages
+        (rlist, page_count) = self.visor_controller._page_manager.get_page(rlist, page)
+        pages = self.visor_controller._page_manager.construct_page_array(page, page_count)
+        if page > page_count:
+            page = page_count
+
+        # set paths of image thumbnails
+        sa_thumbs = 'thumbnails/%s/' % query['dsetname']
+
+        # compute home location taking into account any possible redirections
+        home_location = settings.SITE_PREFIX + '/'
+        if 'HTTP_X_FORWARDED_HOST' in request.META:
+            home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+
+        # setup target for 'Back to results' link
+        if viewmode == 'grid':
+            backpage = home_location + 'searchreslist'
+        elif viewmode == 'rois':
+            backpage = home_location + 'searchresroislist'
+        else:
+            backpage = home_location + 'searchreslist'
+
+        # prepare the details of every item in the list, for rendering the page
+        for ritem in rlist:
+            ritem['anno'] = '1'
+            ritem['anno_style'] = 'roi_box_positive'
+
+        # set up rendering context and render the page
+        context = {
+        'QUERY_ID': query_id,
+        'DATASET_NAME': query['dsetname'],
+        'QUERY_TYPE': query['qtype'],
+        'IMAGE_LIST' : rlist,
+        'PAGE': page,
+        'BACKPAGE': backpage,
+        'SA_THUMBS' : sa_thumbs,
+        'ENGINE': request.session['engine']
+        }
+        return render_to_response(template, context)
+
+
+    @method_decorator(require_GET)
     def viewdetails(self, request, template='details.html'):
         """
             Renders the detailed page of a specific image.
