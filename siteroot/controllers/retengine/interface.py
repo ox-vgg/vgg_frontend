@@ -14,7 +14,8 @@ class VisorInterface(object):
     """
 
     def __init__(self, engine_class,
-                 ranklistpath, compdata_paths,
+                 predefined_ranklistpath, ranklistpath,
+                 compdata_paths,
                  process_pool,
                  proc_opts=models.param_sets.VisorEngineProcessOpts(),
                  opts=models.param_sets.VisorOptions()):
@@ -24,6 +25,7 @@ class VisorInterface(object):
             Arguments:
                 engine_class: instance of VisorEngine, used
                              for all interactions with the backend.
+                predefined_ranklistpath: Path to folder with predefined ranking lists
                 ranklistpath: Path to folder with ranking lists
                 compdata_paths: instance of CompDataPaths, used
                                 to handle all folder/files in the computational data
@@ -49,7 +51,9 @@ class VisorInterface(object):
         self.result_cache = {}
         for engine in self.opts.engines_dict:
             engine_ranklistpath = os.path.join(ranklistpath, engine)
-            self.result_cache[engine] =  managers.ResultCache(engine_ranklistpath,
+            engine_predefined_ranklistpath = os.path.join(predefined_ranklistpath, engine)
+            self.result_cache[engine] =  managers.ResultCache(engine_predefined_ranklistpath,
+                                                 engine_ranklistpath,
                                                  self.process_pool,
                                                  enabled_caches=enabled_result_caches,
                                                  enabled_excl_caches=enabled_result_excl_caches)
