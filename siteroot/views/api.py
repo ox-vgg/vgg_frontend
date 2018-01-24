@@ -11,7 +11,6 @@ import os
 import sys
 import json
 import glob
-from subprocess import Popen, PIPE
 import threading
 from google.protobuf import text_format
 
@@ -20,32 +19,11 @@ if os.path.exists(PATH_TO_CAFFE_BACKEND_PROTO):
     sys.path.append(PATH_TO_CAFFE_BACKEND_PROTO) # add this to be able to load cpuvisor_config_pb2
     import cpuvisor_config_pb2
 
+import retengine.engine.backend_client
+import api_globals
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../pipeline')) # add this to be able to load all data ingestion pipelines
 from data_pipeline_cpuvisor import data_processing_pipeline_cpuvisor
 from data_pipeline_faces import data_processing_pipeline_faces
-
-import retengine.engine.backend_client
-
-# Set a minimum set of valid image extensions. This is to check whether a file is an image or not
-# WITHOUT actually reading the file, because checking all files is too expensive when large amounts
-# of images are ingested.
-VALID_IMG_EXTENSIONS = { ".jpeg", ".jpg", ".png", ".bmp", ".dib", ".tiff", ".tif", ".ppm" }
-VALID_IMG_EXTENSIONS_STR = 'jpeg, jpg, png, bmp, dib, tiff, tif, ppm'
-ENGINES_WITH_PIPELINE = [ 'cpuvisor-srv' , 'faces']
-
-def start_backend_service(engine):
-    """ Body of the thread that runs the script to start the backend service """
-    pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'start_backend_service.sh'), engine ]
-    p = Popen(pOpenCmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    p.poll()
-
-
-def stop_backend_service(engine):
-    """ Body of the thread that runs the script to stop the backend service """
-    pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'stop_backend_service.sh'), engine ]
-    p = Popen(pOpenCmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    p.poll()
-
 
 class APIFunctions:
     """
@@ -62,6 +40,7 @@ class APIFunctions:
         """
         self.visor_controller =  visor_controller
         available_engines =  self.visor_controller.opts.engines_dict
+        self.ENGINES_WITH_PIPELINE = [ 'cpuvisor-srv' , 'faces']
 
         # init paths to negative/positive dirs
         self.DATASET_IM_BASE_PATH = None
@@ -75,13 +54,16 @@ class APIFunctions:
         self.threads_map = {}
         self.lock = threading.Lock()
         self.pipeline_frame_list = []
+        self.total_input_files = None
         self.global_input_index = -1
         self.pipeline_input_type = ''
         self.pipeline_engine = ''
 
-        # init vars to support backen service management
+        # init vars to support backend service management
         self.backend_thread = None
 
+        # init vars to support pipeline input acquisition
+        self.pipeline_input_thread = None
 
     def get_engine_config(self, engine):
 
@@ -420,7 +402,7 @@ class APIFunctions:
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
         if not self.backend_thread:
             print 'Starting backend service...'
-            self.backend_thread = threading.Thread(target=start_backend_service, args=( engine,) )
+            self.backend_thread = threading.Thread(target=api_globals.start_backend_service, args=( engine,) )
             self.backend_thread.start()
             message = 'Starting backend service. This process might take a couple of minutes.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
@@ -452,7 +434,7 @@ class APIFunctions:
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
         if not self.backend_thread:
             print 'Stopping backend service...'
-            self.backend_thread = threading.Thread(target=stop_backend_service, args=( engine,) )
+            self.backend_thread = threading.Thread(target=api_globals.stop_backend_service, args=( engine,) )
             self.backend_thread.start()
             message = 'Stopping backend service. This process might take a few seconds.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
@@ -505,10 +487,54 @@ class APIFunctions:
 
 
     @method_decorator(login_required)
-    @method_decorator(require_POST)
-    def pipeline_start(self, request):
+    @method_decorator(require_GET)
+    def pipeline_input_status(self, request):
         """
-            API function that start the execution of the pipeline and then redirects to the status page.
+            Renders the user page that checks/displays the status of the pipeline input checking
+            Arguments:
+               request: request object containing details of the user session, etc.
+        """
+
+        if self.pipeline_input_thread != None:
+
+            if self.pipeline_input_thread.is_alive():
+                home_location = settings.SITE_PREFIX + '/'
+                if 'HTTP_X_FORWARDED_HOST' in request.META:
+                    home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+                context = {
+                'NUM_FILES_CHECKED': len(self.pipeline_frame_list),
+                'TOTAL_NUM_FILES': self.total_input_files,
+                'HOME_LOCATION': home_location,
+                }
+                return render(request, 'pipeline_input_status.html', context)
+            else:
+                if len(self.pipeline_frame_list) == 0:
+                    message = 'No valid input images were found. The pipeline cannot be started.'
+                    redirect_to = settings.SITE_PREFIX + '/admintools'
+                    return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+                else:
+                    self.pipeline_input_thread = None
+                    return redirect('pipeline_start')
+
+        else:
+
+            if len(self.threads_map) != 0:
+                for thread_index in self.threads_map:
+                    if self.threads_map[thread_index].is_alive():
+                        message = 'There is a pipeline running !. Please wait.'
+                        redirect_to = settings.SITE_PREFIX + '/pipeline_input_status'
+                        return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+            else:
+                message = 'There is no pipeline running !'
+                redirect_to = settings.SITE_PREFIX + '/admintools'
+                return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+
+
+    @method_decorator(login_required)
+    @method_decorator(require_POST)
+    def pipeline_input(self, request):
+        """
+            API function that gathers the input data for the pipeline and then redirects to the pipeline start page.
             Arguments:
                request: request object containing details of the user session, etc.
         """
@@ -518,7 +544,7 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
-        if ('engine' not in request.POST) or (request.POST['engine'] not in ENGINES_WITH_PIPELINE):
+        if ('engine' not in request.POST) or (request.POST['engine'] not in self.ENGINES_WITH_PIPELINE):
             message = 'There is no data pipeline defined for the selected engine. A pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
@@ -542,7 +568,7 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
-        if len(self.threads_map) != 0:
+        if len(self.threads_map) != 0 or self.pipeline_input_thread != None:
             for thread_index in self.threads_map:
                 if self.threads_map[thread_index].is_alive():
                     message = 'There is a pipeline running !. Please wait.'
@@ -552,6 +578,8 @@ class APIFunctions:
         self.threads_map.clear()
         self.pipeline_frame_list = []
         self.global_input_index = -1
+        self.pipeline_engine = request.POST['engine']
+        self.total_input_files = None
 
         fileSystemEncodingNotUTF8 = sys.getfilesystemencoding().lower() != 'utf-8'
         if fileSystemEncodingNotUTF8:
@@ -559,73 +587,56 @@ class APIFunctions:
 
         if len(request.FILES) == 0:
             # if no input file or list is provided with the names of the files to ingest, so ingest the whole directory by default
-            for root, dirnames, filenames in os.walk( img_base_path ):
-                for i in range(len(filenames)):
-                    filename = filenames[i]
-                    if filename.startswith('.'):
-                        continue # skip hidden files, specially in macOS
-                    root_str = root
-                    if fileSystemEncodingNotUTF8:
-                        root_str = str(root) # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
-                    full_path = os.path.join( root_str , filename)
-                    if os.path.isfile(full_path):
-                        relative_path = os.path.join( root_str.replace( img_base_path ,'') , filename)
-                        if relative_path.startswith("/"):
-                            relative_path = relative_path[1:]
-                        # check file is an image...
-                        filename, file_extension = os.path.splitext(relative_path)
-                        if file_extension in VALID_IMG_EXTENSIONS:
-                            # if it is, add it to the list
-                            if fileSystemEncodingNotUTF8:
-                                relative_path = relative_path.decode('utf-8') # if needed, convert from utf-8. It will be converted back by the pipeline.
-                            self.pipeline_frame_list.append(relative_path)
-                        else:
-                            # otherwise, abort !. This might seem drastic, but it is better to
-                            # keep the image folder clean !.
-                            self.pipeline_frame_list = []
-                            message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (relative_path, str(VALID_IMG_EXTENSIONS_STR))
-                            redirect_to = settings.SITE_PREFIX + '/admintools'
-                            return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+            self.pipeline_input_thread = threading.Thread( target=api_globals.gather_pipeline_input,
+                            args=( 'dir', img_base_path, None, fileSystemEncodingNotUTF8, self.pipeline_frame_list),  )
+            # start the thread and redirect to the status-checking page
+            self.pipeline_input_thread.start()
+            return redirect('pipeline_input_status')
 
         if len(request.FILES) != 0:
             file_list = request.FILES.getlist('input_file')
             if len(file_list)==1 and file_list[0].name.endswith('.txt'):
-                # let's leave open the possibility of uploading a list of images in a text file
-                for frame_path in file_list[0]:
-                    frame_path = frame_path.strip()
-                    if frame_path.startswith('/'):
-                        frame_path = frame_path[1:]
-                    if not fileSystemEncodingNotUTF8:           # if NOT utf-8, convert before operations with the 'os' module,
-                        frame_path = frame_path.decode('utf-8') # otherwise convert it later
-                    full_frame_path = os.path.join( img_base_path, frame_path )
-                    filename, file_extension = os.path.splitext(full_frame_path)
-                    # Check frames exists
-                    if not os.path.exists(full_frame_path):
-                         # abort the process in this case
-                        message = ('Input file %s does not exist or cannot be read') % full_frame_path
-                        redirect_to = settings.SITE_PREFIX + '/admintools'
-                        return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
-                    # Check file is an image ...
-                    elif file_extension in VALID_IMG_EXTENSIONS:
-                        # if it is, add it to the list
-                        if fileSystemEncodingNotUTF8:
-                            frame_path = frame_path.decode('utf-8') # if needed, convert from utf-8
-                        self.pipeline_frame_list.append(frame_path)
-                    else:
-                        # otherwise, abort !. This might seem drastic, but it is better to
-                        # keep the image folder clean !.
-                        self.pipeline_frame_list = []
-                        message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (frame_path, str(VALID_IMG_EXTENSIONS_STR))
-                        redirect_to = settings.SITE_PREFIX + '/admintools'
-                        return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+                # This allows the possibility of uploading a list of images in a text file
+                # However, the whole file must be read before leaving this thread and starting the other.
+                uploaded_file = file_list[0].read()
+                file_list = uploaded_file.split('\n')
+                if len(file_list[-1])==0:
+                    file_list = file_list[:-1]
+                self.total_input_files = len(file_list)
+                # check the number of images to ingest. If less than MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES don't start a separate thread
+                if self.total_input_files < settings.MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES:
+                    api_globals.gather_pipeline_input( 'file', img_base_path, file_list, fileSystemEncodingNotUTF8, self.pipeline_frame_list)
+                    return redirect('pipeline_start')
+                else:
+                    self.pipeline_input_thread = threading.Thread( target=api_globals.gather_pipeline_input,
+                            args=( 'file', img_base_path, file_list, fileSystemEncodingNotUTF8, self.pipeline_frame_list) )
+                    # start the thread and redirect to the status-checking page
+                    self.pipeline_input_thread.start()
+                    return redirect('pipeline_input_status')
             else:
-                # First check all files for a valid image extension ...
+                # When uploading files in this way, we cannot use a separate thread, since the files are loaded in memory as stream
+                # objects by Django and if we start another thread the streams are closed, so the separate thread cannot save them.
+                # Therefore, the files must be checked and saved in this thread. Apply all limitatios here and in the corresponding HTML.
+                if len(file_list)> settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES:
+                        # abort !. File ingestion migth take too long a lead to a time-out or a crash
+                        message = ('You can only upload a maximum of %d files in total. Please select less files and try again. ') % settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES
+                        redirect_to = settings.SITE_PREFIX + '/admintools'
+                        return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+                total_size = 0
                 for afile in file_list:
                     filename, file_extension = os.path.splitext(afile.name)
-                    if file_extension not in VALID_IMG_EXTENSIONS:
+                    total_size = total_size + afile.size
+                    # check the accumulated total size of the files to be ingested
+                    if total_size > settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES:
+                        # abort !. File ingestion migth take too long a lead to a time-out or a crash
+                        message = ('You can only upload a maximum of %d MB in total. Please select less files and try again. ') % (settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES/1048576)
+                        redirect_to = settings.SITE_PREFIX + '/admintools'
+                        return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+                    # check all files for a valid image extension
+                    if file_extension not in settings.VALID_IMG_EXTENSIONS:
                         # otherwise, abort !. This might seem drastic, but it is better to
                         # keep the image folder clean !.
-                        message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (afile.name, str(VALID_IMG_EXTENSIONS_STR))
+                        message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (afile.name, str(settings.VALID_IMG_EXTENSIONS_STR))
                         redirect_to = settings.SITE_PREFIX + '/admintools'
                         return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
                 # ... and if we made it until here, try to upload all selected files and copy them to the images folder
@@ -638,14 +649,51 @@ class APIFunctions:
                         for chunk in afile.chunks():
                             destination.write(chunk)
                     self.pipeline_frame_list.append(afile.name)
+                # ... and if we made it until here, we are ready to start the pipeline
+                return redirect('pipeline_start')
+
+
+    @method_decorator(login_required)
+    @method_decorator(require_GET)
+    def pipeline_start(self, request):
+        """
+            API function that start the execution of the pipeline and then redirects to the status page.
+            Arguments:
+               request: request object containing details of the user session, etc.
+        """
+
+        if len(self.threads_map) != 0 or self.pipeline_input_thread != None:
+            for thread_index in self.threads_map:
+                if self.threads_map[thread_index].is_alive():
+                    message = 'There is a pipeline running !. Please wait.'
+                    redirect_to = settings.SITE_PREFIX + '/pipeline_status'
+                    return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
         if len(self.pipeline_frame_list) == 0:
+            self.total_input_files = None
             message = 'No valid input images were found. The pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
+        # get engine config
+        (self.DATASET_IM_BASE_PATH, self.DATASET_IM_PATHS,
+        self.NEGATIVE_IM_PATHS, self.NEGATIVE_IM_BASE_PATH,
+        self.DATASET_FEATS_FILE, self.NEG_FEATS_FILE) = self.get_engine_config( self.pipeline_engine )
+
+        img_base_path = self.DATASET_IM_BASE_PATH
+        file_with_list_of_paths =  self.DATASET_IM_PATHS
+        dataset_features_out_file = self.DATASET_FEATS_FILE
+        if self.pipeline_input_type == 'negative':
+            img_base_path = self.NEGATIVE_IM_BASE_PATH
+            file_with_list_of_paths =  self.NEGATIVE_IM_PATHS
+            dataset_features_out_file = self.NEG_FEATS_FILE
+
+        if not img_base_path or not file_with_list_of_paths:
+            message = 'The image source paths for the current engine are not properly set. The pipeline cannot be started.'
+            redirect_to = settings.SITE_PREFIX + '/admintools'
+            return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+
         # finally ready to start ..
-        self.pipeline_engine = request.POST['engine']
         if self.pipeline_engine == 'cpuvisor-srv':
 
             # Calculate number of threads. Set to a maximum of settings.FRAMES_THREAD_NUM_LIMIT and a minimum of 1.
@@ -784,7 +832,7 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
-        if ('engine' not in request.POST) or (request.POST['engine'] not in ENGINES_WITH_PIPELINE):
+        if ('engine' not in request.POST) or (request.POST['engine'] not in self.ENGINES_WITH_PIPELINE):
             message = 'There is no data pipeline defined for the selected engine. A pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
