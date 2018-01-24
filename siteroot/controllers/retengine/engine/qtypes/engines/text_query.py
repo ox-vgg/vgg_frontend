@@ -132,6 +132,11 @@ class TextQuery(object):
                               }
 
                 improc_timeout = self.opts.imsearchtools_opts['improc_timeout']
+
+                # if the engine settings specify a timeout, use that one instead
+                if 'improc_timeout' in self.compdata_cache.engines_dict[ self.query['engine']  ]:
+                    improc_timeout = self.compdata_cache.engines_dict[ self.query['engine'] ]['improc_timeout' ]
+
                 # when using the 'accurate' detector, double the image processing timeout
                 if  self.opts.feat_detector_type == models.opts.feat_detector_type.accurate:
                     improc_timeout = 2* improc_timeout
