@@ -15,8 +15,10 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+######
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
+######
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # If you need to generate a new key, see https://pypi.python.org/pypi/django-generate-secret-key/1.0.2
@@ -28,12 +30,25 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+######
+# Application settings
+######
+
 # Site prefix, if changed:
 #   - keep it with the same pattern '/<prefix>'
 #   - needs to be replaced too in your web server proxy configuration file (if used).
 SITE_PREFIX = "/vgg_frontend"
 
+# Login URL
+LOGIN_URL = SITE_PREFIX + '/login/'
+
+# Allow bulk update of >1K objects
+# https://docs.djangoproject.com/en/1.10/ref/settings/#data-upload-max-number-fields
+DATA_UPLOAD_MAX_NUMBER_FIELDS = None
+
+######
 # Application definition
+######
 
 INSTALLED_APPS = [
     'siteroot',
@@ -76,8 +91,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'visorgen.wsgi.application'
 
 
+######
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
+######
 
 DATABASES = {
     'default': {
@@ -87,13 +104,10 @@ DATABASES = {
 }
 
 
-# Allow bulk update of >1K objects
-# https://docs.djangoproject.com/en/1.10/ref/settings/#data-upload-max-number-fields
-DATA_UPLOAD_MAX_NUMBER_FIELDS = None
-
-
+######
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
+######
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -111,8 +125,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+######
 # Cache settings
 # https://docs.djangoproject.com/en/1.10/topics/cache/
+######
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
@@ -121,14 +138,19 @@ CACHES = {
 }
 
 
+######
 # Session settings
+######
+
 SESSION_ENGINE = "django.contrib.sessions.backends.file"
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 
+######
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
+######
 
 LANGUAGE_CODE = 'en-uk'
 
@@ -141,19 +163,20 @@ USE_L10N = True
 USE_TZ = True
 
 
+######
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
+######
 
 STATIC_URL = SITE_PREFIX + '/static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, "siteroot/static/")
 
 
-# Login URL
-LOGIN_URL = SITE_PREFIX + '/login/'
-
-
+######
 # Visor web site options
+######
+
 VISOR = {
     'title': 'My Visual Search Engine',
     'disable_autocomplete': True,
@@ -275,8 +298,44 @@ IMSEARCHTOOLS = {
 # Base folder of scripts to manage the service
 MANAGE_SERVICE_SCRIPTS_BASE_PATH = '/webapps/visorgen/vgg_frontend/scripts'
 
+
+######
+# General Data Ingestion settings
+######
+
+# Size of the chunks in which list of frames will be divided.
+PREPROC_CHUNK_SIZE = 500
+
+# Limit to the number of threads to be started when ingesting new data.
+# Each thread will be assigned one chunk of data.
+FRAMES_THREAD_NUM_LIMIT = 6
+
+# Maximum number of individual files to be uploaded
+MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES = 500
+
+# Maximum amount of bytes when uploading individual files
+MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES = MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES * 1024 * 1024
+
+# Minimum number of ingested individual files begore starting pipeline_input thread
+MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES = 1000000
+
+# Set a minimum set of valid image extensions. This is to check whether a file is an image or not
+# WITHOUT actually reading the file, because checking all files is too expensive when large amounts
+# of images are ingested.
+VALID_IMG_EXTENSIONS = { ".jpeg", ".jpg", ".png", ".bmp", ".dib", ".tiff", ".tif", ".ppm" }
+VALID_IMG_EXTENSIONS_STR = ', '.join(VALID_IMG_EXTENSIONS) # '.txt' is added later in the admin view
+
+######
+# Category search engine - Data Ingestion settings
+######
+
 # Path to the config.prototxt file of the object-search engine.
 CONFIG_PROTO_PATH = os.path.join(BASE_DIR,'../vgg_classifier/config.prototxt')
+
+
+######
+# Face search engine - Data Ingestion settings
+######
 
 # Setup settings for face-search engine
 FACE_ENGINE_SETTINGS = {}
@@ -287,9 +346,3 @@ FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_BASE_PATH'] = None
 FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'] = '/webapps/visorgen/backend_data/faces/database.pkl'
 FACE_ENGINE_SETTINGS['FACES_NEG_FEATS_FILE'] = None
 
-# Size of the chunks in which list of frames will be divided.
-PREPROC_CHUNK_SIZE = 500
-
-# Limit to the number of threads to be started when ingesting new data.
-# Each thread will be assigned one chunk of data.
-FRAMES_THREAD_NUM_LIMIT = 6

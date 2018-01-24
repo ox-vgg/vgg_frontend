@@ -96,7 +96,10 @@ class AdminPages:
         'ENGINES_NAMES': engines_names,
         'CPUVISOR_ENABLED': 'cpuvisor-srv' in engines_names.keys(),
         'FACES_ENABLED': 'faces' in engines_names.keys(),
-        'CACHED_TEXT_QUERIES' : cached_text_queries
+        'CACHED_TEXT_QUERIES' : cached_text_queries,
+        'MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES': settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES,
+        'MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES': settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES,
+        'VALID_IMG_EXTENSIONS_STR': settings.VALID_IMG_EXTENSIONS_STR + ", .txt" # accept .txt too for providing list of files
         }
         return render(request, "admintools.html", context)
 
