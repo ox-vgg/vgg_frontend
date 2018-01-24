@@ -25,7 +25,6 @@ urlpatterns = [
 
     url(r'^admin/', admin.site.urls),
     url(r'^admintools', admin_pages.admintools, name='admintools'),
-    url(r'^pipeline_status$', api_functions.pipeline_status, name='pipeline_status'),
 
     # Authentication
 
@@ -47,7 +46,10 @@ urlpatterns = [
     url(r'^set_config$', api_functions.set_config, name='set_config'),
     url(r'^delete_text_query$', api_functions.delete_text_query, name='delete_text_query'),
     url(r'^clear_cache$', api_functions.clear_cache, name='clear_cache'),
+    url(r'^pipeline_input$', api_functions.pipeline_input, name='pipeline_input'),
+    url(r'^pipeline_input_status$', api_functions.pipeline_input_status, name='pipeline_input_status'),
     url(r'^pipeline_start$', api_functions.pipeline_start, name='pipeline_start'),
+    url(r'^pipeline_status$', api_functions.pipeline_status, name='pipeline_status'),
     url(r'^start_backend$', api_functions.start_backend, name='start_backend'),
     url(r'^stop_backend$', api_functions.stop_backend, name='stop_backend'),
     url(r'^clear_backend$', api_functions.clear_backend, name='clear_backend'),

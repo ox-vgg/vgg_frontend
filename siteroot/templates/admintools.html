@@ -175,7 +175,7 @@ The following variables are defined:
 
             <!-- "Manage Service" tab -->
             <div id="Manage" class="tabcontent" style="display: none;">
-                <form id="config_pipeline" action="start_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
+                <form id="backend_start" action="start_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
                         <h2>Start Backend Service</h2>
                         Search Engine:
@@ -187,7 +187,7 @@ The following variables are defined:
                         <input type="submit" value="Start"/>
                     </div>
                 </form>
-                <form id="config_pipeline" action="stop_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
+                <form id="backend_end" action="stop_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
                         <h2>Stop Backend Service</h2>
                         Search Engine:
@@ -205,7 +205,7 @@ The following variables are defined:
             {% if CPUVISOR_ENABLED %}
             <!-- "Manage Category Backend Data" tab -->
             <div id="ProcessCategory" class="tabcontent" style="display: none;">
-                <form id="config_pipeline"  action="pipeline_start" enctype="multipart/form-data" method="post">{% csrf_token %}
+                <form id="config_pipeline"  action="pipeline_input" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
                         <h2>Category search engine: DATA INGESTION</h2>
                         <div id="config-options-container">
@@ -230,7 +230,7 @@ The following variables are defined:
                     </div>
                 </form>
                 <br/>
-                <form id="config_pipeline" action="clear_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
+                <form id="clear_backend" action="clear_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
                         <h2>Category search engine: CLEAR BACKEND DATA</h2>
                         <div id="config-options-container">
@@ -253,7 +253,7 @@ The following variables are defined:
             {% if FACES_ENABLED %}
             <!-- "Manage Face Backend Data" tab -->
             <div id="ProcessFaces" class="tabcontent" style="display: none;">
-                <form id="config_pipeline"  action="pipeline_start" enctype="multipart/form-data" method="post">{% csrf_token %}
+                <form id="config_pipeline"  action="pipeline_input" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
                         <h2>Face search engine: DATA INGESTION</h2>
                         <div id="config-options-container">
