@@ -235,6 +235,7 @@ PATHS = {
     'postrainimgs' : '/webapps/visorgen/frontend_data/searchdata/postrainimgs',
     'uploadedimgs' : '/webapps/visorgen/frontend_data/searchdata/uploadedimgs',
     'rankinglists' : '/webapps/visorgen/frontend_data/searchdata/rankinglists',
+    'predefined_rankinglists' : '/webapps/visorgen/frontend_data/searchdata/predefined_rankinglists',
     'postrainanno' : '/webapps/visorgen/frontend_data/searchdata/postrainanno',
     'postrainfeats' : '/webapps/visorgen/frontend_data/searchdata/postrainfeats',
     'curatedtrainimgs' : '/webapps/visorgen/frontend_data/curatedtrainimgs',

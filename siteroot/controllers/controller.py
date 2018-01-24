@@ -49,6 +49,7 @@ class VisorController:
 
         # initialize interface class for all interactions
         self.interface = retengine.VisorInterface(engine_class,
+                                                  cfg_paths['predefined_rankinglists'],
                                                   cfg_paths['rankinglists'],
                                                   self.compdata_paths,
                                                   self.process_pool,
