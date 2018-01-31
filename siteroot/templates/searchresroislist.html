@@ -113,11 +113,15 @@
                 <br/><a class="results_nav_centre_link" href="{{HOME_LOCATION}}trainingimages?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;view=rois">View Training Images</a>
             {% endif %}
             {% if ENGINE_CAN_SAVE_UBER %}
+                {% if ENGINE_HAS_IMG_POSTPROC_MODULE %}
                 &middot;
+                {% endif %}
                 <a id="save_uber_classif" onclick="save_uber()" href="#">Save as Uber Classifier</a>
             {% endif %}
             {% if IMAGE_COUNT > 0 %}
+                {% if ENGINE_HAS_IMG_POSTPROC_MODULE or ENGINE_CAN_SAVE_UBER %}
                 &middot;
+                {% endif %}
                 <a class="results_nav_centre_link" href="{{HOME_LOCATION}}selectpageimages?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;view=rois">Save page as Text List</a>
             {% endif %}
             <br/>
