@@ -677,7 +677,7 @@ class UserPages:
         if trainimgs:
             for image in trainimgs:
                 image_path = image['image']
-                anno = image['anno']
+                anno = str(image['anno'])
                 if anno == '1' or anno == '+1':
                     anno_style = 'roi_box_positive'
                     anno = '1'
