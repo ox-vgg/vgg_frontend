@@ -12,10 +12,10 @@ import sys
 import json
 import glob
 import threading
-from google.protobuf import text_format
 
 PATH_TO_CAFFE_BACKEND_PROTO = os.path.join(settings.BASE_DIR, '../vgg_classifier/proto')
 if os.path.exists(PATH_TO_CAFFE_BACKEND_PROTO):
+    from google.protobuf import text_format
     sys.path.append(PATH_TO_CAFFE_BACKEND_PROTO) # add this to be able to load cpuvisor_config_pb2
     import cpuvisor_config_pb2
 
