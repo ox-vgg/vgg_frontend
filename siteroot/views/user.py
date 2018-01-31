@@ -564,7 +564,7 @@ class UserPages:
             if 'roi' in ritem:
                 thumbnailroi = ',roi:' + ritem['roi']
                 ritem['thumbnailroi'] = thumbnailroi
-            elif rois:
+            elif rois and self.visor_controller.opts.engines_dict[ engine ]['backend_port']:
                 # If the ROI was not specified, do a final attempt to retrieve it
                 # from the backend
                 query = self.visor_controller.query_key_cache.get_query_details(query_id)
@@ -896,7 +896,7 @@ class UserPages:
         imformat = im.format
 
         engine = request.session['engine']
-        if not roi:
+        if not roi and self.visor_controller.opts.engines_dict[ engine ]['backend_port']:
             # If the ROI was not specified, do a final attempt to retrieve it
             # from the backend
             query = self.visor_controller.query_key_cache.get_query_details(query_id)
