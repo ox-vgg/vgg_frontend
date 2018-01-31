@@ -15,8 +15,10 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+######
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
+######
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # If you need to generate a new key, see https://pypi.python.org/pypi/django-generate-secret-key/1.0.2
@@ -28,12 +30,25 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+######
+# Application settings
+######
+
 # Site prefix, if changed:
 #   - keep it with the same pattern '/<prefix>'
 #   - needs to be replaced too in your web server proxy configuration file (if used).
 SITE_PREFIX = "/vgg_frontend"
 
+# Login URL
+LOGIN_URL = SITE_PREFIX + '/login/'
+
+# Allow bulk update of >1K objects
+# https://docs.djangoproject.com/en/1.10/ref/settings/#data-upload-max-number-fields
+DATA_UPLOAD_MAX_NUMBER_FIELDS = None
+
+######
 # Application definition
+######
 
 INSTALLED_APPS = [
     'siteroot',
@@ -76,8 +91,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'visorgen.wsgi.application'
 
 
+######
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
+######
 
 DATABASES = {
     'default': {
@@ -87,13 +104,10 @@ DATABASES = {
 }
 
 
-# Allow bulk update of >1K objects
-# https://docs.djangoproject.com/en/1.10/ref/settings/#data-upload-max-number-fields
-DATA_UPLOAD_MAX_NUMBER_FIELDS = None
-
-
+######
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
+######
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -111,8 +125,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+######
 # Cache settings
 # https://docs.djangoproject.com/en/1.10/topics/cache/
+######
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
@@ -121,14 +138,19 @@ CACHES = {
 }
 
 
+######
 # Session settings
+######
+
 SESSION_ENGINE = "django.contrib.sessions.backends.file"
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 
+######
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
+######
 
 LANGUAGE_CODE = 'en-uk'
 
@@ -141,25 +163,27 @@ USE_L10N = True
 USE_TZ = True
 
 
+######
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
+######
 
 STATIC_URL = SITE_PREFIX + '/static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, "siteroot/static/")
 
 
-# Login URL
-LOGIN_URL = SITE_PREFIX + '/login/'
-
-
+######
 # Visor web site options
+######
+
 VISOR = {
     'title': 'My Visual Search Engine',
     'disable_autocomplete': True,
     'results_per_page' : 50,
-    'select_roi' : True,  # enable only when the selected backend is able to receive ROIs as input
-    'enable_viewsel' : True,  # enable only when the selected backend is able to return ROIs
+    'check_backends_reachable': True,
+    'select_roi' : True, # enable only when the selected backend is able to receive ROIs as input
+    'enable_viewsel' : True, # enable only when the selected backend is able to return ROIs
     'datasets' : {  # Dictionary of datasets. Only one dataset at a time is supported.
                     # The key-name of the dataset is used to locate subfolders within
                     # the different PATHS used by the controller.
@@ -178,7 +202,8 @@ VISOR = {
                               'pattern_fname_classifier' : '${query_strid}.bin',
                               'can_save_uber_classifier': False,
                               'skip_query_progress': False,
-                              'engine_for_similar_search': 'instances'
+                              'engine_for_similar_search': 'instances',
+                              'improc_timeout': 5
                             },
                     },
 }
@@ -190,6 +215,7 @@ PATHS = {
     'postrainimgs' : '/webapps/visorgen/frontend_data/searchdata/postrainimgs',
     'uploadedimgs' : '/webapps/visorgen/frontend_data/searchdata/uploadedimgs',
     'rankinglists' : '/webapps/visorgen/frontend_data/searchdata/rankinglists',
+    'predefined_rankinglists' : '/webapps/visorgen/frontend_data/searchdata/predefined_rankinglists',
     'postrainanno' : '/webapps/visorgen/frontend_data/searchdata/postrainanno',
     'postrainfeats' : '/webapps/visorgen/frontend_data/searchdata/postrainfeats',
     'curatedtrainimgs' : '/webapps/visorgen/frontend_data/curatedtrainimgs',

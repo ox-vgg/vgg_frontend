@@ -181,6 +181,7 @@ VISOR = {
     'title': 'My Visual Search Engine',
     'disable_autocomplete': True,
     'results_per_page' : 50,
+    'check_backends_reachable': True,
     #'select_roi' : True, # enable only when the selected backend is able to receive ROIs as input
     #'enable_viewsel' : True, # enable only when the selected backend is able to return ROIs
     'datasets' : {  # Dictionary of datasets. Only one dataset at a time is supported.
@@ -204,7 +205,8 @@ VISOR = {
                                   'pattern_fname_classifier' : '${query_strid}.bin',
                                   'can_save_uber_classifier': True,
                                   'skip_query_progress': False,
-                                  'engine_for_similar_search': 'cpuvisor-srv'
+                                  'engine_for_similar_search': 'cpuvisor-srv',
+                                  'improc_timeout': 10
                                 },
 
                 # Sample backend engine for text search.
@@ -246,7 +248,8 @@ VISOR = {
                               'pattern_fname_classifier' : '${query_strid}.bin',
                               'can_save_uber_classifier': False,
                               'skip_query_progress': False,
-                              'engine_for_similar_search': 'instances'
+                              'engine_for_similar_search': 'instances',
+                              'improc_timeout': 5
                             },
                     },
 }
