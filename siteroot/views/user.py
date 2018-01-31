@@ -119,7 +119,8 @@ class UserPages:
            request.session.create()
 
         # check if the backend is reachable or not
-        if self.visor_controller.is_backend_reachable() == "0":
+        print 'self.visor_controller.opts.check_backends_reachable', self.visor_controller.opts.check_backends_reachable
+        if self.visor_controller.opts.check_backends_reachable and self.visor_controller.is_backend_reachable() == "0":
             return redirect( 'nobackend')
 
         # check if the 'Getting Started' tour should be activated

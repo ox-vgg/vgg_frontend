@@ -17,6 +17,7 @@ class VisorOptions(object):
                  engines={},
                  select_roi=False,
                  enable_viewsel=False,
+                 check_backends_reachable=True,
                  disable_autocomplete=False):
         """
             Initializes the class
@@ -28,6 +29,7 @@ class VisorOptions(object):
                  engines: Dictionary of supported engines
                  select_roi: Boolean indicating whether ROIs can be selected in the details page
                  enable_viewsel: Boolean indicating whether the view mode selector should be enable or not
+                 check_backends_reachable: Boolean indicating whether the connection to the backend should be checked or not
                  disable_autocomplete: Boolean indicating whether autocomplete should be enable or not in the main query box
         """
         self.engines_dict = engines
@@ -37,6 +39,7 @@ class VisorOptions(object):
         self.results_per_page = results_per_page
         self.select_roi = select_roi
         self.enable_viewsel = enable_viewsel
+        self.check_backends_reachable = check_backends_reachable
         self.disable_autocomplete = disable_autocomplete
 
 
