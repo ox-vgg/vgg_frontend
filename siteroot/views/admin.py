@@ -77,6 +77,18 @@ class AdminPages:
         if 'HTTP_X_FORWARDED_HOST' in request.META:
             home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
+        # check if the following settings are specified or not
+        dir_settings = dir(settings)
+        MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES = None
+        MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES = None
+        VALID_IMG_EXTENSIONS_STR = ''
+        if 'MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES' in dir_settings:
+            MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES = settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES
+        if 'MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES' in dir_settings:
+            MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES = settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES
+        if 'VALID_IMG_EXTENSIONS_STR' in dir_settings:
+            VALID_IMG_EXTENSIONS_STR = settings.VALID_IMG_EXTENSIONS_STR + ", .txt" # accept .txt too for providing list of files
+
         # set up rendering context and render the page
         context = {
         'HOME_LOCATION': home_location,
@@ -97,9 +109,9 @@ class AdminPages:
         'CPUVISOR_ENABLED': 'cpuvisor-srv' in engines_names.keys(),
         'FACES_ENABLED': 'faces' in engines_names.keys(),
         'CACHED_TEXT_QUERIES' : cached_text_queries,
-        'MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES': settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES,
-        'MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES': settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES,
-        'VALID_IMG_EXTENSIONS_STR': settings.VALID_IMG_EXTENSIONS_STR + ", .txt" # accept .txt too for providing list of files
+        'MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES': MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES,
+        'MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES': MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES,
+        'VALID_IMG_EXTENSIONS_STR': VALID_IMG_EXTENSIONS_STR
         }
         return render(request, "admintools.html", context)
 
