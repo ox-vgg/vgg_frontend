@@ -6,7 +6,7 @@ import threading
 
 # Add the path to the vgg_face_search feature computation
 file_dir = os.path.dirname(os.path.realpath(__file__))
-COMPUTE_POSITIVE_FEATURES_SCRIPT = os.path.join(file_dir,'../../vgg_face_search/pipeline/compute_pos_features.py')
+COMPUTE_POSITIVE_FEATURES_SCRIPT = os.path.join(file_dir,'../../vgg_face_search/pipeline/start_pipeline.sh' )
 
 # Data pipeline definition
 def data_processing_pipeline_faces(inputListOfFrames, lock, DATASET_IM_PATHS, DATASET_IM_BASE_PATH, OUTPUT_FILE):
@@ -70,11 +70,11 @@ def data_processing_pipeline_faces(inputListOfFrames, lock, DATASET_IM_PATHS, DA
 
         ### UNLOCK
 
-        pOpenCmd = [ 'python',
+        pOpenCmd = [
                 COMPUTE_POSITIVE_FEATURES_SCRIPT,
                 DATASET_IM_BASE_PATH,
                 NEW_FILES_LIST, # use just the new files, the script will append them to the previous
-                '-o', OUTPUT_FILE
+                OUTPUT_FILE
             ]
         fout.write( ('FACE-PIPELINE [%s]: %s\n') % ( time.strftime("%H:%M:%S"), str(pOpenCmd)) )
         p = Popen(pOpenCmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -83,7 +83,7 @@ def data_processing_pipeline_faces(inputListOfFrames, lock, DATASET_IM_PATHS, DA
             fout.write( ('FACE-PIPELINE [%s]: OUTPUT STREAM\n%s\n') % ( time.strftime("%H:%M:%S"), output) )
         if err:
             fout.write( ('FACE-PIPELINE [%s]: ERROR STREAM\n%s\n') % ( time.strftime("%H:%M:%S"), err) )
-        fout.write( ('FACE-PIPELINE [%s]: VIDEO PROCESSING DONE\n') % ( time.strftime("%H:%M:%S")) )
+        fout.write( ('FACE-PIPELINE [%s]: FRAMES PROCESSING DONE\n') % ( time.strftime("%H:%M:%S")) )
 
     except Exception as e:
         # log the exception and leave
