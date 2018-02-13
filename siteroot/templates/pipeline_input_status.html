@@ -41,7 +41,7 @@
         var interval = setInterval(function() {
             document.getElementById('timer_div').innerHTML = --seconds_left;
 
-            if (seconds_left < 0)
+            if (seconds_left <= 0)
             {
                clearInterval(interval);
             }
