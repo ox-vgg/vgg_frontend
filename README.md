@@ -5,6 +5,8 @@ Author:
 
  + Ernesto Coto, University of Oxford – <ecoto@robots.ox.ac.uk>
 
+License: BSD (see LICENSE.md)
+
 `vgg_frontend` is a web application that serves as a generic web engine to perform visual searches over an image dataset. It is based on the original application created by the [VGG](http://www.robots.ox.ac.uk/~vgg/) group at the [University of Oxford](http://www.ox.ac.uk/), to perform visual searchers over a large dataset of images from [BBC News](http://www.robots.ox.ac.uk/~vgg/research/on-the-fly/).
 
 It consists of two main components:
