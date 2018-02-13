@@ -38,7 +38,7 @@ def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNo
             pipeline_frame_list: Output list of images to be processed in the pipeline. This is an OUTPUT argument.
     """
     fout = None
-    pipeline_frame_list = []
+    del pipeline_frame_list[:]
 
     try:
         abort = False
@@ -78,7 +78,7 @@ def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNo
                                 else:
                                     # otherwise, abort !. This might seem drastic, but it is better to
                                     # keep the image folder clean !.
-                                    pipeline_frame_list = []
+                                    del pipeline_frame_list[:]
                                     abort = True
 
         if input_type == 'file':
@@ -105,7 +105,7 @@ def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNo
                     else:
                         # otherwise, abort !. This might seem drastic, but it is better to
                         # keep the image folder clean !.
-                        pipeline_frame_list = []
+                        del pipeline_frame_list[:]
                         abort = True
 
         fout.write( 'CHECK_PIPELINE_INPUT END\n' )
