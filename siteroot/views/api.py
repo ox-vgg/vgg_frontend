@@ -721,18 +721,25 @@ class APIFunctions:
 
         if self.pipeline_engine == 'faces':
 
-            # The 'faces' pipeline is not multi-threaded
-            num_threads = 1
-            chunk_size = len(self.pipeline_frame_list) + 1
+            # Calculate number of threads. Set to a maximum of settings.FRAMES_THREAD_NUM_LIMIT and a minimum of 1.
+            num_threads = max(1, min( len(self.pipeline_frame_list)/settings.PREPROC_CHUNK_SIZE, settings.FRAMES_THREAD_NUM_LIMIT ) )
 
-            ## Start pipeline
+            # if the 'negative' features are being computed, always use one thread,
+            # as 'cpuvisor_preproc' does not support chunks for negative features
+            chunk_size = settings.PREPROC_CHUNK_SIZE
+
+            # Start pipeline.
             self.global_input_index = 0
-            t = threading.Thread( target=data_processing_pipeline_faces,
-                            args=(  self.pipeline_frame_list, self.lock,
-                                    file_with_list_of_paths, img_base_path, dataset_features_out_file ) )
-            t.start()
-            self.threads_map[ self.global_input_index ] = t
-            self.global_input_index = len(self.pipeline_frame_list)
+            for i in range(0, num_threads):
+                list_end = min(self.global_input_index + chunk_size, len(self.pipeline_frame_list))
+                frame_list = self.pipeline_frame_list[ self.global_input_index : list_end]
+                t = threading.Thread( target=data_processing_pipeline_faces,
+                            args=(  frame_list, self.global_input_index, self.lock,
+                                    img_base_path, file_with_list_of_paths,
+                                    dataset_features_out_file) )
+                t.start()
+                self.threads_map[ self.global_input_index ] = t
+                self.global_input_index = list_end
 
         return redirect('pipeline_status')
 
@@ -764,12 +771,28 @@ class APIFunctions:
 
         if self.pipeline_engine == 'faces':
 
-            # The 'faces' pipeline is not multi-threaded, so there is always 1 chunk
-            numberOfFrameChunks = 1
+            numberOfFrameChunks = int ( round( ( numberOfFrames /settings.PREPROC_CHUNK_SIZE*1.0 ) + 0.5 ) )
+
             if aliveThreadCounter == 0 and processingFrames and self.global_input_index + 1 >= numberOfFrames:
                 message = 'The data pipeline has finished !.'
                 redirect_to = settings.SITE_PREFIX + '/admintools'
                 return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+            elif processingFrames and aliveThreadCounter < settings.FRAMES_THREAD_NUM_LIMIT and self.global_input_index + 1 < numberOfFrames:
+                # since we are under the FRAMES_THREAD_NUM_LIMIT quota, let's try to start a new thread for the next chunk of frames
+
+                img_base_path = self.DATASET_IM_BASE_PATH
+                file_with_list_of_paths =  self.DATASET_IM_PATHS
+                dataset_features_out_file = self.DATASET_FEATS_FILE
+                list_end = min(self.global_input_index + settings.PREPROC_CHUNK_SIZE, numberOfFrames)
+                frame_list = self.pipeline_frame_list[ self.global_input_index : list_end ]
+                if len(frame_list)>0:
+                    t = threading.Thread( target=data_processing_pipeline_faces,
+                            args=(  frame_list, self.global_input_index, self.lock,
+                                    img_base_path, file_with_list_of_paths,
+                                    dataset_features_out_file) )
+                    t.start()
+                    self.threads_map[ self.global_input_index ] = t
+                    self.global_input_index = list_end
 
         if self.pipeline_engine == 'cpuvisor-srv':
 
