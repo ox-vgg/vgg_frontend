@@ -31,8 +31,10 @@
             <script language="javascript">
             var jcrop_api_detailimg = null;
             var jcrop_api_canvas = null;
+            var jcrop_boxWidth =  window.innerWidth;
+            var jcrop_boxHeight =  window.innerHeight;
             if (jcrop_api_detailimg == null) {
-                $('#detailimg').Jcrop({ onChange: recCoords, onSelect: recCoords}, function () {
+                $('#detailimg').Jcrop({ onChange: recCoords, onSelect: recCoords, boxWidth: jcrop_boxWidth, boxHeight: jcrop_boxHeight }, function () {
                       jcrop_api_detailimg = this;
                 });
             }
@@ -58,9 +60,9 @@
                                                <label for="show_roi">Show detection</label>
                                                {% endif %}
                                                <div id="div_detailimg" >
-                                                    <img id="detailimg" src="datasets/{{IMAGE_URL}}" alt="">
+                                                   <img id="detailimg" src="datasets/{{IMAGE_URL}}" alt="" width="100%" height="100%">
                                                </div>
-                                                <div id="div_canvas"  style="display:none;">
+                                               <div id="div_canvas"  style="display:none;">
                                                     <canvas id="canvas"></canvas>
                                                </div>
                                            </td>
@@ -146,36 +148,53 @@
       divCanvas=document.getElementById("div_canvas");
       divImg=document.getElementById("div_detailimg");
       if (divCanvas.style.display === "none") {
+            {% if SELECT_ROI %}
+            clientWidth = {{IMAGE_WIDTH}};
+            clientHeight = {{IMAGE_HEIGHT}};
+            scaleWidth = 1;
+            scaleHeight = 1;
+            lineWidth = 4*Math.min(clientWidth/jcrop_boxWidth,clientHeight/jcrop_boxHeight);
+            {% else %}
+            clientWidth = divImg.clientWidth;
+            clientHeight = divImg.clientHeight;
+            scaleWidth = clientWidth/{{IMAGE_WIDTH}};
+            scaleHeight = clientHeight/{{IMAGE_HEIGHT}};
+            lineWidth = 4;
+            {% endif %}
             divImg.style.display = "none";
             divCanvas.style.display = "block";
-            canvas.height = {{IMAGE_HEIGHT}};
-            canvas.width = {{IMAGE_WIDTH}};
-            context.drawImage(img, 0, 0, {{IMAGE_WIDTH}}, {{IMAGE_HEIGHT}});
+            canvas.height = clientHeight;
+            canvas.width = clientWidth;
+            context.drawImage(img, 0, 0, {{IMAGE_WIDTH}}, {{IMAGE_HEIGHT}}, 0, 0, canvas.width, canvas.height);
             context.beginPath();
-            context.moveTo({{ROI.0}},{{ROI.1}});
-            context.lineTo({{ROI.2}},{{ROI.3}});
-            context.lineTo({{ROI.4}},{{ROI.5}});
-            context.lineTo({{ROI.6}},{{ROI.7}});
-            context.lineTo({{ROI.8}},{{ROI.9}});
-            context.lineWidth=4;
+            context.moveTo({{ROI.0}}*scaleWidth,{{ROI.1}}*scaleHeight);
+            context.lineTo({{ROI.2}}*scaleWidth,{{ROI.3}}*scaleHeight);
+            context.lineTo({{ROI.4}}*scaleWidth,{{ROI.5}}*scaleHeight);
+            context.lineTo({{ROI.6}}*scaleWidth,{{ROI.7}}*scaleHeight);
+            context.lineTo({{ROI.8}}*scaleWidth,{{ROI.9}}*scaleHeight);
+            context.lineWidth = lineWidth;
             context.strokeStyle = "yellow";
             context.stroke();
-            if (jcrop_api_canvas == null) {
-                $('#canvas').Jcrop({ onChange: recCoords, onSelect: recCoords}, function () {
-                      jcrop_api_canvas = this;
-                });
-            }
-            else {
-                jcrop_api_canvas.enable();
-            }
-            jcrop_api_detailimg.release();
+            {% if SELECT_ROI %}
+                if (jcrop_api_canvas == null) {
+                    $('#canvas').Jcrop({ onChange: recCoords, onSelect: recCoords, boxWidth: jcrop_boxWidth, boxHeight: jcrop_boxHeight }, function () {
+                          jcrop_api_canvas = this;
+                    });
+                }
+                else {
+                    jcrop_api_canvas.enable();
+                }
+                jcrop_api_detailimg.release();
+            {% endif %}
     } else {
         canvas.height = 0;
         canvas.width = 0;
         divCanvas.style.display = "none";
         divImg.style.display = "block";
-        jcrop_api_canvas.release();
-        jcrop_api_detailimg.enable();
+        {% if SELECT_ROI %}
+            jcrop_api_canvas.release();
+            jcrop_api_detailimg.enable();
+        {% endif %}
     }
    };
    </script>
