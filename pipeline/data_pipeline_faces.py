@@ -4,6 +4,7 @@ import sys
 from subprocess import Popen, PIPE
 import threading
 import pickle
+import tempfile
 
 # Add the path to the vgg_face_search feature computation
 file_dir = os.path.dirname(os.path.realpath(__file__))
@@ -13,7 +14,7 @@ COMPUTE_POSITIVE_FEATURES_SCRIPT = os.path.join(file_dir,'../../vgg_face_search/
 def data_processing_pipeline_faces(inputListOfFrames, index, lock, DATASET_IM_BASE_PATH, DATASET_IM_PATHS, OUTPUT_FILE):
 
     # Create/clear the log file
-    LOG_OUTPUT_FILE = '/tmp/prepro_input_%d.log' % index
+    LOG_OUTPUT_FILE = os.path.join( tempfile.gettempdir(), 'prepro_input_%d.log' % index )
     fout = open( LOG_OUTPUT_FILE, 'w', buffering=1)
     new_files_list = ""
     output = ""
@@ -51,7 +52,7 @@ def data_processing_pipeline_faces(inputListOfFrames, index, lock, DATASET_IM_BA
                     datasetImgsFile.write('\n')
             fout.write( ('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN NEW FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), newLineCount))
             # Now create a temp file with just the new frames
-            new_files_list = '/tmp/faces_new_%d.log' % index
+            new_files_list = os.path.join( tempfile.gettempdir(), 'faces_new_%d.log' % index )
             with open(new_files_list, "w") as newFiles:
                 for i in range(0, len(frameList) ):
                     encodeFrameName =  frameList[i].encode("utf-8")

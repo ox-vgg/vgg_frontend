@@ -1,7 +1,7 @@
 from django.conf import settings
 import os
 from subprocess import Popen, PIPE
-
+import tempfile
 
 def start_backend_service(engine):
     """
@@ -44,7 +44,7 @@ def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNo
         abort = False
 
         # Create/clear the log file
-        LOG_OUTPUT_FILE = '/tmp/gather_pipeline_input.log'
+        LOG_OUTPUT_FILE = os.path.join( tempfile.gettempdir(), 'gather_pipeline_input.log' )
         fout = open( LOG_OUTPUT_FILE, 'w',  buffering=1)
         fout.write( 'CHECK_PIPELINE_INPUT BEGIN\n' )
         fout.write( 'input_type: %s\n' % input_type )

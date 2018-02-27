@@ -7,6 +7,7 @@ import sys
 from subprocess import Popen, PIPE
 import threading
 import time
+import tempfile
 
 # Some constants
 CPUVISOR_BIN_PATH = os.path.join(os.path.dirname(__file__),'../../vgg_classifier/bin')
@@ -20,7 +21,7 @@ def preproc_chunk_thread(startIndex, endIndex, lock, feat_type, CONFIG_PROTO_PAT
     try:
 
         # Create/clear the log file
-        LOG_OUTPUT_FILE = '/tmp/chunk_%d-%d.log' % (startIndex, endIndex)
+        LOG_OUTPUT_FILE = os.path.join( tempfile.gettempdir(), 'chunk_%d-%d.log' % (startIndex, endIndex) )
         fout = open( LOG_OUTPUT_FILE, 'w',  buffering=1)
         fout.write( ('DATA-PIPELINE [%s]: PREPROCESSING CHUNK %d-%d\n') % (time.strftime("%H:%M:%S"),startIndex, endIndex) )
 
@@ -91,7 +92,7 @@ def data_processing_pipeline_cpuvisor(inputListOfFrames, index, lock, feat_type,
     """
 
     # Create/clear the log file
-    LOG_OUTPUT_FILE = '/tmp/prepro_input_%d.log' % index
+    LOG_OUTPUT_FILE = os.path.join( tempfile.gettempdir(), 'prepro_input_%d.log' % index )
     fout = open( LOG_OUTPUT_FILE, 'w', buffering=1)
     output = ""
     err = ""
