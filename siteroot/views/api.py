@@ -319,8 +319,11 @@ class APIFunctions:
 
         # if present, separate image path from roi/uri info
         if ('roi:' in url_path) or ('uri:' in url_path) or ('dataset:' in url_path):
-            extra_params = url_path[ url_path.find(',')+1:]
-            url_path = url_path[ :url_path.find(',')]
+            extra_param_indexes = [ url_path.find('roi:') , url_path.find('uri:') , url_path.find('dataset:') ]
+            extra_param_indexes = filter(lambda a: a != -1, extra_param_indexes)
+            extra_param_min = min(extra_param_indexes)
+            extra_params = url_path[ extra_param_min:]
+            url_path = url_path[ :extra_param_min-1 ]
             roi_dict = dict( item.split(":") for item in extra_params.split(",") if 'roi' in item)
             # uri_dict only used for passing information to the backend
             # uri_dict = dict( item.split(":") for item in extra_params.split(",") if 'uri' in item)
