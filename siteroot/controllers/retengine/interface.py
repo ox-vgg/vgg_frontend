@@ -366,11 +366,14 @@ class VisorInterface(object):
         ##print 'Creating uber classifier: $%s...' % name
 
         try:
-            # save the classifier file
-            shutil.copy(src_classifier_fname, dst_classifier_fname)
-            # save the ranking file
+            # save the classifier file ... if it exists
+            if os.path.exists(src_classifier_fname):
+                shutil.copy(src_classifier_fname, dst_classifier_fname)
+
+            # save the ranking file ... this one should exist
             shutil.copy(src_ranking_fname, dst_ranking_fname)
-        except IOError:
+        except IOError as e:
+            print 'IOError while saving uber classifier: ', e
             return False
 
         return True
