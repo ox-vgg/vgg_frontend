@@ -12,8 +12,14 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 
 import os
 
+######
+# Main paths
+######
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+BASE_DATA_DIR = '/webapps/visorgen/'
 
 ######
 # Quick-start development settings - unsuitable for production
@@ -170,7 +176,7 @@ USE_TZ = True
 
 STATIC_URL = SITE_PREFIX + '/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, "siteroot/static/")
+STATIC_ROOT = os.path.join(BASE_DIR, 'siteroot', 'static')
 
 
 ######
@@ -199,7 +205,7 @@ VISOR = {
                               'backend_port' : 55302,
                               'imgtools_postproc_module' : 'visor_faces',
                               'imgtools_style': 'face',
-                              'pattern_fname_classifier' : '${query_strid}.mat',
+                              'pattern_fname_classifier' : 'dummy', # Not used but cannot be 'None'
                               'can_save_uber_classifier': True,
                               'skip_query_progress': False,
                               'engine_for_similar_search': 'faces'
@@ -209,23 +215,24 @@ VISOR = {
 
 
 # Folders used by the controller code
+BASE_FRONTEND_DATA_DIR = os.path.join( BASE_DATA_DIR, 'frontend_data')
 PATHS = {
-    'classifiers' : '/webapps/visorgen/frontend_data/searchdata/classifiers',
-    'postrainimgs' : '/webapps/visorgen/frontend_data/searchdata/postrainimgs',
-    'uploadedimgs' : '/webapps/visorgen/frontend_data/searchdata/uploadedimgs',
-    'rankinglists' : '/webapps/visorgen/frontend_data/searchdata/rankinglists',
-    'predefined_rankinglists' : '/webapps/visorgen/frontend_data/searchdata/predefined_rankinglists',
-    'postrainanno' : '/webapps/visorgen/frontend_data/searchdata/postrainanno',
-    'postrainfeats' : '/webapps/visorgen/frontend_data/searchdata/postrainfeats',
-    'curatedtrainimgs' : '/webapps/visorgen/frontend_data/curatedtrainimgs',
-    'datasets' : '/webapps/visorgen/datasets/images',
-    'thumbnails' : '/webapps/visorgen/datasets/images', # keep this one the same as 'datasets' unless thumbnails are really provided
-    'regions' : '/webapps/visorgen/datasets/images', # The ROIs are defined over the original images
+    'classifiers' : os.path.join( BASE_FRONTEND_DATA_DIR, 'searchdata', 'classifiers'),
+    'postrainimgs' : os.path.join( BASE_FRONTEND_DATA_DIR, 'searchdata', 'postrainimgs'),
+    'uploadedimgs' : os.path.join( BASE_FRONTEND_DATA_DIR, 'searchdata', 'uploadedimgs'),
+    'rankinglists' : os.path.join( BASE_FRONTEND_DATA_DIR, 'searchdata', 'rankinglists'),
+    'predefined_rankinglists' : os.path.join( BASE_FRONTEND_DATA_DIR, 'searchdata', 'predefined_rankinglists'),
+    'postrainanno' : os.path.join( BASE_FRONTEND_DATA_DIR, 'searchdata', 'postrainanno'),
+    'postrainfeats' : os.path.join( BASE_FRONTEND_DATA_DIR, 'searchdata', 'postrainfeats'),
+    'curatedtrainimgs' : os.path.join( BASE_FRONTEND_DATA_DIR, 'curatedtrainimgs'),
+    'datasets' : os.path.join( BASE_DATA_DIR, 'datasets', 'images'),
+    'thumbnails' : os.path.join( BASE_DATA_DIR, 'datasets', 'images'), # keep this one the same as 'datasets' unless thumbnails are really provided
+    'regions' : os.path.join( BASE_DATA_DIR, 'datasets', 'images'), # The ROIs are defined over the original images
 }
 
 # Folders containing metadata
 METADATA = {
-    'metadata' : '/webapps/visorgen/datasets/metadata'
+    'metadata' : os.path.join( BASE_DATA_DIR, 'datasets', 'metadata')
 }
 
 # Settings of the visor engine
@@ -246,13 +253,13 @@ IMSEARCHTOOLS = {
     'service_port' : 36213,
     'engine' : 'google_web',
     'query_timeout' : -1.0,
-    'improc_timeout' : 30, #15,
-    'per_image_timeout' : 10.0, #3.0,
+    'improc_timeout' : 8,
+    'per_image_timeout' : 3.0,
     'num_pos_train' : 100,
 }
 
 # Base folder of scripts to manage the service
-MANAGE_SERVICE_SCRIPTS_BASE_PATH = '/webapps/visorgen/vgg_frontend/scripts'
+MANAGE_SERVICE_SCRIPTS_BASE_PATH = os.path.join(BASE_DIR, 'scripts')
 
 
 ######
@@ -288,8 +295,8 @@ VALID_IMG_EXTENSIONS_STR = ', '.join(VALID_IMG_EXTENSIONS) # '.txt' is added lat
 # Setup settings for face-search engine
 FACE_ENGINE_SETTINGS = {}
 FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'] = os.path.join( PATHS['datasets'], VISOR['datasets'].keys()[0] )
-FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'] = '/webapps/visorgen/backend_data/faces/dsetpaths.txt'
+FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'] = os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'dsetpaths.txt')
 FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_PATHS'] = None
 FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_BASE_PATH'] = None
-FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'] = '/webapps/visorgen/backend_data/faces/database.pkl'
+FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'] = os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'features', 'database.pkl')
 FACE_ENGINE_SETTINGS['FACES_NEG_FEATS_FILE'] = None
