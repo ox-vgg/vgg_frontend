@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import platform
 
 def delete_directory_contents(path):
     """
@@ -37,11 +38,27 @@ def delete_directory_contents(path):
         delete_files(dir_entry[2], dir_entry[0])
         empty_dirs.insert(0, dir_entry[0])
 
+    def samefile(file1, file2):
+        """
+            Checks the stats of two files in an attempt to determine if they are the same.
+            Arguments:
+               file1: filepath of the first file
+               file2: filepath of the second file
+        """
+        return os.stat(file1) == os.stat(file2)
+
     tree = os.walk(path)
     for directory in tree:
         remove_directory(directory)
 
-    for dir in empty_dirs:
-        if not os.path.samefile(path, dir):
-            print 'Removing directory: ' + dir
-            os.rmdir(dir)
+    if 'Windows' not in platform.system():
+        for dir in empty_dirs:
+            if not os.path.samefile(path, dir):
+                print 'Removing directory: ' + dir
+                os.rmdir(dir)
+    else:
+        # os.path.samefile not available in Windows
+        for dir in empty_dirs:
+            if not samefile(path, dir):
+                print 'Removing directory: ' + dir
+                os.rmdir(dir)

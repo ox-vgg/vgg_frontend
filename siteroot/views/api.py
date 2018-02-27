@@ -136,7 +136,7 @@ class APIFunctions:
                 return HttpResponseBadRequest("Incorrect page specified")
 
             # create file using query_id and only the items with indexes included in the idx_list
-            with open( os.path.join(os.path.dirname(__file__), '../static/lists/%s_%s.txt' % (query_id, page)), 'w' ) as fout:
+            with open( os.path.join(os.path.dirname(__file__), '..', 'static', 'lists', '%s_%s.txt' % (query_id, page)), 'w' ) as fout:
                 for idx in idx_list:
                     int_idx = int(idx)
                     fout.write(rlist[int_idx]['path'] + '\n')
@@ -258,6 +258,12 @@ class APIFunctions:
            raise Http404("Query ID not specified. Query does not exist")
 
         query_data = self.visor_controller.execquery_impl(query_id, request.session.session_key, False)
+
+        # transform system paths to browser-like paths before sending out the response
+        for idx in range(len(query_data.status.postrainimg_paths)):
+            query_data.status.postrainimg_paths[idx] = query_data.status.postrainimg_paths[idx].replace(os.sep, '/')
+        for idx in range(len(query_data.status.curatedtrainimgs_paths)):
+            query_data.status.curatedtrainimgs_paths[idx] = query_data.status.curatedtrainimgs_paths[idx].replace(os.sep, '/')
 
         return HttpResponse(json.dumps(query_data.status.to_dict()))
 

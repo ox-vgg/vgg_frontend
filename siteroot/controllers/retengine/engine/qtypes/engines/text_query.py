@@ -10,6 +10,8 @@ try:
     import simplejson as json
 except ImportError:
     import json  # Python 2.6+ only
+import platform
+import socket
 
 from retengine import models
 from retengine import managers
@@ -79,7 +81,14 @@ class TextQuery(object):
 
             # call imsearchtool service
             pipe_name_hash = str(int(round(random.random()*1000000.0)))
-            zmq_impath_return_ch = 'ipc:///tmp/zmq_url_return_ch_' + pipe_name_hash
+            zmq_impath_return_ch = None
+            if 'Windows' not in platform.system(): # ipc protocol not supported in Windows
+                zmq_impath_return_ch = 'ipc:///tmp/zmq_url_return_ch_' + pipe_name_hash
+            else:
+                # the tcp protocol needs an IP
+                imsearchtool_ip = socket.gethostbyname(self.opts.imsearchtools_opts['service_host'])
+                zmq_impath_return_ch = 'tcp://%s:%d' % (imsearchtool_ip, self.opts.imsearchtools_opts['service_port'])
+
             return self._call_imsearchtool(imagedir, featdir, zmq_impath_return_ch, shared_vars)
 
         else:
@@ -198,7 +207,8 @@ class IstImpathReturnThread(threading.Thread):
         self.context = zmq.Context()
         self.impath_receiver = self.context.socket(zmq.REP)
         self.impath_receiver.bind(impath_return_ch)
-        os.chmod(impath_return_ch[6:], 0774)
+        if 'ipc:' in impath_return_ch:
+            os.chmod(impath_return_ch[6:], 0774)
         print 'done initialization'
 
         super(IstImpathReturnThread, self).__init__()

@@ -27,7 +27,7 @@ import base_caches
 
 PATTERN_FNAME_ANNOFILE = '${query_strid}.txt'
 POSTRAINIMGS_DIRNAME = 'postrainimgs'
-CURATEDRAINIMGS_DIRNAME = 'curatedtrainimgs'
+CURATEDTRAINIMGS_DIRNAME = 'curatedtrainimgs'
 UPLOADEDIMGS_DIRNAME = 'uploadedimgs'
 
 class CompDataCache(base_caches.SessionExcludeListCache):
@@ -471,12 +471,12 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             annos = self.get_annotations(query, **kwargs)
             if annos:
                 for anno in annos:
-                    if CURATEDRAINIMGS_DIRNAME in anno['image']:
+                    if CURATEDTRAINIMGS_DIRNAME in anno['image']:
                         anno['image'] = self.convert_system_path_to_server_path(anno['image'],
-                                                                        CURATEDRAINIMGS_DIRNAME + '/')
+                                                                        CURATEDTRAINIMGS_DIRNAME + os.sep)
                     else:
                         anno['image'] = self.convert_system_path_to_server_path(anno['image'],
-                                                                        POSTRAINIMGS_DIRNAME + '/')
+                                                                        POSTRAINIMGS_DIRNAME + os.sep)
             return annos
         elif query['qtype'] == models.opts.qtypes.curated:
             imagedir = self.get_image_dir(query)
@@ -493,13 +493,13 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             annos = self.get_annotations(query, **kwargs)
             for anno in annos:
                 anno['image'] = self.convert_system_path_to_server_path(anno['image'],
-                                                                        UPLOADEDIMGS_DIRNAME +'/')
+                                                                        UPLOADEDIMGS_DIRNAME + os.sep)
             return annos
         elif query['qtype'] == models.opts.qtypes.dsetimage:
             annos = self.get_annotations(query, **kwargs)
             for anno in annos:
                 anno['image'] = self.convert_system_path_to_server_path(anno['image'],
-                                                                        query['dsetname']+'/')
+                                                                        query['dsetname'] + os.sep)
             return annos
         else:
             raise models.errors.UnsupportedQtypeError('qtype not supported')
@@ -570,7 +570,6 @@ class CompDataCache(base_caches.SessionExcludeListCache):
 
         # extract the part we want
         system_path = system_path[diridx:]
-        #print system_path
         system_path = system_path.replace(subdir,'')
-        #print system_path
+        system_path = system_path.replace(os.sep,'/')
         return system_path
