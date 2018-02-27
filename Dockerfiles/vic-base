@@ -104,7 +104,6 @@ RUN cd /webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/ \
 # configure default user in frontend
 RUN cd /webapps/visorgen/vgg_frontend/ \
     && python manage.py migrate \
-    && cd /webapps/visorgen/vgg_frontend/ \
     && printf "import os\nfrom django.core.wsgi import get_wsgi_application\nos.environ['DJANGO_SETTINGS_MODULE']='visorgen.settings'\napplication = get_wsgi_application()\nfrom django.contrib.auth.models import User\nuser=User.objects.create_user('admin', password='vggadmin')\nuser.is_superuser=True\nuser.is_staff=True\nuser.save()" > super.py \
     && python super.py \
     && rm -f super.py \
