@@ -203,32 +203,32 @@ VISOR = {
 
                 # Sample backend engine for object/category search.
                 # It support images and text as input.
-                #'cpuvisor-srv': { 'full_name' : 'Category',
-                                  #'url': '/',
-                                  #'backend_port' : 35215,
-                                  #'imgtools_postproc_module' : 'visor_category',
-                                  #'imgtools_style': 'photo',
-                                  #'pattern_fname_classifier' : '${query_strid}.bin',
-                                  #'can_save_uber_classifier': True,
-                                  #'skip_query_progress': False,
-                                  #'engine_for_similar_search': 'cpuvisor-srv',
-                                  #'improc_timeout': 10
-                                #},
+                'cpuvisor-srv': { 'full_name' : 'Category',
+                                  'url': '/',
+                                  'backend_port' : 35215,
+                                  'imgtools_postproc_module' : 'visor_category',
+                                  'imgtools_style': 'photo',
+                                  'pattern_fname_classifier' : '${query_strid}.bin',
+                                  'can_save_uber_classifier': True,
+                                  'skip_query_progress': False,
+                                  'engine_for_similar_search': 'cpuvisor-srv',
+                                  'improc_timeout': 10
+                                },
 
                 # Sample backend engine for text search.
                 # It does not support images as input, just text.
-                #'text' :        { 'full_name' : 'Text',
-                                  #'url': '/',
-                                  #'backend_port' : 55366,
-                                  #'imgtools_postproc_module' : None, # Set to None to indicate the backend
-                                                                     ## does not support images as input
-                                  #'imgtools_style': None,
-                                  #'pattern_fname_classifier' : 'dummy', # Not used but cannot be 'None'
-                                  #'can_save_uber_classifier': False,
-                                  #'skip_query_progress': True,  # Set to True because this engine can return
-                                                                ## results almost instantly
-                                  #'engine_for_similar_search': None # Set to 'cpuvisor-srv' only if that engine is included in the settings
-                                #},
+                'text' :        { 'full_name' : 'Text',
+                                  'url': '/',
+                                  'backend_port' : 55366,
+                                  'imgtools_postproc_module' : None, # Set to None to indicate the backend
+                                                                     # does not support images as input
+                                  'imgtools_style': None,
+                                  'pattern_fname_classifier' : 'dummy', # Not used but cannot be 'None'
+                                  'can_save_uber_classifier': False,
+                                  'skip_query_progress': True,  # Set to True because this engine can return
+                                                                # results almost instantly
+                                  'engine_for_similar_search': None # Set to 'cpuvisor-srv' only if that engine is included in the settings
+                                },
 
                 # Sample backend engine for face search.
                 # It support images and text as input.
@@ -245,17 +245,17 @@ VISOR = {
 
                 # Sample backend engine for instance search.
                 # It support images and text as input.
-                #'instances':{ 'full_name' : 'Instances',
-                              #'url': '/',
-                              #'backend_port' : 45288,
-                              #'imgtools_postproc_module' : 'visor_category',
-                              #'imgtools_style': 'photo',
-                              #'pattern_fname_classifier' : '${query_strid}.bin',
-                              #'can_save_uber_classifier': False,
-                              #'skip_query_progress': False,
-                              #'engine_for_similar_search': 'instances',
-                              #'improc_timeout': 5
-                            #},
+                'instances':{ 'full_name' : 'Instances',
+                              'url': '/',
+                              'backend_port' : 45288,
+                              'imgtools_postproc_module' : 'visor_category',
+                              'imgtools_style': 'photo',
+                              'pattern_fname_classifier' : '${query_strid}.bin',
+                              'can_save_uber_classifier': False,
+                              'skip_query_progress': False,
+                              'engine_for_similar_search': 'instances',
+                              'improc_timeout': 5
+                            },
                     },
 }
 
@@ -333,6 +333,7 @@ MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES = 1000000
 # of images are ingested.
 VALID_IMG_EXTENSIONS = { ".jpeg", ".jpg", ".png", ".bmp", ".dib", ".tiff", ".tif", ".ppm" }
 VALID_IMG_EXTENSIONS_STR = ', '.join(VALID_IMG_EXTENSIONS) # '.txt' is added later in the admin view
+
 
 ######
 # Category search engine - Data Ingestion settings
