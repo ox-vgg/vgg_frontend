@@ -2,6 +2,7 @@ from django.conf import settings
 import os
 from subprocess import Popen, PIPE
 import tempfile
+import platform
 
 def start_backend_service(engine):
     """
@@ -9,7 +10,10 @@ def start_backend_service(engine):
         Arguments:
             engine: keyword of the engine in the setting's engine dictionary
     """
-    pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'start_backend_service.sh'), engine ]
+    if 'Windows' in platform.system():
+        pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'start_backend_service.bat'), engine ]
+    else:
+        pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'start_backend_service.sh'), engine ]
     p = Popen(pOpenCmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     p.poll()
 
@@ -20,7 +24,10 @@ def stop_backend_service(engine):
         Arguments:
             engine: keyword of the engine in the setting's engine dictionary
     """
-    pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'stop_backend_service.sh'), engine ]
+    if 'Windows' in platform.system():
+        pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'stop_backend_service.bat'), engine ]
+    else:
+        pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'stop_backend_service.sh'), engine ]
     p = Popen(pOpenCmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     p.poll()
 

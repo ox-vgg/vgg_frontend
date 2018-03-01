@@ -5,10 +5,15 @@ from subprocess import Popen, PIPE
 import threading
 import pickle
 import tempfile
+import platform
 
 # Add the path to the vgg_face_search feature computation
 file_dir = os.path.dirname(os.path.realpath(__file__))
-COMPUTE_POSITIVE_FEATURES_SCRIPT = os.path.join(file_dir,'../../vgg_face_search/pipeline/start_pipeline.sh' )
+COMPUTE_POSITIVE_FEATURES_SCRIPT = os.path.join(file_dir, '..' , '..', 'vgg_face_search', 'pipeline')
+if 'Windows' in platform.system():
+    COMPUTE_POSITIVE_FEATURES_SCRIPT = os.path.join( COMPUTE_POSITIVE_FEATURES_SCRIPT, 'start_pipeline.bat' )
+else:
+    COMPUTE_POSITIVE_FEATURES_SCRIPT = os.path.join( COMPUTE_POSITIVE_FEATURES_SCRIPT, 'start_pipeline.sh' )
 
 # Data pipeline definition
 def data_processing_pipeline_faces(inputListOfFrames, index, lock, DATASET_IM_BASE_PATH, DATASET_IM_PATHS, OUTPUT_FILE):
