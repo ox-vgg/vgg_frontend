@@ -76,7 +76,7 @@ class CuratedQuery(object):
             featfn += '.bin'
 
             # add image path to query status
-            img_relative_path = imagedir[imagedir.index('/curatedtrainimgs'):]
+            img_relative_path = imagedir[imagedir.index( os.sep + 'curatedtrainimgs' ):]
             img_relative_path = os.path.join(img_relative_path, 'positive', image)
             shared_vars.curatedtrainimgs_paths = shared_vars.curatedtrainimgs_paths + [img_relative_path,]
 
