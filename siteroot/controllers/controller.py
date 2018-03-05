@@ -58,7 +58,8 @@ class VisorController:
 
         # initialize class for metadata extraction
         self._meta_extr = dsetmap.metaConverter.fnameToMetaConverter(self.opts.datasets,
-                                                                     self.metadata_paths.metadata)
+                                                                     self.metadata_paths.metadata,
+                                                                     self.process_pool)
 
         # initialize classes for pagination
         self._page_manager = utils.pagination.PageManager(self.opts.results_per_page)

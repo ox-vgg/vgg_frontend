@@ -1,32 +1,17 @@
 #!/usr/bin/env python
 
 import csv
-import os.path
-try:
-    import simplejson as json
-except ImportError:
-    import json  # Python 2.6+ only
-
-# logging
-import logging
-log = logging.getLogger(__name__)
-
-
-class MetaloadError(Exception):
-    """ Class for reporting errors related to the metadata conversion """
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
-
+import os
+import multiprocessing
+import sys
 
 class fnameToMetaConverter:
     """
         Class for extracting metadata related to a filename.
-        For a file with a filename "fname", this class expects a JSON file
+        For a file with a filename "fname", this class expects a CSV file
         containing metadata for "fname", within the metadata_dir specified
-        during the initialization of this class. The path to the JSON file
-        is derived from the path to "fname".
+        during the initialization of this class. Only one CSV file within
+        metadata_dir will be read.
     """
 
     class MetaType:
@@ -39,7 +24,7 @@ class fnameToMetaConverter:
         DESC_ONLY=2
 
 
-    def __init__(self, prep_dsets, metadata_dir):
+    def __init__(self, prep_dsets, metadata_dir, process_pool):
         """
             Initializes the class and sets the list of supported datasets.
             Arguments:
@@ -48,11 +33,39 @@ class fnameToMetaConverter:
                             dictionary are used to find the subfolder within
                             metadata_dir where the metadata of each dataset
                             should be stored.
+                process_pool: instance of CpProcessPool, used to support multi-threading
         """
         self.fname2meta = {}
         self.metadata_dir = metadata_dir
+        self.process_pool = process_pool
         for (dset, pretty) in prep_dsets.iteritems():
             self.fname2meta[dset] = {}
+            try:
+                self.process_pool.apply_async(  func=self.loadAllDsetMetadata, args=(dset, ) )
+            except Exception as e:
+                print "Error while pre-loading metadata for " + dset + ": " + str(e) + '\n'
+
+
+    def loadAllDsetMetadata(self, dsetname):
+        """
+            Loads into memory the metadata of a dataset
+            Arguments:
+                dsetname: Key corresponding to the dataset within the list of supported
+                          datasets.
+        """
+        for afile in os.listdir( os.path.join(self.metadata_dir, dsetname) ):
+            if afile.endswith(".csv"):
+                metadata_file = os.path.join(self.metadata_dir, dsetname, afile)
+                with open(metadata_file, 'rb') as fin:
+                    reader = csv.DictReader(fin)
+                    for row in reader:
+                        r_copy = dict(row)
+                        del r_copy['id']
+                        self.fname2meta[dsetname][row['id']] = r_copy
+                        metadata = self.fname2meta[dsetname][row['id']]
+                    print 'Finished loading metadata for', dsetname
+            break
+
 
     def getMetaFromFname(self, fname, dsetname, _metatype=MetaType.ALL_META):
         """
@@ -70,46 +83,55 @@ class fnameToMetaConverter:
         """
 
         # get filename basename
-        # (which will be returned if nothing more meaningful can be found)
-        (fpath, fname) = os.path.split(fname)
+        (fpath, shorter_fname) = os.path.split(fname)
 
-        if fpath:
-            if fpath[0] == '/': fpath = fpath[1:]
-
-        # if the dataset is not supported, just return fname
+        # 1- Check dataset exists. Return just a shorter filename if it does not.
         if dsetname not in self.fname2meta.keys():
-            return fname
+            return shorter_fname
 
+        # 2- Check if we already loaded the metadata for this file
         metadata = None
-
         try:
-            # Check if we already loaded the metadata for this ...
             metadata = self.fname2meta[dsetname][fname]
         except KeyError:
             metadata = None
             pass
 
-        # ... if we didn't, load the provided metadata file
+        # 3- If there is no metadata loaded, try to get just the information about fname
         if metadata == None:
-            metadata_file = os.path.join(self.metadata_dir, dsetname, 'metadata.csv')
             try:
-                with open(metadata_file, 'rb') as f:
-                    reader = csv.reader(f)
-                    self.fname2meta[dsetname] = { row[0]: row[1:] for row in reader}
-                    metadata = self.fname2meta[dsetname][fname]
+                for afile in os.listdir( os.path.join(self.metadata_dir, dsetname) ):
+                    if afile.endswith(".csv"):
+                        metadata_file = os.path.join(self.metadata_dir, dsetname, afile)
+                        with open(metadata_file, 'r') as fin:
+                            reader = csv.DictReader(fin)
+                            for row in reader:
+                                if row['id'] == fname:
+                                    r_copy = dict(row)
+                                    del r_copy['id']
+                                    self.fname2meta[dsetname][row['id']] = r_copy
+                                    metadata = self.fname2meta[dsetname][row['id']]
+                                    break
+                        break
             except Exception as e:
-                print e
+                print 'metada loading exception', str(e)
                 metadata = None
                 pass
 
-        # ... if we couldn't load the provided metadata file
+        # 4- If no metadata at all could be loaded, return just a shorter filename.
         if metadata == None:
-            return fname
-        else:
-            if _metatype == self.MetaType.DESC_ONLY:
-                return metadata[0]
+            return shorter_fname
+
+        # 5- If only the description was requested, check if the metadata contains a caption for this file
+        if metadata != None and _metatype == self.MetaType.DESC_ONLY:
+            if 'caption' in metadata.keys():
+                return metadata['caption']
             else:
-                return metadata
+                return shorter_fname
+
+        # 6- If all metadata was requested, return it
+        if metadata != None and _metatype == self.MetaType.ALL_META:
+            return metadata.items()
 
 
     def getDescFromFname(self, fname, dsetname):

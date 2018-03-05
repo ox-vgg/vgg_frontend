@@ -119,7 +119,6 @@ class UserPages:
            request.session.create()
 
         # check if the backend is reachable or not
-        print 'self.visor_controller.opts.check_backends_reachable', self.visor_controller.opts.check_backends_reachable
         if self.visor_controller.opts.check_backends_reachable and self.visor_controller.is_backend_reachable() == "0":
             return redirect( 'nobackend')
 
@@ -552,7 +551,7 @@ class UserPages:
             # Add the metadata of each item. This could be programme name etc., otherwise defaults to filename
             try:
                 ritem['desc'] = self.visor_controller._meta_extr.getDescFromFname(ritem['path'], query['dsetname'])
-            except dsetmap.metaConverter.MetaloadError:
+            except Exception:
                 (fpath, fname) = os.path.split(ritem['path'])
                 ritem['desc'] = fname
             # add extra tags if necessary
