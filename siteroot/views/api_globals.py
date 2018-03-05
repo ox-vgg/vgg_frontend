@@ -77,7 +77,7 @@ def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNo
                                     relative_path = relative_path[1:]
                                 # check file is an image...
                                 filename, file_extension = os.path.splitext(relative_path)
-                                if file_extension in settings.VALID_IMG_EXTENSIONS:
+                                if file_extension.lower() in settings.VALID_IMG_EXTENSIONS:
                                     # if it is, add it to the list
                                     if fileSystemEncodingNotUTF8:
                                         relative_path = relative_path.decode('utf-8') # if needed, convert from utf-8. It will be converted back by the pipeline.
@@ -104,7 +104,7 @@ def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNo
                          # abort the process if the frame is not found
                          abort = True
                     # Check file is an image ...
-                    elif file_extension in settings.VALID_IMG_EXTENSIONS:
+                    elif file_extension.lower() in settings.VALID_IMG_EXTENSIONS:
                         # if it is, add it to the list
                         if fileSystemEncodingNotUTF8:
                             frame_path = frame_path.decode('utf-8') # if needed, convert from utf-8
