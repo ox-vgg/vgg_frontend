@@ -22,10 +22,12 @@ $(function() {
         var dsetname = '';
         var qtype = '';
         $('.roi_box').each(function(i, obj) {
-            query = query + $(this).attr('id') + ',anno:' + $(this).attr('anno') + ';';
-            dsetname = $(this).attr('dsetname');
-            qtype = $(this).attr('qtype');
-            engine = $(this).attr('engine');
+            if ($(this).attr('anno') == 1 ) {
+                query = query + $(this).attr('id') + ',anno:' + $(this).attr('anno') + ';';
+                dsetname = $(this).attr('dsetname');
+                qtype = $(this).attr('qtype');
+                engine = $(this).attr('engine');
+            }
         });
         query = query.substr(0,query.length-1);
         startQuery(engine, query, dsetname, qtype);
