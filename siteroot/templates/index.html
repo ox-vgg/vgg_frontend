@@ -114,7 +114,15 @@
                         }
                     });
                 }
-            });
+            }).data( "ui-autocomplete" )._renderItem = function( ul, item ) {
+                label = item.label;
+                if (item.label.length>30) {
+                    label = item.label.substring(0, 30) + '...';
+                }
+                return $("<li></li>" ).data("item.ui-autocomplete", item).
+                    append( "<a>" + label +  "</a>").
+                    appendTo( ul );
+            };
         });
         </script>
     </body>
