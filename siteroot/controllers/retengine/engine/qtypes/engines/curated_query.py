@@ -51,6 +51,7 @@ class CuratedQuery(object):
             Arguments:
                 shared_vars: holder of global shared variables
             Returns:
+                The time it took to compute the features.
                 It raises CuratedClassifierPathNotFoundError is the curated
                 training files are not found.
         """
