@@ -109,15 +109,15 @@ var imageuploader = {
                     if (self.options.returnUrlJsonField in data) {
                         url = data[self.options.returnUrlJsonField];
                     }
-                    if (url == '') {
+                    if (url == ''  || url == null) {
                         $.getScript(jsFileLocation+'jquery.ui.imageuploader/appriseimup-1.5.min.js', function() {
                             srcurl = '';
                             if (self.options.returnUrlSource in data) srcurl = data[self.options.returnUrlSource];
                             if (srcurl != '') {
-                                var alertstr = 'The selected image could not be loaded or was invalid:<br/><span style="font-size:small;">'+srcurl+'</span>';
+                                var alertstr = 'The image could not be loaded or was invalid:<br/><span style="font-size:small;">'+srcurl+'</span>';
                                 appriseimup(alertstr);
                             } else {
-                                var alertstr = 'The selected image could not be uploaded';
+                                var alertstr = 'The image could not be uploaded';
                                 appriseimup(alertstr);
                             }
                         });
@@ -133,13 +133,11 @@ var imageuploader = {
 
             opts._cancelled = false;
             opts._uploading = true;
-            $(this).ajaxSubmit(options);
-
             el.find('#imupSubmit').attr('disabled','disabled');
             el.find('#imupUploadUrlContainer').hide();
             el.find('#imupUploadFileContainer').hide();
             el.find('#imupProcessingContainer').show();
-            el.find('#imupTabbar').slideUp('fast');
+            $(this).ajaxSubmit(options);
 
             return false;
         });
@@ -240,7 +238,7 @@ var imageuploader = {
                 if (self.options.returnUrlJsonField in data) {
                     url = data[self.options.returnUrlJsonField];
                 }
-                if (url == '') {
+                if (url == '' || url == null) {
                     $.getScript(jsFileLocation+'jquery.ui.imageuploader/appriseimup-1.5.min.js', function() {
                         srcurl = '';
                         if (self.options.returnUrlSource in data) srcurl = data[self.options.returnUrlSource];
@@ -274,8 +272,8 @@ var imageuploader = {
         }
     },
     _prepareForNewRequest: function() {
-        this.element.find('#imupUploadFile').attr('value', '');
-        this.element.find('#imupUploadUrl').attr('value', '');
+        document.getElementById("imupUploadFile").value = "";
+        document.getElementById("imupUploadUrl").value = "";
 
         this.element.find('#imupProcessingContainer').hide();
         this.element.find('#imupSubmit').removeAttr('disabled');

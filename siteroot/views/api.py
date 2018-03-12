@@ -307,19 +307,19 @@ class APIFunctions:
                     break
             url_path = url_path[ url_path.find(';') ]
 
-        # This could happend when the search is triggered from the training images page
+        # This could happen when the search is triggered from the training images page
         if ('uploadedimgs/postrainimgs' in url_path):
             url_path = url_path.replace( 'uploadedimgs/postrainimgs', 'postrainimgs' )
             img_set = 'postrainimgs'
 
-        # This could happend when the search is triggered from the training images page
+        # This could happen when the search is triggered from the training images page
         if ('uploadedimgs/curatedtrainimgs' in url_path):
             url_path = url_path.replace( 'uploadedimgs/curatedtrainimgs', 'curatedtrainimgs' )
             img_set = 'curatedtrainimgs'
 
         # if present, separate image path from roi/uri info
-        if ('roi:' in url_path) or ('uri:' in url_path) or ('dataset:' in url_path):
-            extra_param_indexes = [ url_path.find('roi:') , url_path.find('uri:') , url_path.find('dataset:') ]
+        if ('roi:' in url_path) or ('uri:' in url_path) or ('dataset:' in url_path) or ('anno:' in url_path):
+            extra_param_indexes = [ url_path.find('roi:') , url_path.find('uri:') , url_path.find('dataset:') , url_path.find('anno:')]
             extra_param_indexes = filter(lambda a: a != -1, extra_param_indexes)
             extra_param_min = min(extra_param_indexes)
             extra_params = url_path[ extra_param_min:]
@@ -332,16 +332,19 @@ class APIFunctions:
                     dataset = item.split(":")[1]
                     break
 
-        # If it is an uploaded image (with a roi or not), it could relate to a image that
+        # If it is an uploaded image (with a roi or not), it could relate to an image that
         # has been uploaded by the user, or an image that was selected in the search results.
         # If it corresponds to the latter, redirect the search to 'datasets' in
-        # an attempt to find the rigth image
+        # an attempt to find the rigth image.
+        # This could happen mostly when showing the thumbnail image in the query bar, in which
+        # case it is not useful to show a ROI, so do not draw it !
         if ('uploadedimgs' in url_path) and dataset:
             path_in_datasets = url_path.replace( 'uploadedimgs', 'datasets/' + dataset )
             full_path_in_datasets = path_in_datasets.replace(settings.SITE_PREFIX + '/datasets' , settings.PATHS['datasets'])
             if os.path.exists(full_path_in_datasets):
                 url_path = path_in_datasets
                 img_set = 'datasets'
+                roi_dict = None # In this case do not draw a ROI
 
         # redirect curated images to their correct folder, if needed
         if 'curated__' in url_path:
@@ -388,6 +391,9 @@ class APIFunctions:
             filename = str(request.FILES['file'])
             data = str(img.read())
             jsonstr =  self.visor_controller.uploadimage( None , None, img_data={ 'filename' : filename , 'data': data }  )
+
+        if jsonstr == '':
+            jsonstr = json.dumps({'Error': 'Error uploading image', 'srcurl': fileurl, 'impath': None})
 
         return HttpResponse(jsonstr)
 
