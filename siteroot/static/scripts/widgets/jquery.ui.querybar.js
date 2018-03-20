@@ -225,7 +225,10 @@ var querybar = {
                           <input id="qbSrcQueryId" name="'+opts.srcQueryIdField+'" type="hidden" disabled="disabled" />\
                         </div>\
                         <div id="qbSelImage">\
-                          +\
+                         <img src="static/images/picture.png" title="Image uploading">\
+                        </div>\
+                        <div id="qbSelKey">\
+                         <img src="static/images/list.png" title="Keyword selection">\
                         </div>\
                       </div>\
                     </div>\
@@ -287,6 +290,15 @@ var querybar = {
             this._setQueryMode();
         }
 
+        if (!el.find('#selectKeywordControl').length) {
+            /* if the keywordcontrol is not included in the page, then do not show the button*/
+            el.find('#qbSelKey').hide();
+        }
+        if (!el.find('#imupControl').length) {
+            /* if the image uploading control is not included in the page, then do not show the button*/
+            el.find('#qbSelImage').hide();
+        }
+
         if (el.find('.qbQueryDset').length) {
             var e = el.find('.qbQueryDset');
             e.hide();
@@ -330,25 +342,25 @@ var querybar = {
 
        /* // If using the combobox for selecting datasets, uncomment this
         $.getScript(jsFileLocation+'jquery.ui.querybar/jquery-selectbox-0.2.min.js', function() {
-	    $("#qbSelDataset").show();
-	    $("#qbSelDataset").selectbox();
-	    if (opts.hideDatasetSelector) {
+        $("#qbSelDataset").show();
+        $("#qbSelDataset").selectbox();
+        if (opts.hideDatasetSelector) {
             if( el.find('.sbHolder') ) {
                 el.find('.sbHolder').hide();
             }
-	    }
-	    el.fadeIn();
+        }
+        el.fadeIn();
         });*/
 
         $.getScript(jsFileLocation+'jquery.ui.querybar/jquery-selectbox-0.2.min.js', function() {
-	    $("#qbSelEngine").show();
-	    $("#qbSelEngine").selectbox();
-	    if (opts.hideDatasetSelector) {
+        $("#qbSelEngine").show();
+        $("#qbSelEngine").selectbox();
+        if (opts.hideDatasetSelector) {
             if( el.find('.sbHolder') ) {
                 el.find('.sbHolder').hide();
             }
-	    }
-	    el.fadeIn();
+        }
+        el.fadeIn();
         });
 
         /* ----------------------------------------------------------------------------------
@@ -383,6 +395,12 @@ var querybar = {
         el.find('#qbSelImage').click(function(e) {
             /* provide handle for callback */
             self._trigger('selectimage');
+        });
+        /* ---
+         On clicking the 'select keyword' button */
+        el.find('#qbSelKey').click(function(e) {
+            /* provide handle for callback */
+            self._trigger('selectkey');
         });
         /* ---
          On dragging an image over the querybar */
@@ -785,7 +803,7 @@ var querybar = {
     getSrcQueryId: function() { return this.options.srcQueryId; },
     setSrcQueryId: function(srcQueryId) {
         this.options.srcQueryId = srcQueryId;
-	this.element.find('#qbSrcQueryId').val(this.options.srcQueryId);
+        this.element.find('#qbSrcQueryId').val(this.options.srcQueryId);
     },
     /* ----------------------------------------------------------------------------------
      INTERFACE - refine mode functions ************************************************
@@ -1021,9 +1039,12 @@ var querybar = {
         }
         if ($.inArray(selected, this.options.enginesWithImageSearchSupport) < 0) {
             this.setImageSearchEnabled(false);
+            /* without image search support it makes no sense to allow keyword selection */
+            this.element.find('#qbSelKey').hide();
         }
         else {
             this.setImageSearchEnabled(true);
+            this.element.find('#qbSelKey').show();
         }
     },
     /* enable/disable control */

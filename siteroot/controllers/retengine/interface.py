@@ -17,6 +17,7 @@ class VisorInterface(object):
                  predefined_ranklistpath, ranklistpath,
                  compdata_paths,
                  process_pool,
+                 metadata_handler,
                  proc_opts=models.param_sets.VisorEngineProcessOpts(),
                  opts=models.param_sets.VisorOptions()):
         """
@@ -31,6 +32,8 @@ class VisorInterface(object):
                                 to handle all folder/files in the computational data
                                 folders
                 process_pool: instance of CpProcessPool, used to support multi-threading
+                metadata_handler: instance of MetaDataHandler, used to access the
+                                  metadata of a dataset
                 proc_opts: used for access to the configuration of the VISOR engine
                 opts: used for access to the configuration of the VISOR frontend
         """
@@ -38,6 +41,7 @@ class VisorInterface(object):
         self.process_pool = process_pool
         self.proc_opts = proc_opts
         self.opts = opts
+        self.metadata_handler = metadata_handler
 
         # set which result caches should be enabled to temporary variables
         if proc_opts.disable_cache:
@@ -124,34 +128,49 @@ class VisorInterface(object):
                 An instance of QueryData, containing the status of the query and the list
                 of results associated with it.
         """
-        # get results directly from cache if possible
-        rlist = self.result_cache[ query['engine'] ].get_results(query, query_ses_id, user_ses_id)
 
-        if rlist:
-            # *** READ RESULTS IN FROM CACHE ***
+        if query['qtype'] ==  models.opts.qtypes.text and query['qdef'].startswith('keywords:'):
+
+            keywords = query['qdef'].replace('keywords:','')
+            training_images = []
+            rlist = []
+            for key in keywords.split(','):
+                keyword_matches = self.metadata_handler.getFilesByKeyword(key, query['dsetname'])
+                training_images = set().union(keyword_matches, training_images)
+            for img in training_images:
+                rlist.append( {'path': img} )
             status = models.QueryStatus(state=models.opts.states.results_ready)
+            return models.QueryData(status, rlist)
+
         else:
-            # *** READ STATUS/RESULTS IN FROM WORKER ***
-            # otherwise, try returning an existing query instance if possible ...
-            status = self.query_manager.get_query_status_from_definition(query)
-            if not status:
-                # ... or return a new one
-                status = self.query_manager.start_query(query, user_ses_id)
+            # get results directly from cache if possible
+            rlist = self.result_cache[ query['engine'] ].get_results(query, query_ses_id, user_ses_id)
 
-            # if the query is not in cache and finished with a fatal error, maybe it is being retried
-            # after a change in the settings. Give it a chance to run again without fully restarting
-            # the server
-            if status.state == models.opts.states.fatal_error_or_socket_timeout:
-                print 'WARNING: Re-executing a previously failed query by fatal-error or timeout'
-                status = self.query_manager.start_query(query, user_ses_id, force_new_worker=True)
+            if rlist:
+                # *** READ RESULTS IN FROM CACHE ***
+                status = models.QueryStatus(state=models.opts.states.results_ready)
+            else:
+                # *** READ STATUS/RESULTS IN FROM WORKER ***
+                # otherwise, try returning an existing query instance if possible ...
+                status = self.query_manager.get_query_status_from_definition(query)
+                if not status:
+                    # ... or return a new one
+                    status = self.query_manager.start_query(query, user_ses_id)
 
-            if return_rlist_directly and status.state == models.opts.states.results_ready:
-                try:
-                    rlist = self._get_results(status, query_ses_id, user_ses_id)
-                except models.errors.ResultReadError:
-                    status = models.QueryStatus(state=models.opts.states.result_read_error)
+                # if the query is not in cache and finished with a fatal error, maybe it is being retried
+                # after a change in the settings. Give it a chance to run again without fully restarting
+                # the server
+                if status.state == models.opts.states.fatal_error_or_socket_timeout:
+                    print 'WARNING: Re-executing a previously failed query by fatal-error or timeout'
+                    status = self.query_manager.start_query(query, user_ses_id, force_new_worker=True)
 
-        return models.QueryData(status, rlist)
+                if return_rlist_directly and status.state == models.opts.states.results_ready:
+                    try:
+                        rlist = self._get_results(status, query_ses_id, user_ses_id)
+                    except models.errors.ResultReadError:
+                        status = models.QueryStatus(state=models.opts.states.result_read_error)
+
+            return models.QueryData(status, rlist)
 
 
     def continue_query(self, qid, return_rlist_directly=True,

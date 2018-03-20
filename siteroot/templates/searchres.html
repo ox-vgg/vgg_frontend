@@ -22,9 +22,13 @@
     <head>
         <meta content="en-gb" http-equiv="Content-Language" />
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <!-- main stylesheet for site -->
         <link href="static/styles/main.css" rel="stylesheet" type="text/css" />
+        <!-- stylesheets for querybar/imageuploader/keyselector widgets -->
+        <link href="static/scripts/lib/select2-4.0.3/select2.min.css" rel="stylesheet" type="text/css" />
         <link href="static/scripts/widgets/jquery.ui.querybar.css" rel="stylesheet" type="text/css" />
         <link href="static/scripts/widgets/jquery.ui.imageuploader.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/widgets/jquery.ui.keyselector.css" rel="stylesheet" type="text/css" />
         <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
         <link href="static/scripts/lib/apprise/apprise.min.css" rel="stylesheet" type="text/css" />
         <title>{{SITE_TITLE}} - Results</title>
@@ -65,9 +69,10 @@
                             <div class="qbSrcQueryId">{{QUERY_ID}}</div>
                             <div class="qbEnginesWithImageSearchSupport">{{ENGINES_WITH_IMAGE_SEARCH_SUPPORT|safe}}</div>
                             <div id="imupControl"></div>
+                            <div id="selectKeywordControl"></div>
                             <!-- put submit box in control so it also appears after qb
                                  has finished loading -->
-                            <input id="query_box_submit" type="submit" value="&#xf002;" />
+                            <input id="query_box_submit" type="submit" value="&#xf002;" title="Search" />
                         </div>
                     </div>
                     <!-- end query box -->
@@ -103,8 +108,10 @@
         <script type="text/javascript" src="static/scripts/lib/jquery-1.11.3.min.js"></script>
         <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.widgets.min.js"></script>
         <script type="text/javascript" src="static/scripts/lib/jquery.form.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/select2-4.0.3/select2.full.min.js"></script>
         <script type="text/javascript" src="static/scripts/widgets/jquery.ui.querybar.js"></script>
         <script type="text/javascript" src="static/scripts/widgets/jquery.ui.imageuploader.js"></script>
+        <script type="text/javascript" src="static/scripts/widgets/jquery.ui.keyselector.js"></script>
         <script type="text/javascript" src="static/scripts/make-querybar-imup.js"></script>
         <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.autocomplete.min.js"></script>
         <!-- JQuery plugin for transitions between subpages. Requires JQuery UI Transitions module.

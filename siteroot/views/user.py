@@ -24,7 +24,6 @@ sys.path.append(os.path.join(settings.BASE_DIR, 'siteroot', 'controllers'))
 # imports from the controller
 import retengine.engine
 import retengine.query_translations
-import dsetmap
 
 class UserPages:
     """
@@ -278,9 +277,10 @@ class UserPages:
             else:
                 skip_query_progress = self.visor_controller.opts.engines_dict[engine].get('skip_query_progress', False)
                 if skip_query_progress or (
-                    engine=='instances' and  query_type=='dsetimage' # For this specific case, we can also skip the query progress
-                                                                     # because results are instant
-                    ):
+                    engine=='instances' and query_type=='dsetimage'  # For this specific case, we can also skip the query progress
+                                                                     # because results are instant ....
+                    ) or query_string.startswith('keywords:'):       # .... and the same applies to this other case
+
                     # NOTE: The code in this if-statement replaces the process implemented in 'searchproc.html', which
                     # performs the query with a visual feedback and downloading images. In cases when the backend does
                     # not need images as input, and the results are obtained almost instantly, you can use this code to
@@ -432,7 +432,7 @@ class UserPages:
         'DISABLE_AUTOCOMPLETE': VISOR_SETTINGS['disable_autocomplete'],
         'ENGINES_WITH_IMAGE_SEARCH_SUPPORT': str_engines_with_image_input_support,
         'VIEWMODE': view,
-        'VIEWSEL': self.visor_controller.opts.enable_viewsel
+        'VIEWSEL': self.visor_controller.opts.enable_viewsel and not query_string.startswith('keywords:')
         }
         return render_to_response(template, context)
 
@@ -550,7 +550,7 @@ class UserPages:
 
             # Add the metadata of each item. This could be programme name etc., otherwise defaults to filename
             try:
-                ritem['desc'] = self.visor_controller._meta_extr.getDescFromFname(ritem['path'], query['dsetname'])
+                ritem['desc'] = self.visor_controller.metadata_handler.getDescFromFname(ritem['path'], query['dsetname'])
             except Exception:
                 (fpath, fname) = os.path.split(ritem['path'])
                 ritem['desc'] = fname
@@ -607,8 +607,8 @@ class UserPages:
         'RANKING_TIME' : rankingtime,
         'ENGINE': engine,
         'SIMILAR_ENGINE': similar_search_engine,
-        'ENGINE_CAN_SAVE_UBER' : self.visor_controller.opts.engines_dict[engine]['can_save_uber_classifier'],
-        'ENGINE_HAS_IMG_POSTPROC_MODULE' : self.visor_controller.opts.engines_dict[engine]['imgtools_postproc_module'] != None,
+        'ENGINE_CAN_SAVE_UBER' : self.visor_controller.opts.engines_dict[engine]['can_save_uber_classifier'] and not query_string.startswith('keywords:'),
+        'ENGINE_HAS_IMG_POSTPROC_MODULE' : self.visor_controller.opts.engines_dict[engine]['imgtools_postproc_module'] != None and not query_string.startswith('keywords:'),
         }
         return render_to_response(template, context)
 
@@ -710,6 +710,7 @@ class UserPages:
                         idx = idx + 1
                 image['img_id'] = img_id
                 image['image'] = urllib.quote(image['image'])
+
 
         # set up rendering context and render the page
         context = {
@@ -941,7 +942,7 @@ class UserPages:
         'ROI': roi,
         'SELECT_ROI' : self.visor_controller.opts.select_roi,
         'DSET_RES_ID': dsetresid,
-        'METADATA': self.visor_controller._meta_extr.getMetaFromFname(imagename, dsetname)
+        'METADATA': self.visor_controller.metadata_handler.getMetaFromFname(imagename, dsetname)
         }
         return render_to_response(template, context)
 

@@ -1,0 +1,22 @@
+.selectKeywordControlWrapper {
+    background-color: #ffffff;
+    /*color: #ffffff;*/
+    padding: 1em;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    -webkit-box-shadow: inset 0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px rgba(195, 200, 207, 0.3), 0 3px 3px #7b7b7b;
+    box-shadow: inset 0 10px 20px rgba(255, 255, 255, 0.25), inset 0 -15px 30px rgba(195, 200, 207, 0.3), 0 3px 3px #7b7b7b;
+    width: 300px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    border-right: 1px solid #9cb0d8;
+    border-bottom: 1px solid #9cb0d8;
+    border-left: 1px solid #9cb0d8;
+}
+
+.selectKeyContainer {
+    padding: 0.5em;
+}
+#selectKeySubmitContainer {
+    text-align: right;
+}

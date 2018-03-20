@@ -47,19 +47,20 @@ class VisorController:
         # by query session id
         self.query_key_cache = retengine.managers.QueryKeyCache()
 
+        # initialize class for metadata extraction
+        self.metadata_handler = dsetmap.metaConverter.MetaDataHandler(self.opts.datasets,
+                                                                      self.metadata_paths.metadata,
+                                                                      self.process_pool)
+
         # initialize interface class for all interactions
         self.interface = retengine.VisorInterface(engine_class,
                                                   cfg_paths['predefined_rankinglists'],
                                                   cfg_paths['rankinglists'],
                                                   self.compdata_paths,
                                                   self.process_pool,
+                                                  self.metadata_handler,
                                                   self.proc_opts,
                                                   self.opts)
-
-        # initialize class for metadata extraction
-        self._meta_extr = dsetmap.metaConverter.fnameToMetaConverter(self.opts.datasets,
-                                                                     self.metadata_paths.metadata,
-                                                                     self.process_pool)
 
         # initialize classes for pagination
         self._page_manager = utils.pagination.PageManager(self.opts.results_per_page)

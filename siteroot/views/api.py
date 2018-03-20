@@ -463,6 +463,35 @@ class APIFunctions:
 
 
     @method_decorator(require_GET)
+    def get_keyword_list(self, request):
+        """
+            Retrieves a list of keywords extracted from the metadata of the defined dataset.
+            The list depends on a search 'term' specified in the request.
+            Only GET requests are allowed.
+            Arguments:
+               request: request object specifying the search 'term'
+            Returns:
+               JSON containing the list of keywords in the form: { 'results':  <list of keywords> }.
+               <list of keywords> will be empty on case of errors.
+        """
+        json_response = { "results": [] }
+        term_text=''
+        if 'term' in request.GET:
+            term_text = request.GET['term']
+
+        try:
+            keyword_list = self.visor_controller.metadata_handler.getSearchSuggestions(term_text)
+            for idx in range(len(keyword_list)):
+                json_response["results"].append( { 'id': idx+1, 'text': keyword_list[idx] } )
+        except Exception as e:
+            print e
+            json_response = { "results": [] }
+            pass
+
+        return HttpResponse(json.dumps(json_response))
+
+
+    @method_decorator(require_GET)
     def get_text_suggestions(self, request):
         """
             Retrieves a list of words suggested for the autocomplete of the main page.
@@ -478,7 +507,7 @@ class APIFunctions:
                JSON containing the suggestions in the form: { 'success': True, results': <list of results> },
                or an empty JSON if there was an error.
         """
-        json_response = []
+        json_response = {}
         if 'query' not in request.GET or 'engine' not in request.GET:
             return HttpResponse(json.dumps(json_response))
 
@@ -493,9 +522,9 @@ class APIFunctions:
                 response = ses.custom_request(request)
                 json_response = json.loads(response)
                 if not json_response["success"]:
-                    json_response = []
+                    json_response = {}
         except:
-            json_response = []
+            json_response = {}
             pass
 
         return HttpResponse(json.dumps(json_response))

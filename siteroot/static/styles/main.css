@@ -175,6 +175,13 @@ a:visited {
     z-index: 999;
 }
 
+#selectKeywordControl {
+    position: absolute;
+    left: 0;
+    top: 30px;
+    z-index: 999;
+}
+
 #gfControl {
     position:absolute;
     right: 0;
@@ -990,6 +997,11 @@ div.result_text {
 .ui-autocomplete {
     /*5010 because z-index of page_header if 5000*/
     z-index:5010 !important;
+    position: absolute;
+    max-height: 200px;
+    overflow-y: auto !important;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
 }
 
 .ui-helper-hidden-accessible {
@@ -1009,6 +1021,14 @@ div.result_text {
 
 ul.ui-autocomplete {
     list-style: none;
+}
+
+/* @end */
+
+/* @group select2 customizations */
+
+.select2-container {
+  z-index: 5001; /* above header banner*/
 }
 
 /* @end */

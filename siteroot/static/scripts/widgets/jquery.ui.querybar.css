@@ -322,6 +322,61 @@ div#qbSelImage:after {
     clear: both;
 }
 
+div#qbSelImage>img {
+    height: 15px;
+    width: 15px;
+    display:block;
+    padding-top:3px
+}
+
+div#qbSelKey {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 100%;
+    /*vertical-align: center;*/
+    -webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
+    box-shadow:inset 0px 1px 0px 0px #ffffff;
+    background: -moz-linear-gradient(center top, #f2f5f8 5%, #cdd4de 100%) #f2f5f8;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #f2f5f8), to(#cdd4de)) #f2f5f8;
+    -webkit-border-radius:2px;
+    border-radius:2px;
+    border:1px solid #a3a3a3;
+    display:inline-block;
+    color:#777777;
+    text-decoration:none;
+    text-shadow:1px 1px 0px #ffffff;
+    cursor: default;
+    -moz-user-select: -moz-none;
+    -webkit-user-select: none;
+    user-select: none;
+    position: relative;
+    /*z-index: 999;*/
+    padding-right: 3px;
+    padding-left: 3px;
+    width: 18px;
+}
+div#qbSelKey:hover {
+    background: -moz-linear-gradient(center top, #f2f5f8 5%, #acb7c8 100%) #f2f5f8;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #f2f5f8), to(#acb7c8)) #f2f5f8;
+}
+div#qbSelKey:active {
+    background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #cdd4de), color-stop(1, #f2f5f8) );
+    background:-moz-linear-gradient( center top, #cdd4de 5%, #f2f5f8 100% );
+    position:relative;
+    top:1px;
+}
+div#qbSelKey:after {
+    clear: both;
+}
+
+div#qbSelKey>img {
+    height: 15px;
+    width: 15px;
+    display:block;
+    padding-top:3px
+}
+
 .previewDragOver {
     background-color: #4787ec !important;
     color: #ffffff;
@@ -329,6 +384,7 @@ div#qbSelImage:after {
 .queryTextDragOver {
     background-color: #d8dfea;
 }
+
 
 /* @end */
 
