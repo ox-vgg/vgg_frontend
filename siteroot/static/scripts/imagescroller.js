@@ -160,7 +160,6 @@ function imsc_loadImage(engine, impath) {
 }
 
 function imsc_imageLoaded(idx) {
-    num_images_added++;
 
     var scaleRatio = imsc_canvas.height / imsc_pics[idx].height;
     imsc_widths[idx] = imsc_pics[idx].width*scaleRatio;
