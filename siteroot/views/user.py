@@ -547,7 +547,6 @@ class UserPages:
 
         # prepare the details of every item in the list, for rendering the page
         for ritem in rlist:
-
             # Add the metadata of each item. This could be programme name etc., otherwise defaults to filename
             try:
                 ritem['desc'] = self.visor_controller.metadata_handler.getDescFromFname(ritem['path'], query['dsetname'])
@@ -559,6 +558,8 @@ class UserPages:
             if 'uri' in ritem:
                 dsetresid = dsetresid+ ',uri:%s' % ritem['uri']
             ritem['dsetresid'] = dsetresid
+            if 'score' not in ritem:
+                ritem['score'] = 0
 
             if 'roi' in ritem:
                 thumbnailroi = ',roi:' + ritem['roi']
