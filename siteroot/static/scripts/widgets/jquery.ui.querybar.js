@@ -285,6 +285,9 @@ var querybar = {
             var e = el.find('.qbImageSearchVal');
             e.hide();
             self.setQueryStr(e.html(),CONST_QT_IMAGE);
+            if (e.html().indexOf('anno:') !== -1) {
+                el.find('#qbQueryType').attr('value',CONST_QT_REFINE);
+            }
         } else {
             /* DO THIS EVEN IF NO INITIAL VALUE SPECIFIED */
             this._setQueryMode();
