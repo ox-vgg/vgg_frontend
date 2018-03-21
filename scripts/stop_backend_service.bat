@@ -14,7 +14,7 @@ exit /B
     exit /B
 :CASE_faces
     taskkill /FI "WINDOWTITLE eq vgg_img_downloader*" /F /T
-    taskkill /FI "WINDOWTITLE eq vgg_face_search_service*" /F /T
+    taskkill /FI "WINDOWTITLE eq vgg_face_finder_service*" /F /T
     exit /B
 :CASE_instances
     echo Instances search engine not yet supported in Windows
