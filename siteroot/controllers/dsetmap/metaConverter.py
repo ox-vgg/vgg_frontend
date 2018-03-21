@@ -46,23 +46,33 @@ class MetaDataHandler:
         self.keyword2fname = {}
         self.metadata_dir = metadata_dir
         self.process_pool = process_pool
-        # initialize indexing
-        self.index_dir = os.path.join(self.metadata_dir, 'indexdir')
-        create_index = False
-        if not os.path.exists(self.index_dir):
-            os.mkdir(self.index_dir)
-            schema = Schema(key=KEYWORD(stored=True),
-                            dataset=TEXT) # In the future, this migth be needed if
-                                          # using multiple datasets
-            self.metaindex = create_in(self.index_dir, schema)
-            create_index = True
-        else:
-            self.metaindex = open_dir(self.index_dir)
         # load metadata for each dataset
+        self.metaindex = None
+        found_a_csv = False
         for (dset, pretty) in prep_dsets.iteritems():
             self.fname2meta[dset] = {}
             self.keyword2fname[dset] = {}
             try:
+                # check there is at least one csv
+                if not found_a_csv:
+                    for afile in os.listdir( os.path.join(self.metadata_dir, dset) ):
+                        if afile.endswith(".csv"):
+                            found_a_csv = True
+                            break
+                # create index, if not present
+                self.index_dir = os.path.join(self.metadata_dir, 'indexdir')
+                create_index = False
+                if found_a_csv and not os.path.exists(self.index_dir):
+                    os.mkdir(self.index_dir)
+                    schema = Schema(key=KEYWORD(stored=True),
+                                    dataset=TEXT) # In the future, this migth be needed if
+                                                  # using multiple datasets
+                    self.metaindex = create_in(self.index_dir, schema)
+                    create_index = True
+                # load the old one, if found
+                if found_a_csv and os.path.exists(self.index_dir):
+                    self.metaindex = open_dir(self.index_dir)
+                # start thread to load all metadata
                 self.process_pool.apply_async(  func=self.loadAllDsetMetadata, args=(dset, create_index,) )
             except Exception as e:
                 print "Error while pre-loading metadata for " + dset + ": " + str(e) + '\n'
@@ -174,21 +184,22 @@ class MetaDataHandler:
                 index, whose values match the query text in the 'key' field.
         """
         results_list = []
-        with self.metaindex.searcher() as searcher:
-            query = QueryParser('key', self.metaindex.schema).parse(text)
-            c = searcher.collector(limit)
-            tlc = TimeLimitCollector(c, timelimit, use_alarm=False)
+        if self.metaindex:
+            with self.metaindex.searcher() as searcher:
+                query = QueryParser('key', self.metaindex.schema).parse(text)
+                c = searcher.collector(limit)
+                tlc = TimeLimitCollector(c, timelimit, use_alarm=False)
 
-            # Try searching
-            try:
-                searcher.search_with_collector(query, tlc)
-            except TimeLimit:
-                print "searchByKeyWord: Index search took too long, aborting!"
+                # Try searching
+                try:
+                    searcher.search_with_collector(query, tlc)
+                except TimeLimit:
+                    print "searchByKeyWord: Index search took too long, aborting!"
 
-            # get partial results, if available
-            results = tlc.results()
-            for res in results:
-                results_list.append( dict(res) )
+                # get partial results, if available
+                results = tlc.results()
+                for res in results:
+                    results_list.append( dict(res) )
 
         return results_list
 
