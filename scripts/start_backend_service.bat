@@ -16,8 +16,8 @@ exit /B
     cd %~dp0
     cd ..\vgg_img_downloader
     START "vgg_img_downloader" /MIN start_service.bat
-    cd ..\..\vgg_face_finder\service
-    START "vgg_face_finder_service" /MIN start_backend_service.bat
+    cd ..\..\vgg_face_search\service
+    START "vgg_face_search_service" /MIN start_backend_service.bat
     exit /B
 :CASE_instances
     echo Instances search engine not yet supported in Windows
