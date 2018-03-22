@@ -161,15 +161,15 @@ function imsc_loadImage(engine, impath) {
 
 function imsc_imageLoaded(idx) {
 
+    num_images_added++;
     var scaleRatio = imsc_canvas.height / imsc_pics[idx].height;
     imsc_widths[idx] = imsc_pics[idx].width*scaleRatio;
     imsc_createBitmap(idx, scaleRatio);
 }
 
 function imsc_imageLoadFailed(idx) {
-    num_images_added++;
-    console.log("image at idx " + idx + " could not be loaded - " + imsc_pics[idx].src);
 
+    console.log("image at idx " + idx + " could not be loaded - " + imsc_pics[idx].src);
     if (idx+1 != imsc_pics.length) {
         alert('Developer error: tried to load too many images at the same time (only one image at a time is supported)');
     }
