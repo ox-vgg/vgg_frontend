@@ -143,6 +143,8 @@ class MetaDataHandler:
                                             self.keyword2fname[dsetname][key].append(filename)
                                         else:
                                             self.keyword2fname[dsetname][key] = [ filename ]
+                            else:
+                                raise Exception('"filename" and/or "file_attributes" columns not found in ' + afile + ' (are you missing the column names?). Metadata will not be available!.')
 
                         print 'Finished loading metadata for %s in %s' % (dsetname, str(time.time()-t))
                 break
