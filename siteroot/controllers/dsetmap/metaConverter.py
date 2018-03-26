@@ -147,7 +147,7 @@ class MetaDataHandler:
                                 raise Exception('"filename" and/or "file_attributes" columns not found in ' + afile + ' (are you missing the column names?). Metadata will not be available!.')
 
                         print 'Finished loading metadata for %s in %s' % (dsetname, str(time.time()-t))
-                break
+                    break
         except Exception as e:
             print "loadAllDsetMetadata Exception:" + str(e) + '\n'
 
