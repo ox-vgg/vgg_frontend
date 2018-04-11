@@ -648,12 +648,8 @@ div.result_belowtext>div {
     position: absolute;
 }
 
-.result_belowtext_movsymbol:before {
-    content: "M";
-}
-
 .result_belowtext_text {
-    padding-left: 1.8em;
+    padding-left: 1em;
 }
 
 /* result refine buttons --------------------------- */

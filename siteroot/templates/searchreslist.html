@@ -69,7 +69,11 @@
                             <a class="result_refinebtn result_refinebtn_unselected result_refinebtn_pos" href="#">+</a>
                         </div>
                         <div class="result_belowtext">
-                            <div><span class="result_belowtext_movsymbol"></span><span class="result_belowtext_text">{{RITEM.desc|trunc:20}}</span></div>
+                            {% if RITEM.score >= 0 %}
+                                <div><span class="result_belowtext_movsymbol" style="color:#008300;">/</span><span class="result_belowtext_text">{{RITEM.desc|trunc:20}}</span></div>
+                            {% else %}
+                                <div><span class="result_belowtext_movsymbol" style="color:#d9d900;">W</span><span class="result_belowtext_text">{{RITEM.desc|trunc:20}}</span></div>
+                            {% endif %}
                         </div>
                         {% if SIMILAR_ENGINE %}
                         <div class="result_extras">
