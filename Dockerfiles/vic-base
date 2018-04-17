@@ -58,10 +58,10 @@ RUN wget https://github.com/BVLC/caffe/archive/rc3.zip -P /tmp \
     && rm -rf /tmp/*.zip
 
 # Download vgg repos
-RUN wget https://gitlab.com/vgg/vgg_frontend/repository/archive.zip?ref=master -O /tmp/vgg_frontend.zip \
+RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O /tmp/vgg_frontend.zip \
     && unzip /tmp/vgg_frontend.zip -d /webapps/visorgen/ \
     && mv /webapps/visorgen/vgg_frontend*  /webapps/visorgen/vgg_frontend \
-    && wget https://gitlab.com/vgg/vgg_classifier/repository/archive.zip?ref=master -O /tmp/vgg_classifier.zip \
+    && wget https://gitlab.com/vgg/vgg_classifier/-/archive/master/vgg_classifier-master.zip -O /tmp/vgg_classifier.zip \
     && unzip /tmp/vgg_classifier.zip -d /webapps/visorgen/ \
     && mv /webapps/visorgen/vgg_classifier*  /webapps/visorgen/vgg_classifier \
     && rm -rf /tmp/*.zip \
