@@ -54,10 +54,17 @@ class APIFunctions:
         self.threads_map = {}
         self.lock = threading.Lock()
         self.pipeline_frame_list = []
+        self.pipeline_video_list = []
         self.total_input_files = None
         self.global_input_index = -1
         self.pipeline_input_type = ''
         self.pipeline_engine = ''
+
+        # init constants for video processing.
+        # So far these are only defined here and should
+        # not be changed via the settings
+        self.num_video_threads = 2
+        self.video_chunk_size = 1
 
         # init vars to support backend service management
         self.backend_thread = None
@@ -583,7 +590,7 @@ class APIFunctions:
                request: request object containing details of the user session, etc.
         """
 
-        if ('input_type' not in request.POST) or (request.POST['input_type'] not in ['positive', 'negative']):
+        if ('input_type' not in request.POST) or (request.POST['input_type'] not in ['positive', 'negative', 'video']):
             message = 'The input type descriptor is missing or invalid. The pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
@@ -592,6 +599,17 @@ class APIFunctions:
             message = 'There is no data pipeline defined for the selected engine. A pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+
+        if (request.POST['engine'] == 'faces' and request.POST['input_type']=='video'):
+            file_list = request.FILES.getlist('input_video_list')
+            if len(file_list)==0:
+                message = 'The input file for video ingestion is missing. A pipeline cannot be started.'
+                redirect_to = settings.SITE_PREFIX + '/admintools'
+                return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+            elif not file_list[0].name.endswith('.txt'):
+                message = 'The input file for video ingestion does not appear to be a text file. A pipeline cannot be started.'
+                redirect_to = settings.SITE_PREFIX + '/admintools'
+                return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
         # get engine config
         (self.DATASET_IM_BASE_PATH, self.DATASET_IM_PATHS,
@@ -621,6 +639,7 @@ class APIFunctions:
 
         self.threads_map.clear()
         self.pipeline_frame_list = []
+        self.pipeline_video_list = []
         self.global_input_index = -1
         self.pipeline_engine = request.POST['engine']
         self.total_input_files = None
@@ -629,7 +648,7 @@ class APIFunctions:
         if fileSystemEncodingNotUTF8:
             img_base_path = str(img_base_path)  # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
 
-        if len(request.FILES) == 0:
+        if self.pipeline_input_type != 'video' and len(request.FILES) == 0:
             # if no input file or list is provided with the names of the files to ingest, so ingest the whole directory by default
             self.pipeline_input_thread = threading.Thread( target=api_globals.gather_pipeline_input,
                             args=( 'dir', img_base_path, None, fileSystemEncodingNotUTF8, self.pipeline_frame_list),  )
@@ -638,8 +657,13 @@ class APIFunctions:
             return redirect('pipeline_input_status')
 
         if len(request.FILES) != 0:
-            file_list = request.FILES.getlist('input_file')
-            if len(file_list)==1 and file_list[0].name.endswith('.txt'):
+
+            if self.pipeline_input_type != 'video':
+                file_list = request.FILES.getlist('input_file')
+            else:
+                file_list = request.FILES.getlist('input_video_list')
+
+            if len(file_list) == 1 and file_list[0].name.endswith('.txt'):
                 # This allows the possibility of uploading a list of images in a text file
                 # However, the whole file must be read before leaving this thread and starting the other.
                 uploaded_file = file_list[0].read()
@@ -647,16 +671,22 @@ class APIFunctions:
                 if len(file_list[-1])==0:
                     file_list = file_list[:-1]
                 self.total_input_files = len(file_list)
-                # check the number of images to ingest. If less than MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES don't start a separate thread
-                if self.total_input_files < settings.MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES:
-                    api_globals.gather_pipeline_input( 'file', img_base_path, file_list, fileSystemEncodingNotUTF8, self.pipeline_frame_list)
-                    return redirect('pipeline_start')
+
+                if self.pipeline_input_type != 'video':
+                    # check the number of images to ingest. If less than MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES don't start a separate thread
+                    if self.total_input_files < settings.MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES:
+                        api_globals.gather_pipeline_input( 'file', img_base_path, file_list, fileSystemEncodingNotUTF8, self.pipeline_frame_list)
+                        return redirect('pipeline_start')
+                    else:
+                        self.pipeline_input_thread = threading.Thread( target=api_globals.gather_pipeline_input,
+                                args=( 'file', img_base_path, file_list, fileSystemEncodingNotUTF8, self.pipeline_frame_list) )
+                        # start the thread and redirect to the status-checking page
+                        self.pipeline_input_thread.start()
+                        return redirect('pipeline_input_status')
                 else:
-                    self.pipeline_input_thread = threading.Thread( target=api_globals.gather_pipeline_input,
-                            args=( 'file', img_base_path, file_list, fileSystemEncodingNotUTF8, self.pipeline_frame_list) )
-                    # start the thread and redirect to the status-checking page
-                    self.pipeline_input_thread.start()
-                    return redirect('pipeline_input_status')
+                    # for videos, just go straight to the pipeline
+                    self.pipeline_video_list = file_list
+                    return redirect('pipeline_start')
             else:
                 # When uploading files in this way, we cannot use a separate thread, since the files are loaded in memory as stream
                 # objects by Django and if we start another thread the streams are closed, so the separate thread cannot save them.
@@ -713,11 +743,18 @@ class APIFunctions:
                     redirect_to = settings.SITE_PREFIX + '/pipeline_status'
                     return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
 
-        if len(self.pipeline_frame_list) == 0:
+        if len(self.pipeline_frame_list) == 0 and self.pipeline_input_type != 'video':
             self.total_input_files = None
             message = 'No valid input images were found. The pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+
+        if len(self.pipeline_video_list) == 0 and self.pipeline_input_type == 'video':
+            self.total_input_files = None
+            message = 'No video paths were provided. The pipeline cannot be started.'
+            redirect_to = settings.SITE_PREFIX + '/admintools'
+            return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+
 
         # get engine config
         (self.DATASET_IM_BASE_PATH, self.DATASET_IM_PATHS,
@@ -763,24 +800,40 @@ class APIFunctions:
                 self.threads_map[ self.global_input_index ] = t
                 self.global_input_index = list_end
 
-        if self.pipeline_engine == 'faces':
+        if self.pipeline_engine == 'faces' and self.pipeline_input_type != 'video':
 
             # Calculate number of threads. Set to a maximum of settings.FRAMES_THREAD_NUM_LIMIT and a minimum of 1.
             num_threads = max(1, min( len(self.pipeline_frame_list)/settings.PREPROC_CHUNK_SIZE, settings.FRAMES_THREAD_NUM_LIMIT ) )
 
-            # if the 'negative' features are being computed, always use one thread,
-            # as 'cpuvisor_preproc' does not support chunks for negative features
-            chunk_size = settings.PREPROC_CHUNK_SIZE
-
             # Start pipeline.
             self.global_input_index = 0
             for i in range(0, num_threads):
-                list_end = min(self.global_input_index + chunk_size, len(self.pipeline_frame_list))
+                list_end = min(self.global_input_index + settings.PREPROC_CHUNK_SIZE, len(self.pipeline_frame_list))
                 frame_list = self.pipeline_frame_list[ self.global_input_index : list_end]
                 t = threading.Thread( target=data_processing_pipeline_faces,
-                            args=(  frame_list, self.global_input_index, self.lock,
+                            args=(  frame_list, self.pipeline_input_type,
+                                    self.global_input_index, self.lock,
                                     img_base_path, file_with_list_of_paths,
                                     dataset_features_out_file) )
+                t.start()
+                self.threads_map[ self.global_input_index ] = t
+                self.global_input_index = list_end
+
+        if self.pipeline_engine == 'faces' and self.pipeline_input_type == 'video':
+
+            # Calculate number of threads. Set to a maximum of self.num_video_threads.
+            num_threads =  min( len(self.pipeline_video_list), self.num_video_threads )
+
+            self.global_input_index = 0
+            for i in range(0, num_threads):
+                list_end = min(self.global_input_index + self.video_chunk_size, len(self.pipeline_video_list))
+                video_list = self.pipeline_video_list[ self.global_input_index : list_end]
+                t = threading.Thread( target=data_processing_pipeline_faces,
+                    args=(  video_list,
+                            self.pipeline_input_type,
+                            self.global_input_index, self.lock,
+                            img_base_path, file_with_list_of_paths,
+                            dataset_features_out_file) )
                 t.start()
                 self.threads_map[ self.global_input_index ] = t
                 self.global_input_index = list_end
@@ -810,10 +863,12 @@ class APIFunctions:
             else:
                 doneThreadCounter = doneThreadCounter + 1
 
+        numberOfVideos = len(self.pipeline_video_list)
         numberOfFrames = len(self.pipeline_frame_list)
         processingFrames = numberOfFrames>0
+        processingVideo = numberOfVideos>0
 
-        if self.pipeline_engine == 'faces':
+        if self.pipeline_engine == 'faces' and self.pipeline_input_type != 'video':
 
             numberOfFrameChunks = int ( round( ( numberOfFrames /settings.PREPROC_CHUNK_SIZE*1.0 ) + 0.5 ) )
 
@@ -831,7 +886,32 @@ class APIFunctions:
                 frame_list = self.pipeline_frame_list[ self.global_input_index : list_end ]
                 if len(frame_list)>0:
                     t = threading.Thread( target=data_processing_pipeline_faces,
-                            args=(  frame_list, self.global_input_index, self.lock,
+                            args=(  frame_list, self.pipeline_input_type,
+                                    self.global_input_index, self.lock,
+                                    img_base_path, file_with_list_of_paths,
+                                    dataset_features_out_file) )
+                    t.start()
+                    self.threads_map[ self.global_input_index ] = t
+                    self.global_input_index = list_end
+
+        if self.pipeline_engine == 'faces' and self.pipeline_input_type == 'video':
+
+            if aliveThreadCounter == 0 and processingVideo and self.global_input_index + 1 > numberOfVideos:
+                message = 'The data pipeline has finished !.'
+                redirect_to = settings.SITE_PREFIX + '/admintools'
+                return render_to_response("alert_and_redirect.html", context = {'REDIRECT_TO': redirect_to, 'MESSAGE': message } )
+            elif processingVideo and aliveThreadCounter < self.num_video_threads and self.global_input_index + 1 <= numberOfVideos:
+                # since we are under the self.num_video_threads quota, let's try to start a new thread for the next video
+
+                img_base_path = self.DATASET_IM_BASE_PATH
+                file_with_list_of_paths =  self.DATASET_IM_PATHS
+                dataset_features_out_file = self.DATASET_FEATS_FILE
+                list_end = min(self.global_input_index + self.video_chunk_size, numberOfVideos)
+                video_list = self.pipeline_video_list[ self.global_input_index : list_end ]
+                if len(video_list)>0:
+                    t = threading.Thread( target=data_processing_pipeline_faces,
+                            args=(  video_list, self.pipeline_input_type,
+                                    self.global_input_index, self.lock,
                                     img_base_path, file_with_list_of_paths,
                                     dataset_features_out_file) )
                     t.start()
@@ -877,7 +957,9 @@ class APIFunctions:
             home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         context = {
+        'PROCESSED_VIDEOS': doneThreadCounter,
         'PROCESSED_FRAME_CHUNKS': doneThreadCounter,
+        'TOTAL_VIDEOS': numberOfVideos,
         'TOTAL_FRAME_CHUNKS': numberOfFrameChunks,
         'TOTAL_FRAMES': numberOfFrames,
         'HOME_LOCATION': home_location,

@@ -259,17 +259,23 @@ The following variables are defined:
                         <h2>Face search engine: DATA INGESTION</h2>
                         <div id="config-options-container">
                                 <dl>
-                                    <dt>(OPTIONAL) Select specific files to be ingested:</dt>
+                                    <dt>Input type:</dt>
                                     <dd>
-                                        <input name="input_file" id="input_descriptor_file_input" type="file" multiple="true" accept="{{VALID_IMG_EXTENSIONS_STR}}"/>
+                                          <br>
+                                          <input type="radio" name="input_type" value="positive" checked> Images<br>
+                                          (OPTIONAL) Select specific files to be ingested:
+                                          <input name="input_file" id="input_descriptor_file_input" type="file" multiple="true" accept="{{VALID_IMG_EXTENSIONS_STR}}"/><br>
+                                          <strong>If no specific files are selected for ingestion, the full content of the images folder will be processed</strong><br>
+                                          <br>
+                                          <input type="radio" name="input_type" value="video"> Videos<br>
+                                          Select a text file (.txt) containing the COMPLETE paths to the videos:
+                                          <input name="input_video_list" id="input_descriptor_video_input" type="file" accept=".txt"/><br>
+                                          <strong>Only videos up to 90 minutes are supported. MP4 format is recommended.</strong><br>
+                                          <strong>BE ADVICED: Video ingestion is computationally intensive.</strong><br>
                                     </dd>
-                                    <input type="hidden" name="input_type" value="positive" />
                                     <input type="hidden" name="engine" value="faces" />
                                 </dl>
                         </div>
-                        <strong>If no specific files are selected for ingestion, the full content of the images folder will be processed</strong>
-                        <br/>
-                        <br/>
                         <input type="submit" value="Ingest"/>
                     </div>
                 </form>
