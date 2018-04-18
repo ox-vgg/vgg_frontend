@@ -2,13 +2,11 @@
 
 import csv
 import os
-import multiprocessing
-import sys
 import time
 import json
 
 from whoosh.index import create_in, open_dir
-from whoosh.fields import *
+from whoosh.fields import Schema, KEYWORD, TEXT
 from whoosh.qparser import QueryParser
 from whoosh.collectors import TimeLimitCollector, TimeLimit
 from whoosh.writing import AsyncWriter
@@ -27,8 +25,8 @@ class MetaDataHandler:
                 ALLMETA: All recovered metadata for a specified file
                 DESC_ONLY: Only a short description, which is defined manually below.
         """
-        ALL_META=1,
-        DESC_ONLY=2
+        ALL_META = 1,
+        DESC_ONLY = 2
 
 
     def __init__(self, prep_dsets, metadata_dir, process_pool):
@@ -55,7 +53,7 @@ class MetaDataHandler:
             try:
                 # check there is at least one csv
                 if not found_a_csv:
-                    for afile in os.listdir( os.path.join(self.metadata_dir, dset) ):
+                    for afile in os.listdir(os.path.join(self.metadata_dir, dset)):
                         if afile.endswith(".csv"):
                             found_a_csv = True
                             break
@@ -73,12 +71,12 @@ class MetaDataHandler:
                 if found_a_csv and os.path.exists(self.index_dir):
                     self.metaindex = open_dir(self.index_dir)
                 # start thread to load all metadata
-                self.process_pool.apply_async(  func=self.loadAllDsetMetadata, args=(dset, create_index,) )
+                self.process_pool.apply_async(func=self.load_all_dset_metadata, args=(dset, create_index,))
             except Exception as e:
                 print "Error while pre-loading metadata for " + dset + ": " + str(e) + '\n'
 
 
-    def loadAllDsetMetadata(self, dsetname, create_index=False):
+    def load_all_dset_metadata(self, dsetname, create_index=False):
         """
             Loads into memory the metadata of a dataset. The metadata is read from a CSV file, which should
             have at least two columns:
@@ -97,9 +95,9 @@ class MetaDataHandler:
                               with the metadata
         """
         metaindex = None
-        t =time.time()
+        t = time.time()
         try:
-            for afile in os.listdir( os.path.join(self.metadata_dir, dsetname) ):
+            for afile in os.listdir(os.path.join(self.metadata_dir, dsetname)):
                 if afile.endswith(".csv"):
                     metadata_file = os.path.join(self.metadata_dir, dsetname, afile)
                     print 'Found metadata file at', metadata_file
@@ -132,7 +130,7 @@ class MetaDataHandler:
                                         query = QueryParser('key', metaindex.schema).parse(key)
                                         writer.delete_by_query(query, metaindex.searcher())
                                         # add document
-                                        writer.add_document(key=unicode(key),dataset=unicode(dsetname))
+                                        writer.add_document(key=unicode(key), dataset=unicode(dsetname))
                                     writer.commit()
                                 if keyword_list: # we would like to do this, even if the index is not created
                                     # register link keyword-file
@@ -142,17 +140,17 @@ class MetaDataHandler:
                                         if key in self.keyword2fname[dsetname].keys():
                                             self.keyword2fname[dsetname][key].append(filename)
                                         else:
-                                            self.keyword2fname[dsetname][key] = [ filename ]
+                                            self.keyword2fname[dsetname][key] = [filename]
                             else:
                                 raise Exception('"filename" and/or "file_attributes" columns not found in ' + afile + ' (are you missing the column names?). Metadata will not be available!.')
 
                         print 'Finished loading metadata for %s in %s' % (dsetname, str(time.time()-t))
                     break
         except Exception as e:
-            print "loadAllDsetMetadata Exception:" + str(e) + '\n'
+            print "load_all_dset_metadata Exception:" + str(e) + '\n'
 
 
-    def getFilesByKeyword(self, keyword, dsetname):
+    def get_files_by_keyword(self, keyword, dsetname):
         """
             Returns the list of files associated to a keyword in the metadata index
             Arguments:
@@ -168,12 +166,11 @@ class MetaDataHandler:
         except Exception as e:
             print e
             results_list = []
-            pass
 
         return results_list
 
 
-    def searchMetaindexByKeyword(self, text, limit=None, timelimit=1):
+    def search_metaindex_by_keyword(self, text, limit=None, timelimit=1):
         """
             Performs a query in the metadata search index by the 'key' field.
             Arguments:
@@ -189,8 +186,8 @@ class MetaDataHandler:
         if self.metaindex:
             with self.metaindex.searcher() as searcher:
                 query = QueryParser('key', self.metaindex.schema).parse(text)
-                c = searcher.collector(limit)
-                tlc = TimeLimitCollector(c, timelimit, use_alarm=False)
+                coll = searcher.collector(limit)
+                tlc = TimeLimitCollector(coll, timelimit, use_alarm=False)
 
                 # Try searching
                 try:
@@ -201,12 +198,12 @@ class MetaDataHandler:
                 # get partial results, if available
                 results = tlc.results()
                 for res in results:
-                    results_list.append( dict(res) )
+                    results_list.append(dict(res))
 
         return results_list
 
 
-    def getSearchSuggestions(self, text):
+    def get_search_suggestions(self, text):
         """
             Gathers a list of maximum 100 search suggestions from the metadata search index.
             The timeout for a search in the index is 0.5 seconds. Searches that
@@ -217,13 +214,13 @@ class MetaDataHandler:
                 A list of maximum 100 suggestions
         """
         suggestions = []
-        results = self.searchMetaindexByKeyword(text + '*', limit=100, timelimit=0.5)
+        results = self.search_metaindex_by_keyword(text + '*', limit=100, timelimit=0.5)
         for res in results:
             suggestions.append(res['key'])
         return suggestions
 
 
-    def getMetaFromFname(self, fname, dsetname, _metatype=MetaType.ALL_META):
+    def get_meta_from_fname(self, fname, dsetname, _metatype=MetaType.ALL_META):
         """
             Extracts the metadata corresponding to the specified file, within
             the specified dataset.
@@ -251,7 +248,6 @@ class MetaDataHandler:
             metadata = self.fname2meta[dsetname][fname]
         except KeyError:
             metadata = None
-            pass
 
         # 3- If no metadata was found, return just a shorter filename, otherwise keep going
         if metadata == None:
@@ -269,7 +265,7 @@ class MetaDataHandler:
             return metadata.items()
 
 
-    def getDescFromFname(self, fname, dsetname):
+    def get_desc_from_fname(self, fname, dsetname):
         """
             Extracts a short description corresponding to the specified file, within
             the specified dataset.
@@ -281,14 +277,9 @@ class MetaDataHandler:
             Returns:
                 A string with the extracted description, possibly in JSON format.
         """
-        return self.getMetaFromFname(fname, dsetname, _metatype=self.MetaType.DESC_ONLY)
+        return self.get_meta_from_fname(fname, dsetname, _metatype=self.MetaType.DESC_ONLY)
 
 
-    def getSupportedDatasets(self):
+    def get_supported_datasets(self):
         """ Returns the list of supported datasets """
         return self.fname2meta.keys()
-
-
-
-
-
