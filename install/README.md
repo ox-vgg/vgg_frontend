@@ -1,27 +1,74 @@
-vgg_frontend Installers
-=======================
+Deployment scripts and usage
+============================
 
-These installers are experimental. Please use caution when using them and read this README until the end before attempting the installation.
+These scripts are meant for local deployment on your computer of the applications listed here. This means that they will download and install third-party software and data in your computer, as well as compile and configure source code. The scripts are experimental and are intended for **Software Developers**. Regular users are strongly advised to use the docker version of the applications listed here to install them on their computers.
 
-Ubuntu 14 LTS
+In all cases, you will need a C++ compiler and Python 2.7 installed on your system. For GPU support you will need the NVIDIA drivers and the CUDA Toolkit in your system. Please be aware that the scripts for GPU might fail depending on your particular CUDA setup (version, location of the CUDA library in your system, etc.). cuDNN is not used anywhere so if you want, for instance, Caffe with cuDNN, you will need to reconfigure and recompile Caffe by yourself.
+
+All scripts contain requirements and some instructions at the beginning of the file. Please read them before attempting the deployment.
+
+All scripts create a default 'admin' user in the system. Check the last lines of the scripts for the password.
+
+Applications
+------------
+
+#### *VGG Image Classification (VIC) engine*
+
+`VIC` is a combination of the code in this repository and [vgg_classifier](https://gitlab.com/vgg/vgg_classifier).
+
+`VIC` is an application that serves as a web engine to perform image classification queries over an user-defined image dataset. More detailed information can be found at <http://www.robots.ox.ac.uk/~vgg/software/vic/>.
+
+Deployment scripts are provided for macOS High Sierra 10.13.3 and Ubuntu 14.04, with or without GPU support.
+
+#### *VGG Face Finder (VFF) engine*
+
+`VFF` is a combination of the code in this repository and [vgg_face_search](https://gitlab.com/vgg/vgg_face_search).
+
+`VFF` is an application that serves as a web engine to perform queries over an user-defined image dataset with faces. More detailed information can be found at <http://www.robots.ox.ac.uk/~vgg/software/vff/>.
+
+Deployment scripts are provided for macOS High Sierra 10.13.3, Ubuntu 14.04 and Windows10 x64; with or without GPU support.
+
+The GPU version uses [face-py-faster-rcnn](https://github.com/playerkk/face-py-faster-rcnn/) for the face detection, while the CPU-only version uses [facenet](https://github.com/davidsandberg/facenet/).
+
+For Windows, none of these detectors are supported and instead the standard frontal-face detector of [Dlib](http://dlib.net/imaging.html) is used. You can easily change the code in `vgg_face_search\service\face_detection_dlib.py` to use Dlib's `cnn_face_detector` to get better results. In such a case, GPU support would be useful, so you will need to compile Dlib with GPU support.
+
+#### *`vgg_frontend` for Display*
+
+
+The scripts will deploy the code in this repository without any backend engine. It can be used to retrieve a pre-defined list of images associated with a text string.
+
+Deployment scripts are provided for macOS High Sierra 10.13.3, Ubuntu 14.04 and Windows10 x64.
+
+Configuration
 -------------
 
- 1. This script is to be run in a clean Ubuntu 14.04 LTS machine, by a sudoer user.
- 2. Caffe is compiled for CPU use only.
- 3. Use `install_ubuntu.sh` to install `vgg_frontend`. The application will be installed in `/webapps/visorgen/`
- 4. If you plan to use the CATEGORY search engine, use `install_vgg_classifier_ubuntu.sh` to install it. It will be installed in the `/webapps/visorgen/vgg_classifier` folder.
- 5. If you plan to use the TEXT search engine, use `install_text-backend_ubuntu.sh` to install it. It will be installed in the `/webapps/visorgen/text_search` folder. **Please NOTE that this repository is not open-source yet !, so only an authorized user will be able to access it. Please contact us for more information.**
- 6. Remember that before the first use you need to configure the search engines. See <https://gitlab.com/vgg/vgg_classifier> and <https://gitlab.com/vgg/text_search>.
+If you have executed one of the scripts in the `install` folder, the application you chose should have been deployed either in `/webapps/` or at `$HOME` or at a directory of your choosing, let's hereby call that directory `MY_FOLDER`.
 
-macOS Sierra v10.12.3
----------------------
+The main configuration file for the frontend is `MY_FOLDER/visorgen/vgg_frontend/visorgen/settings.py`, which contains a set of variables. You should have no need to change these variables unless you want to customize the application. **Be sure you know what you are doing** before changing the settings.
 
- 1. These scripts are VERY EXPERIMENTAL. Please be careful. Instead of running the full script, you might want to open it in a text editor and run one instruction at a time.
- 2. The scripts assume Homebrew is available in the system (https://brew.sh/).
- 3. The scripts assume GIT is installed (https://sourceforge.net/projects/git-osx-installer/files/).
- 4. Make sure you have enough user privileges to install software using HomeBrew.
- 5. Caffe is compiled for CPU use only.
- 6. Use `install_macos.sh` to install `vgg_frontend`. The application will be installed in `$HOME/visorgen`
- 7. Use `install_vgg_classifier_macos.sh` to install the CATEGORY search engine. It will be installed in the `$HOME/visorgen/vgg_classifier` folder.
- 8. Unfortunately we are unable to provide at the moment an installer for the TEXT search engine. See <https://gitlab.com/vgg/text_search> for the source code.
- 9. Remember that before the first use you need to configure the search engines. See <https://gitlab.com/vgg/vgg_classifier> and <https://gitlab.com/vgg/text_search>.
+You can also change *some* configuration from the administration tools, see the next section.
+
+Usage Instructions
+------------------
+
+#### *Starting the application*
+
+Open a terminal and go to the `MY_FOLDER/visorgen/vgg_frontend/` folder, then enter the command:
+
+	python manage.py runserver
+
+to start the Django server. By default, the server will start at `http://127.0.0.1:8000/vgg_frontend`. Open an Internet browser and visit that URL. If you have started the installed search-engine backend manually (for `VIC` and `VFF`), you will be able to see the main page of the application.
+
+However, if you see a message "Attempting to reconnect to backend...", then the application cannot contact the installed search-engine backend. In such a case, use your Internet browser to visit `http://127.0.0.1:8000/vgg_frontend/admintools`. You will be asked for login credentials. Please enter the 'admin' credentials created with the scripts above, and you will be redirected to the administration tools page.
+
+In the administration tools, visit the `Manage Backend Service tab`, select the engine you want to start and press the `Start` button. You will see a message and then you will be redirected back to the administration tools page. Click on the `Home` link at the top left corner of the page to go back to the homepage. If the backend was successfully started, you will be able to see the home page of the application.
+
+In the bottom-left corner of the home page, you will see a `Getting Started` link. Click on it and read through the explanation on how to use the web application.
+
+#### *Stopping the application*
+
+In order to stop the application, **stop the search-engine backend before stopping `vgg_frontend`**. In the administration tools, visit the `Manage Backend Service tab`, select the engine you want to stop and press the `Stop` button.
+
+After this, just interrupt the Django server. In macOS/Linux this can be done simply with Control+C. In Windows, use Control+Break.
+
+After stopping the application, any configuration changes you have done in the `Global Server Configuration tab` will be lost. However, all your cached text queries will be available the next time you start the application.
