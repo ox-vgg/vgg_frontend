@@ -61,4 +61,3 @@ class MaxSizeResultCache(object):
     def clear_cache(self):
         """ Clears up the entire cache """
         self._max_size_cache.clear_cache()
-

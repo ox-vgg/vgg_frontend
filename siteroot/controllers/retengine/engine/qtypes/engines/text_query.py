@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import threading
 import requests
 import zmq
@@ -70,7 +69,7 @@ class TextQuery(object):
                 'None', it will return zero.
         """
         # Check that a imgtools_postproc_module has actually been configured ...
-        if self.compdata_cache.engines_dict[ self.query['engine'] ]['imgtools_postproc_module'] != None:
+        if self.compdata_cache.engines_dict[self.query['engine']]['imgtools_postproc_module'] != None:
 
             # get output image directory from compdata_cache
             imagedir = self.compdata_cache.get_image_dir(self.query)
@@ -122,13 +121,13 @@ class TextQuery(object):
 
         # make HTTP request
         # print 'Query ID for current query: %d' % self.query_id
-        with retengine_utils.timing.TimerBlock() as t:
+        with retengine_utils.timing.TimerBlock() as timer:
             try:
                 # preinitialize zmq socket
                 func_loc = ('http://%s:%d/init_zmq_context' % \
                             (self.opts.imsearchtools_opts['service_host'],
                              self.opts.imsearchtools_opts['service_port']))
-                r = requests.get(func_loc)
+                resp = requests.get(func_loc)
                 func_loc = ('http://%s:%d/exec_pipeline' % \
                             (self.opts.imsearchtools_opts['service_host'],
                              self.opts.imsearchtools_opts['service_port']))
@@ -138,22 +137,22 @@ class TextQuery(object):
                               'query_id': self.query_id,
                               'featdir': featdir,
                               'detector' : self.opts.feat_detector_type
-                              }
+                             }
 
                 improc_timeout = self.opts.imsearchtools_opts['improc_timeout']
 
                 # if the engine settings specify a timeout, use that one instead
-                if 'improc_timeout' in self.compdata_cache.engines_dict[ self.query['engine']  ]:
-                    improc_timeout = self.compdata_cache.engines_dict[ self.query['engine'] ]['improc_timeout' ]
+                if 'improc_timeout' in self.compdata_cache.engines_dict[self.query['engine']]:
+                    improc_timeout = self.compdata_cache.engines_dict[self.query['engine']]['improc_timeout']
 
                 # when using the 'accurate' detector, double the image processing timeout
-                if  self.opts.feat_detector_type == models.opts.feat_detector_type.accurate:
+                if  self.opts.feat_detector_type == models.opts.FeatDetectorType.accurate:
                     improc_timeout = 2* improc_timeout
 
                 if zmq_impath_return_ch:
                     extra_prms['zmq_impath_return_ch'] = zmq_impath_return_ch
                 request_data = {'q': self.query['qdef'],
-                                'postproc_module': self.compdata_cache.engines_dict[ self.query['engine'] ]['imgtools_postproc_module'],
+                                'postproc_module': self.compdata_cache.engines_dict[self.query['engine']]['imgtools_postproc_module'],
                                 'postproc_extra_prms': json.dumps(extra_prms),
                                 'engine': self.opts.imsearchtools_opts['engine'],
                                 'custom_local_path': imagedir,
@@ -163,17 +162,17 @@ class TextQuery(object):
                                 'num_results': self.opts.imsearchtools_opts['num_pos_train'],
                                 'resize_width': self.opts.resize_width,
                                 'resize_height': self.opts.resize_height,
-                                'style': self.compdata_cache.engines_dict[ self.query['engine'] ]['imgtools_style']}
-                r = requests.post(func_loc,
-                                  data=request_data,
-                                  timeout=10*60) #times out at 10m
+                                'style': self.compdata_cache.engines_dict[self.query['engine']]['imgtools_style']}
+                resp = requests.post(func_loc,
+                                     data=request_data,
+                                     timeout=10*60) #times out at 10m
             except requests.exceptions.Timeout:
                 print 'Image download and feature computation timed out for query:', self.query
             except requests.exceptions.ConnectionError, e:
                 print 'Could not connect to imsearchtool service'
                 raise e
 
-        comp_time = t.interval
+        comp_time = timer.interval
         # print 'Done with call to imsearchtool for Query ID:', self.query_id
 
         # send terminate message to impath callback thread if required
@@ -232,9 +231,9 @@ class IstImpathReturnThread(threading.Thread):
                 # otherwise message is image path, so append it to postrainimg_paths
                 diridx = zmq_msg.find(POSTRAINIMGS_DIRNAME)
                 if diridx < 1:
-                    raise runtime_error('Could not parse path to positive training \
-                                         image path - check POSTRAINIMGS_DIRNAME \
-                                         variable')
+                    raise RuntimeError('Could not parse path to positive training \
+                                        image path - check POSTRAINIMGS_DIRNAME \
+                                        variable')
                 zmq_msg = zmq_msg[diridx-1:]
                 self.shared_vars.postrainimg_paths = self.shared_vars.postrainimg_paths + [zmq_msg,]
                 # print 'Updated postrainimg_paths:', zmq_msg

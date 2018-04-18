@@ -1,16 +1,16 @@
-from visorgen import settings
-import retengine
-import dsetmap
-import utils
-from PIL import Image
-from PIL import ImageDraw
 import json
 import traceback
 import sys
 import urllib
-import os
 from threading import Lock
 import time
+from PIL import Image
+from PIL import ImageDraw
+
+import retengine
+import meta
+import utils
+from visorgen import settings
 
 class VisorController:
     """ Base class for the VISOR frontend controller """
@@ -48,7 +48,7 @@ class VisorController:
         self.query_key_cache = retengine.managers.QueryKeyCache()
 
         # initialize class for metadata extraction
-        self.metadata_handler = dsetmap.metaConverter.MetaDataHandler(self.opts.datasets,
+        self.metadata_handler = meta.metadata_handler.MetaDataHandler(self.opts.datasets,
                                                                       self.metadata_paths.metadata,
                                                                       self.process_pool)
 
@@ -63,7 +63,7 @@ class VisorController:
                                                   self.opts)
 
         # initialize classes for pagination
-        self._page_manager = utils.pagination.PageManager(self.opts.results_per_page)
+        self.page_manager = utils.pagination.PageManager(self.opts.results_per_page)
 
     def set_config(self, kwargs, user_session_id):
         """
@@ -126,19 +126,19 @@ class VisorController:
         # SET text query exclude list for each engine
         for engine in self.opts.engines_dict:
             engine_active_text_queries_LABEL = 'active_text_queries_' + engine
-            engine_all_text_queries_LABEL  = 'all_text_queries_' + engine
+            engine_all_text_queries_LABEL = 'all_text_queries_' + engine
             if engine_active_text_queries_LABEL in kwargs:
                 # get list of active (checked) text queries from the form
-                active_text_queries = kwargs[ engine_active_text_queries_LABEL ]
+                active_text_queries = kwargs[engine_active_text_queries_LABEL]
                 if not isinstance(active_text_queries, list):
                     active_text_queries = [active_text_queries]
                 active_text_queries = map(lambda s: s.encode('GB18030'), active_text_queries)
 
                 if engine_all_text_queries_LABEL not in kwargs:
-                    raise RuntimeError( engine_all_text_queries_LABEL + ' field not found in response')
+                    raise RuntimeError(engine_all_text_queries_LABEL + ' field not found in response')
 
                 # get complete list of all text queries from the form (hidden field)
-                all_text_queries = kwargs[ engine_all_text_queries_LABEL ]
+                all_text_queries = kwargs[engine_all_text_queries_LABEL]
                 if not isinstance(all_text_queries, list):
                     all_text_queries = [all_text_queries]
                 all_text_queries = map(lambda s: s.encode('GB18030'), all_text_queries)
@@ -151,22 +151,22 @@ class VisorController:
                 # In such a case, cleanup the unused postrainimgs for that particular query,
                 # in preparation for the download of new images
                 try:
-                    for txt in kwargs[ engine_all_text_queries_LABEL ]:
+                    for txt in kwargs[engine_all_text_queries_LABEL]:
                         for dataset in self.opts.datasets:
-                            query = {'qdef': txt, 'engine' : engine, 'qtype': 'text', 'dsetname': dataset } # This should only work for text queries
+                            query = {'qdef': txt, 'engine' : engine, 'qtype': 'text', 'dsetname': dataset} # This should only work for text queries
                             if (txt in inactive_text_queries[engine]) and (not self.interface.compdata_cache.query_in_exclude_list(query, ses_id=user_session_id)):
                                 self.interface.compdata_cache.cleanup_unused_query_postrainimgs_cache(query)
                 except Exception, e:
-                       print e
-                       pass
+                    print e
+                    pass
 
             else:
                 if engine_all_text_queries_LABEL in kwargs:
-                    inactive_text_queries[engine] = kwargs[ engine_all_text_queries_LABEL ]
+                    inactive_text_queries[engine] = kwargs[engine_all_text_queries_LABEL]
                     # Detect if the cache of a query was enable and now is going to be disable.
                     # In such a case, cleanup the unused postrainimgs for that particular query,
                     # in preparation for the download of new images
-                    for txt in kwargs[ engine_all_text_queries_LABEL ]:
+                    for txt in kwargs[engine_all_text_queries_LABEL]:
                         for dataset in self.opts.datasets:
                             query = {'qdef': txt, 'engine' : engine, 'qtype': 'text', 'dsetname': dataset} # This should only work for text queries
                             if (txt in inactive_text_queries[engine]) and (not self.interface.compdata_cache.query_in_exclude_list(query, ses_id=user_session_id)):
@@ -194,80 +194,80 @@ class VisorController:
             scale = 1
             if as_thumbnail:
 
-                imW, imH = img.size
-                maxW = 200
-                maxH = 200
-                maxW = float(maxW)
-                maxH = float(maxH)
+                im_w, im_h = img.size
+                max_w = 200
+                max_h = 200
+                max_w = float(max_w)
+                max_h = float(max_h)
 
-                if maxW == None and maxH == None:
+                if max_w == None and max_h == None:
                     scale = 1
                 else:
-                    if maxW == None:
-                        scale = maxH/imH
-                    elif maxH == None:
-                        scale = maxW/imW
+                    if max_w == None:
+                        scale = max_h/im_h
+                    elif max_h == None:
+                        scale = max_w/im_w
                     else:
-                        scale = min(maxH/imH, maxW/imH)
+                        scale = min(max_h/im_h, max_w/im_h)
 
-                if scale<1:
-                    img.thumbnail((int(imW*scale), int(imH*scale)))
+                if scale < 1:
+                    img.thumbnail((int(im_w*scale), int(im_h*scale)))
                 else:
                     scale = 1
 
-                if (img.mode != 'RGB'):
-                    img = img.convert('RGB');
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
 
             if roi:
 
                 values = [float(val)*scale for val in roi['roi'].split('_')]
                 points = []
                 for i in range(1, len(values), 2):
-                    points.append( (values[i-1], values[i]) )
+                    points.append((values[i-1], values[i]))
 
                 if just_ROI:
 
                     img = img.crop((
-                                int(  min(values[0],values[2],values[4],values[6],values[8]) ),
-                                int(  min(values[1],values[3],values[5],values[7],values[9]) ),
-                                int(  max(values[0],values[2],values[4],values[6],values[8]) ),
-                                int(  max(values[1],values[3],values[5],values[7],values[9]) )
-                                ))
-                    imW, imH = img.size
-                    maxW = 100
-                    maxH = 100
-                    maxW = float(maxW)
-                    maxH = float(maxH)
-                    scale = min(maxH/imH, maxW/imH)
-                    size = int(imW*scale), int(imH*scale)
+                        int(min(values[0], values[2], values[4], values[6], values[8])),
+                        int(min(values[1], values[3], values[5], values[7], values[9])),
+                        int(max(values[0], values[2], values[4], values[6], values[8])),
+                        int(max(values[1], values[3], values[5], values[7], values[9]))
+                        ))
+                    im_w, im_h = img.size
+                    max_w = 100
+                    max_h = 100
+                    max_w = float(max_w)
+                    max_h = float(max_h)
+                    scale = min(max_h/im_h, max_w/im_h)
+                    size = int(im_w*scale), int(im_h*scale)
                     img = img.resize(size)
 
                 else:
 
                     if 'roi_colour' in roi:
-                        r, g, b = [int(x) for x in  roi['roi_colour'].split('_')]
+                        red, green, blue = [int(x) for x in  roi['roi_colour'].split('_')]
                     else:
-                        r, g, b = 255, 255, 0
-                    linecol = (r,g,b)
+                        red, green, blue = 255, 255, 0
+                    linecol = (red, green, blue)
 
                     if 'roi_linewidth' in roi:
                         linewidth = int(roi['roi_linewidth'])
                     else:
                         linewidth = 5
 
-                    if (img.mode != 'RGB'):
-                        img = img.convert('RGB');
+                    if img.mode != 'RGB':
+                        img = img.convert('RGB')
 
                     imd = ImageDraw.Draw(img)
                     for i in range(0, len(points)-1):
-                        imd.line( (points[i][0], points[i][1], points[i+1][0], points[i+1][1]), fill=linecol, width=linewidth );
+                        imd.line((points[i][0], points[i][1], points[i+1][0], points[i+1][1]), fill=linecol, width=linewidth)
 
             return img
 
         except IOError:
 
             print 'Exception while reading ' + path
-            img = Image.new('RGBA', (1, 1), (255,0,0,0))
+            img = Image.new('RGBA', (1, 1), (255, 0, 0, 0))
             return img
 
 
@@ -279,7 +279,7 @@ class VisorController:
                 user_session_id: User session id
             Returns: boolean indicating whether a query is cached or not.
         """
-        rlist = self.interface.result_cache[ query['engine'] ].get_results(query, query_ses_id=None, user_ses_id=user_session_id)
+        rlist = self.interface.result_cache[query['engine']].get_results(query, query_ses_id=None, user_ses_id=user_session_id)
 
         return bool(rlist)
 
@@ -299,17 +299,17 @@ class VisorController:
             # lock
             self.query_available_lock.acquire()
             # check if it in the cache
-            rlist = self.interface.result_cache[ query['engine'] ].get_results(query, query_ses_id=None, user_ses_id=user_session_id)
-            if rlist==None:
+            rlist = self.interface.result_cache[query['engine']].get_results(query, query_ses_id=None, user_ses_id=user_session_id)
+            if rlist == None:
                 # if not cached, check the status to verify that is not being executed by another thread
                 status = self.interface.query_manager.get_query_status_from_definition(query)
-                while (status != None and status.state <= retengine.models.opts.states.results_ready):
+                while status != None and status.state <= retengine.models.opts.States.results_ready:
                     # if it is begin executed, wait a bit and then query the status again ...
                     time.sleep(1)
                     status = self.interface.query_manager.get_query_status_from_definition(query)
-                    if status != None and status.state==retengine.models.opts.states.results_ready:
+                    if status != None and status.state == retengine.models.opts.States.results_ready:
                         # if ready, get the results and leave the loop
-                        rlist = self.interface.result_cache[ query['engine'] ].get_results(query, query_ses_id=None, user_ses_id=user_session_id)
+                        rlist = self.interface.result_cache[query['engine']].get_results(query, query_ses_id=None, user_ses_id=user_session_id)
             return bool(rlist)
         finally:
             # unlock
@@ -395,7 +395,7 @@ class VisorController:
                 self.interface.continue_query(qid,
                                               return_rlist_directly=return_rlist_directly,
                                               query_ses_id=qsid,
-                                              user_ses_id=user_session_id )
+                                              user_ses_id=user_session_id)
         else:
             # ELSE if no backend qid is associated with the current query session as yet
             # start a new query and then add the backend qid to the session data
@@ -405,7 +405,7 @@ class VisorController:
             query_data = self.interface.query(query,
                                               return_rlist_directly=return_rlist_directly,
                                               query_ses_id=qsid,
-                                              user_ses_id=user_session_id )
+                                              user_ses_id=user_session_id)
             self.query_key_cache.set_query_session_backend_qid(query_data.status.qid,
                                                                qsid)
 
@@ -428,9 +428,9 @@ class VisorController:
         """
         filepath = locals()['file']  # convert file -> filepath to avoid python clash
         if filepath:
-           print 'File received for upload: %s', filepath
+            print 'File received for upload: %s', filepath
         if url:
-           print 'URL received for upload: %s', url
+            print 'URL received for upload: %s', url
 
         imageuploader = \
             utils.imuptools.ImageUploader(self.compdata_paths.uploadedimgs,

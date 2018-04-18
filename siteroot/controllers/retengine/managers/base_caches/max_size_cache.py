@@ -39,17 +39,17 @@ class MaxSizeCache(object):
             reconstructing the instance.
         """
         # avoid attempting to pickle unpickleable lock when serializing
-        d = dict(self.__dict__)
-        del d['_datastore_lock']
-        return d
+        a_dict = dict(self.__dict__)
+        del a_dict['_datastore_lock']
+        return a_dict
 
 
-    def __setstate__(self, d):
+    def __setstate__(self, a_dict):
         """
             Reconfigures the instance from the object specified in the parameter.
         """
         # in the deserialized output, the lock object is created anew
-        self.__dict__.update(d)
+        self.__dict__.update(a_dict)
         self._datastore_lock = Lock()
 
 
@@ -94,7 +94,7 @@ class MaxSizeCache(object):
         with self._datastore_lock:
             self._datastore = OrderedDict((key, ritem)
                                           for (key, ritem) in self._datastore.iteritems()
-                                          if not(partial_tuple == key[:len(partial_tuple)]))
+                                          if not partial_tuple == key[:len(partial_tuple)])
 
 
     def clear_cache(self):

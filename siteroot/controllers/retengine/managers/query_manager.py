@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from multiprocessing import Manager
-from multiprocessing import Pool
 
 # for pickling of visor_engine method prior to sending to worker pool
 import copy_reg
@@ -43,7 +42,7 @@ class QueryWorker(object):
         self.shared_vars = manager.Namespace()
 
         # configure initial shared memory namespace values
-        self.shared_vars.state = models.opts.states.processing
+        self.shared_vars.state = models.opts.States.processing
         self.shared_vars.postrainimg_paths = []
         self.shared_vars.curatedtrainimgs_paths = []
         self.shared_vars.negtrainimg_count = 0
@@ -135,6 +134,8 @@ class QueryManager(object):
             if value.qindex == qindex:
                 return value
 
+        return None
+
 
     def start_query(self, query,
                     user_ses_id=None, force_new_worker=False):
@@ -166,7 +167,7 @@ class QueryManager(object):
 
         if not worker:
             # determine if on cache exclude list
-            excl_query = self.result_cache[ query['engine'] ].query_in_exclude_list(query, ses_id=user_ses_id)
+            excl_query = self.result_cache[query['engine']].query_in_exclude_list(query, ses_id=user_ses_id)
 
             # print 'Initializing query worker process...'
             try:
@@ -184,7 +185,7 @@ class QueryManager(object):
             except models.errors.QueryIdError:
                 # this exception is triggered by the constructor of QueryWorker
                 # if the backend cannot be contacted
-                return models.QueryStatus(state=models.opts.states.fatal_error_or_socket_timeout)
+                return models.QueryStatus(state=models.opts.States.fatal_error_or_socket_timeout)
 
         # return query status (including qid as a field)
         return worker.get_status()
@@ -219,8 +220,8 @@ class QueryManager(object):
         worker = self._get_worker_from_definition(query)
         if worker:
             return worker.get_status()
-        else:
-            return None
+
+        return None
 
 
     def get_query_result(self, status):

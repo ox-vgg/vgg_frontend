@@ -41,7 +41,7 @@ class SessionExcludeListCache(object):
         # print 'Looking for query in exclude list: (%s), ses_id: %s, class: %s - %s' %
         #       (qhash, ses_id, self.__class__.__name__, data != None)
         # return only whether the key was present or not (and had non-None data)
-        return (data != None)
+        return data != None
 
 
     def add_query_to_exclude_list(self, query, ses_id=None):
@@ -108,9 +108,9 @@ class SessionResultCache(object):
         if query:
             qhash = query_translations.get_qhash(query, include_qtype=True)
             return self._session_cache.get_data(ses_id, (qhash, query['engine'], query['dsetname']))
-        else:
-            # returns data dictionary directly if no query key was specified
-            return self._session_cache.get_data(ses_id)
+
+        # returns data dictionary directly if no query key was specified
+        return self._session_cache.get_data(ses_id)
 
 
     def add_results(self, rlist, ses_id, query):

@@ -45,7 +45,7 @@ def verify_image(filename, maxwidth=None, maxheight=None):
             im = Image.open(filename)
             newimwidth = int(imwidth*sf)
             newimheight = int(imheight*sf)
-            im = im.resize((newimwidth,newimheight), Image.ANTIALIAS)
+            im = im.resize((newimwidth, newimheight), Image.ANTIALIAS)
             im.save(filename, format=imformat)
         else:
             im = Image.open(filename)

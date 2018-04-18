@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import string
 import re
 import urllib
 from hashlib import md5
@@ -59,7 +58,7 @@ def decode_query_strid(strid, escape=False):
     """
     qtype = strid.split('__', 1)[0]
 
-    if qtype != models.opts.qtypes.text:
+    if qtype != models.opts.Qtypes.text:
         raise models.errors.StrIdDecodeError("Only queries of type 'text' can be decoded")
 
     try:
@@ -107,4 +106,4 @@ def unescape_querystr(query_esc):
     querystr = querystr.replace('____', ':')
     querystr = querystr.replace('___', ',')
     querystr = urllib.unquote(querystr)
-    return query
+    return querystr

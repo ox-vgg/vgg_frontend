@@ -22,9 +22,9 @@ def delete_directory_contents(path):
                dir_path: Full path to the directory containing the files
                          in dir_list.
         """
-        for file in dir_list:
-            print 'Removing file: ' + os.path.join(dir_path, file)
-            os.remove(os.path.join(dir_path, file))
+        for afile in dir_list:
+            print 'Removing file: ' + os.path.join(dir_path, afile)
+            os.remove(os.path.join(dir_path, afile))
 
     def remove_directory(dir_entry):
         """
@@ -52,13 +52,13 @@ def delete_directory_contents(path):
         remove_directory(directory)
 
     if 'Windows' not in platform.system():
-        for dir in empty_dirs:
-            if not os.path.samefile(path, dir):
-                print 'Removing directory: ' + dir
-                os.rmdir(dir)
+        for adir in empty_dirs:
+            if not os.path.samefile(path, adir):
+                print 'Removing directory: ' + adir
+                os.rmdir(adir)
     else:
         # os.path.samefile not available in Windows
-        for dir in empty_dirs:
-            if not samefile(path, dir):
-                print 'Removing directory: ' + dir
-                os.rmdir(dir)
+        for adir in empty_dirs:
+            if not samefile(path, adir):
+                print 'Removing directory: ' + adir
+                os.rmdir(adir)

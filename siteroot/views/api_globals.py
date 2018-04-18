@@ -11,11 +11,11 @@ def start_backend_service(engine):
             engine: keyword of the engine in the setting's engine dictionary
     """
     if 'Windows' in platform.system():
-        pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'start_backend_service.bat'), engine ]
+        popen_cmd = [os.path.join(settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'start_backend_service.bat'), engine]
     else:
-        pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'start_backend_service.sh'), engine ]
-    p = Popen(pOpenCmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    p.poll()
+        popen_cmd = [os.path.join(settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'start_backend_service.sh'), engine]
+    popen_obj = Popen(popen_cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    popen_obj.poll()
 
 
 def stop_backend_service(engine):
@@ -25,14 +25,14 @@ def stop_backend_service(engine):
             engine: keyword of the engine in the setting's engine dictionary
     """
     if 'Windows' in platform.system():
-        pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'stop_backend_service.bat'), engine ]
+        popen_cmd = [os.path.join(settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'stop_backend_service.bat'), engine]
     else:
-        pOpenCmd = [ os.path.join( settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'stop_backend_service.sh'), engine ]
-    p = Popen(pOpenCmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    p.poll()
+        popen_cmd = [os.path.join(settings.MANAGE_SERVICE_SCRIPTS_BASE_PATH, 'stop_backend_service.sh'), engine]
+    popen_obj = Popen(popen_cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    popen_obj.poll()
 
 
-def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNotUTF8, pipeline_frame_list):
+def gather_pipeline_input(input_type, img_base_path, files, file_system_encoding_not_UTF8, pipeline_frame_list):
     """
         Body of the thread that checks and acquires the list of files to input to the pipeline
         Arguments:
@@ -40,7 +40,7 @@ def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNo
             img_base_path: Full path to the folder of images. Used as the folder to be scanned when input_type is 'dir'. Used as
                            the base folder for the files indicated in the list of files when input_type is 'list'.
             files: List of files to be checked. It should be None when input_type is 'dir'.
-            fileSystemEncodingNotUTF8: Boolena indicating the operating systems' string to is non-utf-8
+            file_system_encoding_not_UTF8: Boolena indicating the operating systems' string to is non-utf-8
         Returns:
             pipeline_frame_list: Output list of images to be processed in the pipeline. This is an OUTPUT argument.
     """
@@ -51,16 +51,16 @@ def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNo
         abort = False
 
         # Create/clear the log file
-        LOG_OUTPUT_FILE = os.path.join( tempfile.gettempdir(), 'gather_pipeline_input.log' )
-        fout = open( LOG_OUTPUT_FILE, 'w',  buffering=1)
-        fout.write( 'CHECK_PIPELINE_INPUT BEGIN\n' )
-        fout.write( 'input_type: %s\n' % input_type )
-        fout.write( 'img_base_path: %s\n' % img_base_path )
-        fout.write( 'files: %s\n' % str(files) )
+        LOG_OUTPUT_FILE = os.path.join(tempfile.gettempdir(), 'gather_pipeline_input.log')
+        fout = open(LOG_OUTPUT_FILE, 'w', buffering=1)
+        fout.write('CHECK_PIPELINE_INPUT BEGIN\n')
+        fout.write('input_type: %s\n' % input_type)
+        fout.write('img_base_path: %s\n' % img_base_path)
+        fout.write('files: %s\n' % str(files))
 
         if input_type == 'dir':
 
-            for root, dirnames, filenames in os.walk( img_base_path ):
+            for root, dirnames, filenames in os.walk(img_base_path):
                 if not abort:
                     for i in range(len(filenames)):
                         if not abort:
@@ -68,18 +68,18 @@ def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNo
                             if filename.startswith('.'):
                                 continue # skip hidden files, specially in macOS
                             root_str = root
-                            if fileSystemEncodingNotUTF8:
+                            if file_system_encoding_not_UTF8:
                                 root_str = str(root) # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
-                            full_path = os.path.join( root_str , filename)
+                            full_path = os.path.join(root_str, filename)
                             if os.path.isfile(full_path):
-                                relative_path = os.path.join( root_str.replace( img_base_path ,'') , filename)
+                                relative_path = os.path.join(root_str.replace(img_base_path, ''), filename)
                                 if relative_path.startswith("/"):
                                     relative_path = relative_path[1:]
                                 # check file is an image...
                                 filename, file_extension = os.path.splitext(relative_path)
                                 if file_extension.lower() in settings.VALID_IMG_EXTENSIONS:
                                     # if it is, add it to the list
-                                    if fileSystemEncodingNotUTF8:
+                                    if file_system_encoding_not_UTF8:
                                         relative_path = relative_path.decode('utf-8') # if needed, convert from utf-8. It will be converted back by the pipeline.
                                     pipeline_frame_list.append(relative_path)
                                 else:
@@ -93,20 +93,22 @@ def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNo
             for frame_path in files:
                 if not abort:
                     frame_path = frame_path.strip()
+                    if frame_path == '':
+                        continue
                     if frame_path.startswith('/'):
                         frame_path = frame_path[1:]
-                    if not fileSystemEncodingNotUTF8:           # if NOT utf-8, convert before operations with the 'os' module,
+                    if not file_system_encoding_not_UTF8:       # if NOT utf-8, convert before operations with the 'os' module,
                         frame_path = frame_path.decode('utf-8') # otherwise convert it later
-                    full_frame_path = os.path.join( img_base_path, frame_path )
+                    full_frame_path = os.path.join(img_base_path, frame_path)
                     filename, file_extension = os.path.splitext(full_frame_path)
                     # Check frame exists
                     if not os.path.exists(full_frame_path):
-                         # abort the process if the frame is not found
-                         abort = True
+                        # abort the process if the frame is not found
+                        abort = True
                     # Check file is an image ...
                     elif file_extension.lower() in settings.VALID_IMG_EXTENSIONS:
                         # if it is, add it to the list
-                        if fileSystemEncodingNotUTF8:
+                        if file_system_encoding_not_UTF8:
                             frame_path = frame_path.decode('utf-8') # if needed, convert from utf-8
                         pipeline_frame_list.append(frame_path)
                     else:
@@ -115,12 +117,12 @@ def gather_pipeline_input(input_type, img_base_path, files, fileSystemEncodingNo
                         del pipeline_frame_list[:]
                         abort = True
 
-        fout.write( 'CHECK_PIPELINE_INPUT END\n' )
+        fout.write('CHECK_PIPELINE_INPUT END\n')
 
     except Exception as e:
         # log the exception and leave
         if fout:
-            fout.write( 'CHECK_PIPELINE_EXCEPTION %s\n' % e.message)
+            fout.write('CHECK_PIPELINE_EXCEPTION %s\n' % e.message)
         pass
 
     if fout:

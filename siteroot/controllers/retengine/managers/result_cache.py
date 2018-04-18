@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import msgpack
 import os
 import string
+import msgpack
 
 from retengine import utils
 from retengine import models
@@ -118,17 +118,17 @@ class ResultCache(base_caches.SessionExcludeListCache):
             reconstructing the instance.
         """
         # avoid attempting to pickle unpickleable worker pools when serializing
-        d = dict(self.__dict__)
-        del d['process_pool']
-        return d
+        a_dict = dict(self.__dict__)
+        del a_dict['process_pool']
+        return a_dict
 
 
-    def __setstate__(self, d):
+    def __setstate__(self, a_dict):
         """
             Reconfigures the instance from the object specified in the parameter.
         """
         # in the deserialized output, process_pool is set to None
-        self.__dict__.update(d)
+        self.__dict__.update(a_dict)
         self.process_pool = None
 
 
@@ -147,7 +147,7 @@ class ResultCache(base_caches.SessionExcludeListCache):
         querystrs = []
 
         if (not return_empty_list_if_cache_enabled or
-            self.Caches.disk in self.enabled_caches):
+                self.Caches.disk in self.enabled_caches):
             if os.path.exists(self.ranklistpath):
                 rankfiles = os.listdir(self.ranklistpath)
                 for rankfile in rankfiles:
@@ -243,9 +243,6 @@ class ResultCache(base_caches.SessionExcludeListCache):
             return None
 
         return self.get_results(query, query_ses_id, user_ses_id)
-        # print 'Retrieved by query_ses_id: %s' % (rlist is not None)
-
-        return rlist
 
 
     def add_results(self, rlist, query,
@@ -384,8 +381,8 @@ class ResultCache(base_caches.SessionExcludeListCache):
             except Exception as e:
                 rlist = None
                 print e
-                pass
-        if rlist==None:
+
+        if rlist == None:
             if os.path.isfile(fname):
                 try:
                     with open(fname, 'rb') as rfile:
@@ -393,7 +390,7 @@ class ResultCache(base_caches.SessionExcludeListCache):
                 except Exception as e:
                     rlist = None
                     print e
-                    pass
+
         return rlist
 
 

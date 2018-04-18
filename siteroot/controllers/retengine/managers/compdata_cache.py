@@ -100,8 +100,8 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             fname = self._get_classifier_fname(query)
             if 'save_classifier' in self.callbacks:
                 return self.callbacks['save_classifier'](query, fname, **kwargs)
-            else:
-                return False
+
+        return False
 
 
     def load_classifier(self, query, **kwargs):
@@ -133,8 +133,8 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             fname = self._get_classifier_fname(query)
             if 'load_classifier' in self.callbacks:
                 return self.callbacks['load_classifier'](query, fname, **kwargs)
-            else:
-                return False
+
+        return False
 
 
     def _get_classifier_fname(self, query):
@@ -153,7 +153,7 @@ class CompDataCache(base_caches.SessionExcludeListCache):
         engine = query['engine']
         classifiers_path = os.path.join(classifiers_path, engine)
 
-        fname_template = string.Template( self.engines_dict[ engine ]['pattern_fname_classifier'] )
+        fname_template = string.Template(self.engines_dict[engine]['pattern_fname_classifier'])
         fname = fname_template.substitute(query_strid=query_strid)
         try:
             os.makedirs(classifiers_path)
@@ -188,8 +188,8 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             fname = self._get_annotations_fname(query)
             if 'save_annotations' in self.callbacks:
                 return self.callbacks['save_annotations'](query, fname, **kwargs)
-            else:
-                return False
+
+        return False
 
 
     def load_annotations_and_trs(self, query, **kwargs):
@@ -217,8 +217,8 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             fname = self._get_annotations_fname(query)
             if 'load_annotations_and_trs' in self.callbacks:
                 return self.callbacks['load_annotations_and_trs'](query, fname, **kwargs)
-            else:
-                return False
+
+        return False
 
 
     def get_annotations(self, query, **kwargs):
@@ -245,8 +245,8 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             fname = self._get_annotations_fname(query)
             if 'get_annotations' in self.callbacks:
                 return self.callbacks['get_annotations'](query, fname, **kwargs)
-            else:
-                return False
+
+        return False
 
 
     def _get_annotations_fname(self, query):
@@ -307,9 +307,9 @@ class CompDataCache(base_caches.SessionExcludeListCache):
         try:
             postrainimgs_path = self.get_image_dir(query)
             if (os.path.exists(postrainimgs_path)
-                and postrainimgs_path!=os.path.join(self._compdata_paths.datasets, query['dsetname']) # avoid deleting the complete set of dataset images
-                and self._compdata_paths.uploadedimgs!=postrainimgs_path    # avoid deleting the complete uploadedimgs directory
-                and self._compdata_paths.curatedtrainimgs not in postrainimgs_path):  # avoid deleting any curated training images
+                    and postrainimgs_path != os.path.join(self._compdata_paths.datasets, query['dsetname']) # avoid deleting the complete set of dataset images
+                    and self._compdata_paths.uploadedimgs != postrainimgs_path    # avoid deleting the complete uploadedimgs directory
+                    and self._compdata_paths.curatedtrainimgs not in postrainimgs_path):  # avoid deleting any curated training images
                 shutil.rmtree(postrainimgs_path)
                 print 'REMOVED FOLDER:', postrainimgs_path
         except Exception as e:
@@ -317,8 +317,8 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             pass # avoid an exception here from preventing the execution of the code below
 
         try:
-            postrainfeats_path =  self.get_feature_dir(query)
-            if os.path.exists(postrainfeats_path) and postrainfeats_path!=os.path.join(self._compdata_paths.postrainfeats, query['engine'] ):
+            postrainfeats_path = self.get_feature_dir(query)
+            if os.path.exists(postrainfeats_path) and postrainfeats_path != os.path.join(self._compdata_paths.postrainfeats, query['engine']):
                 shutil.rmtree(postrainfeats_path)
                 print 'REMOVED FOLDER:', postrainfeats_path
         except Exception as e:
@@ -335,28 +335,28 @@ class CompDataCache(base_caches.SessionExcludeListCache):
     def clear_features_cache(self):
         """  Clears up the directory of cached features for all configured engines """
         for engine in self.engines_dict:
-            postrainfeats_path = os.path.join(self._compdata_paths.postrainfeats, engine )
+            postrainfeats_path = os.path.join(self._compdata_paths.postrainfeats, engine)
             utils.fileutils.delete_directory_contents(postrainfeats_path)
 
 
     def clear_annotations_cache(self):
         """  Clears up the directory of cached annotations for all configured engines """
         for engine in self.engines_dict:
-            postrainanno_path = os.path.join(self._compdata_paths.postrainanno, engine )
+            postrainanno_path = os.path.join(self._compdata_paths.postrainanno, engine)
             utils.fileutils.delete_directory_contents(postrainanno_path)
 
 
     def clear_classifiers_cache(self):
         """  Clears up the directory of cached classifiers for all configured engines """
         for engine in self.engines_dict:
-            classifiers_path = os.path.join(self._compdata_paths.classifiers, engine )
+            classifiers_path = os.path.join(self._compdata_paths.classifiers, engine)
             utils.fileutils.delete_directory_contents(classifiers_path)
 
 
     def clear_postrainimgs_cache(self):
         """  Clears up the directory of downloaded positive training images for all configured engines """
         for engine in self.engines_dict:
-            postrainimgs_path = os.path.join(self._compdata_paths.postrainimgs, engine )
+            postrainimgs_path = os.path.join(self._compdata_paths.postrainimgs, engine)
             utils.fileutils.delete_directory_contents(postrainimgs_path)
 
 
@@ -378,7 +378,7 @@ class CompDataCache(base_caches.SessionExcludeListCache):
                     path = line.split('\t')[0]
                     path = path.split(' ')[0]
                     if path.startswith(POSTRAINIMGS_DIRNAME):
-                        path = path.replace( POSTRAINIMGS_DIRNAME, self._compdata_paths.postrainimgs)
+                        path = path.replace(POSTRAINIMGS_DIRNAME, self._compdata_paths.postrainimgs)
                     postrainimgs_files.append(path)
             postrainimg_folder = self.get_image_dir(query)
             for the_file in os.listdir(postrainimg_folder):
@@ -388,7 +388,6 @@ class CompDataCache(base_caches.SessionExcludeListCache):
                         os.remove(file_path)
                 except Exception, e:
                     print e
-                    pass
 
     # ----------------------------------
     ## Get paths and disk filenames
@@ -399,26 +398,26 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             Gets the path to the folder where the images associated to a
             query are stored. The path varies not only depending on the
             query itself but also depending on the query type
-            (see 'models.opts.qtypes'). This function also creates the
+            (see 'models.opts.Qtypes'). This function also creates the
             folder if it did not exist.
             Arguments:
                 query: query in dictionary form.
         """
         query_strid = utils.tag_utils.get_query_strid(query)
 
-        if query['qtype'] == models.opts.qtypes.text:
+        if query['qtype'] == models.opts.Qtypes.text:
             postrainimgs_path = self._compdata_paths.postrainimgs
-            postrainimgs_path = os.path.join(postrainimgs_path, query['engine'] )
+            postrainimgs_path = os.path.join(postrainimgs_path, query['engine'])
             rootdir = os.path.join(postrainimgs_path, query_strid)
             try:
                 os.makedirs(rootdir)
-                os.chmod(rootdir,0774)
+                os.chmod(rootdir, 0774)
             except OSError:
                 pass
             return rootdir
-        elif query['qtype'] == models.opts.qtypes.curated:
+        elif query['qtype'] == models.opts.Qtypes.curated:
             curatedtrainimgs_path = self._compdata_paths.curatedtrainimgs
-            curatedtrainimgs_path = os.path.join(curatedtrainimgs_path, query['engine'] )
+            curatedtrainimgs_path = os.path.join(curatedtrainimgs_path, query['engine'])
             rootdir = os.path.join(curatedtrainimgs_path, query_strid)
             posdir = os.path.join(rootdir, 'positive')
             negdir = os.path.join(rootdir, 'negative')
@@ -426,25 +425,25 @@ class CompDataCache(base_caches.SessionExcludeListCache):
                 errmsg = 'Directory containing curated classifiers does not exist'
                 raise models.errors.CuratedClassifierPathNotFoundError(errmsg)
             return rootdir
-        elif query['qtype'] == models.opts.qtypes.image:
+        elif query['qtype'] == models.opts.Qtypes.image:
             rootdir = os.path.join(self._compdata_paths.uploadedimgs)
             try:
                 os.makedirs(rootdir)
             except OSError:
                 pass
             return rootdir
-        elif query['qtype'] == models.opts.qtypes.refine:
+        elif query['qtype'] == models.opts.Qtypes.refine:
             postrainimgs_path = os.path.join(self._compdata_paths.postrainimgs)
             # if there are curated images in the refined search. change the source folder
             if 'curated__' in str(query['qdef']):
                 postrainimgs_path = os.path.join(self._compdata_paths.curatedtrainimgs)
-            postrainimgs_path = os.path.join(postrainimgs_path, query['engine'] )
+            postrainimgs_path = os.path.join(postrainimgs_path, query['engine'])
             try:
                 os.makedirs(postrainimgs_path)
             except OSError:
                 pass
             return postrainimgs_path
-        elif query['qtype'] == models.opts.qtypes.dsetimage:
+        elif query['qtype'] == models.opts.Qtypes.dsetimage:
             rootdir = os.path.join(self._compdata_paths.datasets, query['dsetname'])
             try:
                 os.makedirs(rootdir)
@@ -467,18 +466,18 @@ class CompDataCache(base_caches.SessionExcludeListCache):
         # pop full_path from kwargs if it exists
         full_path = kwargs.pop('full_path', False)
 
-        if query['qtype'] in [models.opts.qtypes.text, models.opts.qtypes.refine]:
+        if query['qtype'] in [models.opts.Qtypes.text, models.opts.Qtypes.refine]:
             annos = self.get_annotations(query, **kwargs)
             if annos:
                 for anno in annos:
                     if CURATEDTRAINIMGS_DIRNAME in anno['image']:
                         anno['image'] = self.convert_system_path_to_server_path(anno['image'],
-                                                                        CURATEDTRAINIMGS_DIRNAME + os.sep)
+                                                                                CURATEDTRAINIMGS_DIRNAME + os.sep)
                     else:
                         anno['image'] = self.convert_system_path_to_server_path(anno['image'],
-                                                                        POSTRAINIMGS_DIRNAME + os.sep)
+                                                                                POSTRAINIMGS_DIRNAME + os.sep)
             return annos
-        elif query['qtype'] == models.opts.qtypes.curated:
+        elif query['qtype'] == models.opts.Qtypes.curated:
             imagedir = self.get_image_dir(query)
             imagedir = os.path.join(imagedir, 'positive')
             image_fns = glob.glob(os.path.join(imagedir, '*.jpg'))
@@ -489,13 +488,13 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             else:
                 return [os.path.join(imagedir, os.path.basename(image_fn))
                         for image_fn in image_fns]
-        elif query['qtype'] == models.opts.qtypes.image:
+        elif query['qtype'] == models.opts.Qtypes.image:
             annos = self.get_annotations(query, **kwargs)
             for anno in annos:
                 anno['image'] = self.convert_system_path_to_server_path(anno['image'],
                                                                         UPLOADEDIMGS_DIRNAME + os.sep)
             return annos
-        elif query['qtype'] == models.opts.qtypes.dsetimage:
+        elif query['qtype'] == models.opts.Qtypes.dsetimage:
             annos = self.get_annotations(query, **kwargs)
             for anno in annos:
                 anno['image'] = self.convert_system_path_to_server_path(anno['image'],
@@ -510,41 +509,41 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             Gets the path to the folder where the features associated to a
             query are stored. The path varies not only depending on the
             query itself but also depending on the query type
-            (see 'models.opts.qtypes'). This function also creates the
+            (see 'models.opts.Qtypes'). This function also creates the
             folder if it did not exist.
             Arguments:
                 query: query in dictionary form.
         """
         query_strid = utils.tag_utils.get_query_strid(query)
 
-        if query['qtype'] == models.opts.qtypes.text:
+        if query['qtype'] == models.opts.Qtypes.text:
             postrainfeats_path = self._compdata_paths.postrainfeats
-            postrainfeats_path = os.path.join(postrainfeats_path, query['engine'] )
+            postrainfeats_path = os.path.join(postrainfeats_path, query['engine'])
             rootdir = os.path.join(postrainfeats_path, query_strid)
             try:
                 os.makedirs(rootdir)
             except OSError:
                 pass
             return rootdir
-        elif query['qtype'] == models.opts.qtypes.refine:
+        elif query['qtype'] == models.opts.Qtypes.refine:
             postrainfeats_path = os.path.join(self._compdata_paths.postrainfeats)
-            postrainfeats_path = os.path.join(postrainfeats_path, query['engine'] )
+            postrainfeats_path = os.path.join(postrainfeats_path, query['engine'])
             try:
                 os.makedirs(postrainfeats_path)
             except OSError:
                 pass
             return postrainfeats_path
-        elif query['qtype'] == models.opts.qtypes.dsetimage:
+        elif query['qtype'] == models.opts.Qtypes.dsetimage:
             postrainfeats_path = os.path.join(self._compdata_paths.postrainfeats)
-            postrainfeats_path = os.path.join(postrainfeats_path, query['engine'] )
+            postrainfeats_path = os.path.join(postrainfeats_path, query['engine'])
             try:
                 os.makedirs(postrainfeats_path)
             except OSError:
                 pass
             return postrainfeats_path
-        elif query['qtype'] == models.opts.qtypes.image:
+        elif query['qtype'] == models.opts.Qtypes.image:
             postrainfeats_path = os.path.join(self._compdata_paths.postrainfeats)
-            postrainfeats_path = os.path.join(postrainfeats_path, query['engine'] )
+            postrainfeats_path = os.path.join(postrainfeats_path, query['engine'])
             try:
                 os.makedirs(postrainfeats_path)
             except OSError:
@@ -570,6 +569,6 @@ class CompDataCache(base_caches.SessionExcludeListCache):
 
         # extract the part we want
         system_path = system_path[diridx:]
-        system_path = system_path.replace(subdir,'')
-        system_path = system_path.replace(os.sep,'/')
+        system_path = system_path.replace(subdir, '')
+        system_path = system_path.replace(os.sep, '/')
         return system_path

@@ -29,9 +29,9 @@ def _unpickle_method(func_name, obj, cls):
             a Python method
     """
     try:
-        for cls in cls.mro():
+        for acls in cls.mro():
             try:
-                func = cls.__dict__[func_name]
+                func = acls.__dict__[func_name]
             except KeyError:
                 pass
             else:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from socket import *
+import socket
 try:
     import simplejson as json
 except ImportError:
@@ -59,16 +59,16 @@ class Session(object):
             Returns:
                 JSON containing the response from the host
         """
-        sock = socket(AF_INET, SOCK_STREAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             sock.connect((self.host, self.port))
-        except error, msg:
+        except socket.error, msg:
             print 'Connect failed', msg
             return self.prepare_success_json_str_(False)
 
         sock.settimeout(TCP_TIMEOUT)
 
-        print 'Request to VISOR backend at port %s: %s' % ( str(self.port), request)
+        print 'Request to VISOR backend at port %s: %s' % (str(self.port), request)
 
         if append_end:
             request += TCP_TERMINATOR
@@ -89,10 +89,10 @@ class Session(object):
                     print 'Connection closed! at port ' + str(self.port)
                     sock.close()
                     return self.prepare_success_json_str_(False)
-                    break
+
                 response = response + rep_chunk
                 term_idx = response.find(TCP_TERMINATOR)
-            except timeout:
+            except socket.timeout:
                 print 'Socket timeout at port ' + str(self.port)
                 sock.close()
                 return self.prepare_success_json_str_(False)
@@ -146,8 +146,8 @@ class Session(object):
         func_out = json.loads(response)
         if "query_id" in func_out:
             return func_out["query_id"]
-        else:
-            return -1
+
+        return -1
 
 
     def release_query_id(self, query_id):
@@ -196,7 +196,7 @@ class Session(object):
         else:
             func_in["func"] = "addPosTrs"
         func_in["query_id"] = query_id
-        func_in["impath"] =  urllib.unquote(urllib.unquote(impath)) # decode possibly url-encoded image names
+        func_in["impath"] = urllib.unquote(urllib.unquote(impath)) # decode possibly url-encoded image names
         func_in["featpath"] = featpath
         func_in["from_dataset"] = (1 if from_dataset else 0)
 
@@ -236,7 +236,7 @@ class Session(object):
         else:
             func_in["func"] = "addNegTrs"
         func_in["query_id"] = query_id
-        func_in["impath"] =  urllib.unquote(urllib.unquote(impath)) # decode possibly url-encoded image names
+        func_in["impath"] = urllib.unquote(urllib.unquote(impath)) # decode possibly url-encoded image names
         func_in["featpath"] = featpath
         func_in["from_dataset"] = (1 if from_dataset else 0)
 
@@ -276,8 +276,8 @@ class Session(object):
             return None
         elif 'err_msg' in func_out:
             return func_out['err_msg']
-        else:
-            return str(func_out[SUCCESS_FIELD])
+
+        return str(func_out[SUCCESS_FIELD])
 
 
     def load_classifier(self, query_id, fname):
@@ -375,10 +375,10 @@ class Session(object):
         response = self.custom_request(request)
 
         func_out = json.loads(response)
-        if func_out[SUCCESS_FIELD] == True:
+        if func_out[SUCCESS_FIELD]:
             return func_out["annos"]
-        else:
-            return False
+
+        return False
 
 
     def save_annotations(self, query_id, fname):
@@ -450,10 +450,10 @@ class Session(object):
         response = self.custom_request(request)
 
         func_out = json.loads(response)
-        if func_out[SUCCESS_FIELD] == True:
+        if func_out[SUCCESS_FIELD]:
             return func_out["ranklist"]
-        else:
-            return False
+
+        return False
 
 
     def get_ranking_subset(self, query_id, start_idx, end_idx):
@@ -483,10 +483,10 @@ class Session(object):
         response = self.custom_request(request)
 
         func_out = json.loads(response)
-        if func_out[SUCCESS_FIELD] == True:
+        if func_out[SUCCESS_FIELD]:
             return (func_out["ranklist"], func_out["total_len"])
-        else:
-            return False
+
+        return False
 
 
     def get_ranked_features(self, query_id, top_n=300):
@@ -514,10 +514,10 @@ class Session(object):
         response = self.custom_request(request)
 
         func_out = json.loads(response)
-        if func_out[SUCCESS_FIELD] == True:
+        if func_out[SUCCESS_FIELD]:
             return func_out["rfeats"]
-        else:
-            return False
+
+        return False
 
 
     def test_func(self):
@@ -542,6 +542,6 @@ class Session(object):
 
 if __name__ == "__main__":
     # if invoked from the command line, just start the session with the backend
-    port = 35200
-    host = "localhost"
-    session = Session(port, host=host, verbose=True)
+    PORT = 35200
+    HOST = "localhost"
+    SESSION = Session(port=PORT, host=HOST, verbose=True)

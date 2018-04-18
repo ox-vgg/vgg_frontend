@@ -12,20 +12,22 @@ def get_query_handler(query, query_id, backend_port, compdata_cache, opts):
             compdata_cache: Computational data cache manager.
             opts: current configuration of options for the visor engine
         Returns:
-            The created object corresponding to the query type.
+            The created object corresponding to the query type, or None
+            if the query type does not exists
     """
-    if query['qtype'] == models.opts.qtypes.text:
+    if query['qtype'] == models.opts.Qtypes.text:
         if query['qdef'][0] == '#':
             # query['qdef'] =  query['qdef'][1:] # Remove the first special character. NOTE: Not necessary now. Disabled until needed.
-            query['qtype'] = models.opts.qtypes.curated
+            query['qtype'] = models.opts.Qtypes.curated
             return engines.CuratedQuery(query_id, query,
                                         backend_port, compdata_cache, opts)
-        else:
-            return engines.TextQuery(query_id, query, backend_port, compdata_cache, opts)
-    elif query['qtype'] == models.opts.qtypes.image:
+
+        return engines.TextQuery(query_id, query, backend_port, compdata_cache, opts)
+    elif query['qtype'] == models.opts.Qtypes.image:
         return engines.ImageQuery(query_id, query, backend_port, compdata_cache, opts)
-    elif query['qtype'] == models.opts.qtypes.dsetimage:
+    elif query['qtype'] == models.opts.Qtypes.dsetimage:
         return engines.DsetimageQuery(query_id, query, backend_port, compdata_cache, opts)
-    elif query['qtype'] == models.opts.qtypes.refine:
+    elif query['qtype'] == models.opts.Qtypes.refine:
         return engines.RefineQuery(query_id, query, backend_port, compdata_cache, opts)
 
+    return None

@@ -87,8 +87,8 @@ class BaseQuery(object):
             else:
                 image['anno'] = 1
 
-        with retengine_utils.timing.TimerBlock() as t:
+        with retengine_utils.timing.TimerBlock() as timer:
             feat_comp = feature_computation.FeatureComputer(self.query_id, self.backend_port)
             feat_comp.compute_feats(image_dict)
 
-        return t.interval
+        return timer.interval

@@ -12,7 +12,7 @@ class VisorOptions(object):
     def __init__(self,
                  title='VISOR',
                  datasets={},
-                 default_view=retengine_opts.vmode.grid,
+                 default_view=retengine_opts.Vmode.grid,
                  results_per_page=20,
                  engines={},
                  select_roi=False,
@@ -74,7 +74,7 @@ class CompDataPaths(object):
 class MetaDataPaths(object):
     """ Class for storing the different paths for the metadata files """
 
-    def __init__(self, metadata ):
+    def __init__(self, metadata):
         """
             Initializes the class
             Arguments:
@@ -98,11 +98,11 @@ class VisorEngineProcessOpts(object):
                                          improc_timeout=15.0,
                                          per_image_timeout=1.0,
                                          num_pos_train=200),
-                 rf_rank_type=retengine_opts.rf_rank_types.full,
+                 rf_rank_type=retengine_opts.RfRankTypes.full,
                  rf_rank_topn=2000,
-                 rf_train_type=retengine_opts.rf_train_types.regular,
-                 feat_detector_type=retengine_opts.feat_detector_type.fast
-                 ):
+                 rf_train_type=retengine_opts.RfTrainTypes.regular,
+                 feat_detector_type=retengine_opts.FeatDetectorType.fast
+                ):
         """
             Initializes the class
             Arguments:

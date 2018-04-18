@@ -4,7 +4,7 @@
 ## Enums
 # ----------------------------------
 
-class states:
+class States:
     """ Enum for identifying the different states of a query """
     processing = 0
     training = 51
@@ -16,7 +16,7 @@ class states:
     inactive = 890
 
 
-class qtypes:
+class Qtypes:
     """ Enum for identifying the different query types """
     text = 'text'
     curated = 'curated'
@@ -25,25 +25,28 @@ class qtypes:
     refine = 'refine'
 
 
-class rf_rank_types:
+class RfRankTypes:
     """ Enum for identifying the different relevance feedback rank types supported """
     full = 'full'
     topn = 'topn'
 
 
-class rf_train_types:
-    """ Enum for identifying the different relevance feedback train types - currently not supported """
+class RfTrainTypes:
+    """
+      Enum for identifying the different relevance feedback train types
+      Currently not supported
+    """
     regular = 'regular'
     augment = 'augment'
 
 
-class feat_detector_type:
+class FeatDetectorType:
     """ Enum for identifying the different types of feature detectors supported """
     fast = 'fast'
     accurate = 'accurate'
 
 
-class vmode:
+class Vmode:
     """ Enum of the supported view modes in the frontend """
     grid = 'grid'
     rois = 'rois'

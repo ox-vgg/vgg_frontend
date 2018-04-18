@@ -27,7 +27,7 @@ class AdminPages:
             Arguments:
                 visor_controller: an instance of the visor backend interface controller
         """
-        self.visor_controller =  visor_controller
+        self.visor_controller = visor_controller
 
     @method_decorator(csrf_protect)
     @method_decorator(require_GET)
@@ -46,24 +46,24 @@ class AdminPages:
         # get all current settings from the options, to fill out the controls in the page
         num_pos_train = self.visor_controller.proc_opts.imsearchtools_opts['num_pos_train']
         improc_timeout = self.visor_controller.proc_opts.imsearchtools_opts['improc_timeout']
-        improc_engine_list = [ 'google_web' ]
+        improc_engine_list = ['google_web']
         improc_engine = self.visor_controller.proc_opts.imsearchtools_opts['engine']
 
-        rqt_objdict = retengine.models.opts.rf_rank_types.__dict__
+        rqt_objdict = retengine.models.opts.RfRankTypes.__dict__
         rf_rank_type_list = [rqt_objdict[a] for a in rqt_objdict.keys()
                                if not (a.startswith('__') and a.endswith('__'))]
         rf_rank_type = self.visor_controller.proc_opts.rf_rank_type
         rf_rank_topn = self.visor_controller.proc_opts.rf_rank_topn
 
-        rtt_objdict = retengine.models.opts.rf_train_types.__dict__
+        rtt_objdict = retengine.models.opts.RfTrainTypes.__dict__
         rf_train_type_list = [rtt_objdict[a] for a in rtt_objdict.keys()
                                if not (a.startswith('__') and a.endswith('__'))]
         rf_train_type = self.visor_controller.proc_opts.rf_train_type
 
-        fdt_objdict = retengine.models.opts.feat_detector_type.__dict__
+        fdt_objdict = retengine.models.opts.FeatDetectorType.__dict__
         feat_detector_type_list = [fdt_objdict[a] for a in fdt_objdict.keys()
                                if not (a.startswith('__') and a.endswith('__'))]
-        feat_detector_type =  self.visor_controller.proc_opts.feat_detector_type
+        feat_detector_type = self.visor_controller.proc_opts.feat_detector_type
 
         disable_cache = self.visor_controller.proc_opts.disable_cache
 

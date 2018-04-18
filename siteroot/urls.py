@@ -21,7 +21,7 @@ urlpatterns = [
     url(r'^accounts/profile/$', user_pages.user_profile, name='user_profile'),
     url(r'^selectpageimages$', user_pages.selectpageimages, name='selectpageimages'),
 
-    # Admin pages (requires user authentication)
+    # Admin pages (restricted - requires user authentication)
 
     url(r'^admin/', admin.site.urls),
     url(r'^admintools', admin_pages.admintools, name='admintools'),
