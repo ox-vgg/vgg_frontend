@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create requirements files for pip, install all pip requirements, create main folders and secret key file
-RUN printf "django==1.10\npython-memcached\nprotobuf==2.6.1\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==1.1.0\ngevent-zeromq==0.2.5\nWhoosh==2.7.4" > /tmp/requirements.txt \
+RUN printf "django==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==1.1.0\ngevent-zeromq==0.2.5\nWhoosh==2.7.4" > /tmp/requirements.txt \
     && pip install -r /tmp/requirements.txt \
     && mkdir /webapps/  \
     && chmod 777 /webapps/ \
