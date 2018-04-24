@@ -1,0 +1,54 @@
+# Dockerfile for the VGG-FRONTEND application. It can only be used for displaying pre-computed list of images.
+# The admintools are not accesible.
+
+# Start from a clean Ubuntu Trusty machine
+FROM ubuntu:trusty
+
+# Update repositories and install all apt-get dependencies
+RUN apt-get update && apt-get install -y \
+    python-pip \
+    python-dev \
+    memcached \
+    libz-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzmq-dev \
+    libevent-dev \
+    screen \
+    unzip \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create requirements files for pip, install all pip requirements, create main folders and secret key file
+RUN printf "django==1.10\npython-memcached\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==1.1.0\ngevent-zeromq==0.2.5\nWhoosh==2.7.4" > /tmp/requirements.txt \
+    && pip install -r /tmp/requirements.txt \
+    && mkdir /webapps/  \
+    && chmod 777 /webapps/ \
+    && mkdir /webapps/visorgen /webapps/visorgen/backend_dependencies  /webapps/visorgen/backend_data \
+          /webapps/visorgen/datasets  /webapps/visorgen/datasets/images/  /webapps/visorgen/datasets/images/mydataset \
+          /webapps/visorgen/datasets/metadata/  /webapps/visorgen/datasets/metadata/mydataset \
+          /webapps/visorgen/datasets/negatives/  /webapps/visorgen/datasets/negatives/mydataset \
+          /webapps/visorgen/frontend_data  /webapps/visorgen/frontend_data/searchdata/ /webapps/visorgen/frontend_data/curatedtrainimgs \
+          /webapps/visorgen/frontend_data/searchdata/classifiers /webapps/visorgen/frontend_data/searchdata/postrainanno \
+          /webapps/visorgen/frontend_data/searchdata/postrainfeats /webapps/visorgen/frontend_data/searchdata/postrainimgs \
+          /webapps/visorgen/frontend_data/searchdata/rankinglists /webapps/visorgen/frontend_data/searchdata/predefined_rankinglists \
+          /webapps/visorgen/frontend_data/searchdata/predefined_rankinglists/display /webapps/visorgen/frontend_data/searchdata/uploadedimgs \
+    && echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
+
+# Download and configure vgg_frontend
+RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O /tmp/vgg_frontend.zip \
+    && unzip /tmp/vgg_frontend.zip -d /webapps/visorgen/ \
+    && mv /webapps/visorgen/vgg_frontend*  /webapps/visorgen/vgg_frontend \
+    && rm -rf /tmp/*.zip \
+    && cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_display.py /webapps/visorgen/vgg_frontend/visorgen/settings.py \
+    && cd /webapps/visorgen/vgg_frontend/ \
+    && python manage.py migrate \
+    && echo 'tail -f /dev/null' >> /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh
+
+# The customizations below can be done via the command line and are not needed here.
+# If you need them create a new Docker image derived from this one and define them.
+#EXPOSE 8000
+#VOLUME /webapps/visorgen/frontend_data/searchdata/predefined_rankinglists/display/ \
+#       /webapps/visorgen/datasets/images/mydataset \
+#       /webapps/visorgen/datasets/metadata/mydataset
+#ENTRYPOINT /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh
