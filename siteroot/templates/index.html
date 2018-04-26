@@ -17,9 +17,11 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <!-- main stylesheet for site -->
         <link href="static/styles/main.css" rel="stylesheet" type="text/css" />
-        <!-- stylesheets for querybar/imageuploader widgets -->
+        <!-- stylesheets for querybar/imageuploader/keyselector widgets -->
+        <link href="static/scripts/lib/select2-4.0.3/select2.min.css" rel="stylesheet" type="text/css" />
         <link href="static/scripts/widgets/jquery.ui.querybar.css" rel="stylesheet" type="text/css" />
         <link href="static/scripts/widgets/jquery.ui.imageuploader.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/widgets/jquery.ui.keyselector.css" rel="stylesheet" type="text/css" />
         <link href="static/scripts/lib/fancybox/jquery.fancybox.css" rel="stylesheet" type="text/css" />
         <link href="static/scripts/lib/fancybox/helpers/jquery.fancybox-buttons.css" rel="stylesheet" type="text/css" />
         <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
@@ -56,9 +58,10 @@
                             <div class="qbImagePreviewPrefix">uploadedimgs/</div>
                             <div class="qbEnginesWithImageSearchSupport">{{ENGINES_WITH_IMAGE_SEARCH_SUPPORT|safe}}</div>
                             <div id="imupControl"></div>
+                            <div id="selectKeywordControl"></div>
                             <!-- put submit box in control so it also appears after qb
                                  has finished loading -->
-                            <input id="query_box_submit" type="submit" value="&#xf002;" />
+                            <input id="query_box_submit" type="submit" value="&#xf002;" title="Search"/>
                         </div>
                     </div>
                 </form>
@@ -76,8 +79,10 @@
         <!-- querybar widget provides multi-modal (text/image) query textbox -->
         <!-- imageuploader widget provides dropdown menu used to select url/local file to upload and use as image input -->
         <script type="text/javascript" src="static/scripts/ajax_setup.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/select2-4.0.3/select2.full.min.js"></script>
         <script type="text/javascript" src="static/scripts/widgets/jquery.ui.querybar.js"></script>
         <script type="text/javascript" src="static/scripts/widgets/jquery.ui.imageuploader.js"></script>
+        <script type="text/javascript" src="static/scripts/widgets/jquery.ui.keyselector.js"></script>
         <!-- the following utility script connects the querybar widget with the imageuploader widget -->
         <script type="text/javascript" src="static/scripts/make-querybar-imup.js"></script>
         <!-- set up the 'getting started' lightbox -->
@@ -86,7 +91,7 @@
         <script type="text/javascript" src="static/scripts/add-getting-started-lb.js"></script>
         <!-- set up the example queries -->
         {% if OPEN_TOUR %}
-            <script type="text/javascript">
+        <script type="text/javascript">
             $(function() {
                 openTour();
             });
@@ -114,7 +119,15 @@
                         }
                     });
                 }
-            });
+            }).data( "ui-autocomplete" )._renderItem = function( ul, item ) {
+                label = item.label;
+                if (item.label.length>30) {
+                    label = item.label.substring(0, 30) + '...';
+                }
+                return $("<li></li>" ).data("item.ui-autocomplete", item).
+                    append( "<a>" + label +  "</a>").
+                    appendTo( ul );
+            };
         });
         </script>
     </body>

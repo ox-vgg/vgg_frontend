@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import msgpack
 import os
 import string
+import msgpack
 
 from retengine import utils
 from retengine import models
@@ -79,11 +79,12 @@ class ResultCache(base_caches.SessionExcludeListCache):
     ## Start of main class implementation
     # ----------------------------------
 
-    def __init__(self, ranklistpath, process_pool, enabled_caches=CacheCfg.all,
+    def __init__(self, predefined_ranklistpath, ranklistpath, process_pool, enabled_caches=CacheCfg.all,
                  enabled_excl_caches=CacheCfg.none):
         """
             Initializes the cache.
             Arguments:
+                predefined_ranklistpath: Path to folder with predefined ranking lists
                 ranklistpath: Path to folder with ranking lists
                 process_pool: pool of workers for multi-threading processing
                 enabled_caches: caches to use in normal operation.
@@ -92,6 +93,8 @@ class ResultCache(base_caches.SessionExcludeListCache):
                                      It should be a valid CacheCfg value.
         """
         self.ranklistpath = ranklistpath
+        self.predefined_ranklistpath = predefined_ranklistpath
+
         # process pool for saving ranking lists in background
         self.process_pool = process_pool
 
@@ -115,17 +118,17 @@ class ResultCache(base_caches.SessionExcludeListCache):
             reconstructing the instance.
         """
         # avoid attempting to pickle unpickleable worker pools when serializing
-        d = dict(self.__dict__)
-        del d['process_pool']
-        return d
+        a_dict = dict(self.__dict__)
+        del a_dict['process_pool']
+        return a_dict
 
 
-    def __setstate__(self, d):
+    def __setstate__(self, a_dict):
         """
             Reconfigures the instance from the object specified in the parameter.
         """
         # in the deserialized output, process_pool is set to None
-        self.__dict__.update(d)
+        self.__dict__.update(a_dict)
         self.process_pool = None
 
 
@@ -144,7 +147,7 @@ class ResultCache(base_caches.SessionExcludeListCache):
         querystrs = []
 
         if (not return_empty_list_if_cache_enabled or
-            self.Caches.disk in self.enabled_caches):
+                self.Caches.disk in self.enabled_caches):
             if os.path.exists(self.ranklistpath):
                 rankfiles = os.listdir(self.ranklistpath)
                 for rankfile in rankfiles:
@@ -240,9 +243,6 @@ class ResultCache(base_caches.SessionExcludeListCache):
             return None
 
         return self.get_results(query, query_ses_id, user_ses_id)
-        # print 'Retrieved by query_ses_id: %s' % (rlist is not None)
-
-        return rlist
 
 
     def add_results(self, rlist, query,
@@ -299,11 +299,9 @@ class ResultCache(base_caches.SessionExcludeListCache):
         if self.Caches.disk in caches:
             if for_all_datasets:
                 cache_fname = self._get_disk_fname(query)
-                cache_fname = cache_fname.replace(query['dsetname'], '###')
-
                 a_dir = os.path.dirname(cache_fname)
                 a_files = os.listdir(a_dir)
-                cache_fname = cache_fname.split('###')[1] #we just added '###', so this should work
+                cache_fname = cache_fname.split(query['dsetname'])[-1]
 
                 all_fnames = [os.path.join(a_dir, a_file) for a_file in a_files]
                 # just get fnames which conform to regular expression
@@ -365,33 +363,49 @@ class ResultCache(base_caches.SessionExcludeListCache):
     def _load_results_from_disk(self, query):
         """
             Loads from a local ranking list file the results associated
-            to the specified query.
+            to the specified query. Pre-defined ranking list have priority over
+            ranking list produced by the application.
             Arguments:
                 query: query in dictionary form.
             Returns:
                 The list of results associated to the query, or 'None' if
                 it was not possible to read the file.
         """
+        rlist = None
         fname = self._get_disk_fname(query)
-        if os.path.isfile(fname):
+        predefined_fname = fname.replace(self.ranklistpath, self.predefined_ranklistpath)
+        if os.path.isfile(predefined_fname): # give priority to the predefined list
             try:
-                with open(fname, 'rb') as rfile:
+                with open(predefined_fname, 'rb') as rfile:
                     rlist = msgpack.load(rfile)
-            except:
-                return None
-            return rlist
-        else:
-            return None
+            except Exception as e:
+                rlist = None
+                print e
+
+        if rlist == None:
+            if os.path.isfile(fname):
+                try:
+                    with open(fname, 'rb') as rfile:
+                        rlist = msgpack.load(rfile)
+                except Exception as e:
+                    rlist = None
+                    print e
+
+        return rlist
 
 
     def _save_results_to_disk(self, query):
         """
-            Saves the results of a query to a local ranking list file.
+            Saves the results of a query to a local ranking list file. If there is
+            already a pre-defined ranking list associated to the query, the results
+            are not saved so as to not overwrite the pre-defined list.
             Arguments:
                 query: query in dictionary form.
         """
         fname = self._get_disk_fname(query)
-        rlist = self._mem_cache.get_results(query)
-
-        with open(fname, 'wb') as rfile:
-            msgpack.dump(rlist, rfile)
+        predefined_fname = fname.replace(self.ranklistpath, self.predefined_ranklistpath)
+        if not os.path.isfile(predefined_fname): # only save it if there is no predefined list
+                                                 # associated to the same query
+            rlist = self._mem_cache.get_results(query)
+            with open(fname, 'wb') as rfile:
+                msgpack.dump(rlist, rfile)

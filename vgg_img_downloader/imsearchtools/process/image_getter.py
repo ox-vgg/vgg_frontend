@@ -7,22 +7,20 @@ Author: Ken Chatfield <ken@robots.ox.ac.uk>
 Created on: 19 Oct 2012
 """
 
+import shutil
+import os
+import time
+import logging
+from httplib import BadStatusLine
+import requests
+
 import gevent
 from gevent.timeout import Timeout
-
-from gevent import monkey; monkey.patch_socket()
-import urllib2
-from httplib import BadStatusLine
-
-#import requests
-import os
-import urlparse
-import time
+from gevent import monkey
+monkey.patch_socket()
 
 from image_processor import *
 import imutils
-
-import logging
 
 from callback_handler import CallbackHandler
 
@@ -44,7 +42,6 @@ class ImageGetter(ImageProcessor):
         self.opts = opts
         self.timeout = timeout
         self.image_timeout = image_timeout
-        self.headers = {'User-Agent': 'Mozilla/5.0 Gecko/20071127 Firefox/2.0.0.11'}
         self.subprocs = []
 
     def process_url(self, urldata, output_dir, call_completion_func=False,
@@ -58,10 +55,10 @@ class ImageGetter(ImageProcessor):
             else:
                 clean_fn = None
                 thumb_fn = None
-        except urllib2.URLError, e:
-            log.info('URL Error for %s (%s)', urldata['url'], str(e))
+        except requests.ConnectionError, e:
+            log.info('Connection Error for %s (%s)', urldata['url'], str(e))
             error_occurred = True
-        except urllib2.HTTPError, e:
+        except requests.HTTPError, e:
             if e.code != 201:
                 log.info('HTTP Error for %s (%s)', urldata['url'], str(e))
                 error_occurred = True
@@ -98,19 +95,24 @@ class ImageGetter(ImageProcessor):
                 self._callback_handler.skip()
 
             return None
-        
+
     def _download_image(self, url, output_fn):
         if imutils.image_exists(output_fn):
             log.info('Output filename exists for URL: %s', url)
             return
 
         log.info('Downloading URL: %s', url)
-        request = urllib2.Request(url, headers=self.headers)
-        r = urllib2.urlopen(request, timeout=self.image_timeout)
+        response = None
+        try:
+            response = requests.get(url, timeout=self.image_timeout, stream=True)
+        except Exception as e:
+            log.info('Exception while downloading from %s: %s' % (url, str(e)))
+            response = None
+        if response:
+            with open(output_fn, 'wb') as out_file:
+                shutil.copyfileobj(response.raw, out_file)
 
-        with open(output_fn, 'w') as f:
-            f.write(r.read())
-        
+
     def process_urls(self, urls, output_dir, completion_func=None,
                      completion_worker_count=-1, completion_extra_prms=None, process_images=True):
         """Process returned list of URL dicts returned from search client class
@@ -132,7 +134,7 @@ class ImageGetter(ImageProcessor):
                   'clean_fn':'/path/to/processed/and/validated/image',
                   'thumb_fn':'/path/to/thumbnail'},
                   ...]
-            
+
         """
 
         # check input parameters
@@ -150,7 +152,7 @@ class ImageGetter(ImageProcessor):
         jobs = [gevent.spawn(self.process_url,
                              urldata, output_dir,
                              call_completion_func=(completion_func is not None),
-                             completion_extra_prms=completion_extra_prms,process_images=process_images,
+                             completion_extra_prms=completion_extra_prms, process_images=process_images,
                              start_time=time.time())
                 for urldata in urls]
 
@@ -166,7 +168,7 @@ class ImageGetter(ImageProcessor):
             for job in jobs:
                 try:
                     job.get(block=False)
-                except Timeout, IndexError:
+                except (Timeout, IndexError):
                     job.kill(block=True)
                     timeout_occurred = True
 
@@ -187,5 +189,3 @@ class ImageGetter(ImageProcessor):
                 results.append(job.value)
 
         return results
-        
-

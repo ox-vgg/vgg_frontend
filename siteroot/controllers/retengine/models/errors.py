@@ -7,7 +7,7 @@
 class ResultReadError(Exception):
     """ Class for reporting errors related to reading results from the backend """
     def __init__(self, msg):
-        super(Exception, self).__init__()
+        super(ResultReadError, self).__init__()
         self.msg = msg
 
     def __str__(self):
@@ -17,7 +17,7 @@ class ResultReadError(Exception):
 class QueryIdError(Exception):
     """ Class for reporting errors related to reading results from the backend """
     def __init__(self, msg):
-        super(Exception, self).__init__()
+        super(QueryIdError, self).__init__()
         self.msg = msg
 
     def __str__(self):
@@ -27,7 +27,7 @@ class QueryIdError(Exception):
 class CuratedClassifierPathNotFoundError(Exception):
     """ Class for reporting errors when the training images folder of a curated query is not found """
     def __init__(self, msg):
-        super(Exception, self).__init__()
+        super(CuratedClassifierPathNotFoundError, self).__init__()
         self.msg = msg
 
     def __str__(self):
@@ -37,7 +37,7 @@ class CuratedClassifierPathNotFoundError(Exception):
 class UnsupportedQtypeError(Exception):
     """ Class for reporting errors when the attempting to use a query type that is not supported """
     def __init__(self, msg):
-        super(Exception, self).__init__()
+        super(UnsupportedQtypeError, self).__init__()
         self.msg = msg
 
     def __str__(self):
@@ -47,7 +47,7 @@ class UnsupportedQtypeError(Exception):
 class FeatureCompError(Exception):
     """ Class for reporting errors related to feature computations """
     def __init__(self, msg):
-        super(Exception, self).__init__()
+        super(FeatureCompError, self).__init__()
         self.msg = msg
 
     def __str__(self):
@@ -57,7 +57,7 @@ class FeatureCompError(Exception):
 class VisorBackendUnreachableError(Exception):
     """ Class for reporting errors when a backend is unreachable """
     def __init__(self, msg):
-        super(Exception, self).__init__()
+        super(VisorBackendUnreachableError, self).__init__()
         self.msg = msg
 
     def __str__(self):
@@ -67,7 +67,7 @@ class VisorBackendUnreachableError(Exception):
 class AnnoSaveLoadError(Exception):
     """ Class for reporting errors when the annotations of a classifier cannot be loaded or saved """
     def __init__(self, msg):
-        super(Exception, self).__init__()
+        super(AnnoSaveLoadError, self).__init__()
         self.msg = msg
 
     def __str__(self):
@@ -77,7 +77,7 @@ class AnnoSaveLoadError(Exception):
 class ClassifierTrainError(Exception):
     """ Class for reporting errors when there is an error during the training of a classifier """
     def __init__(self, msg):
-        super(Exception, self).__init__()
+        super(ClassifierTrainError, self).__init__()
         self.msg = msg
 
     def __str__(self):
@@ -87,7 +87,7 @@ class ClassifierTrainError(Exception):
 class ClassifierSaveLoadError(Exception):
     """ Class for reporting errors when a classifier cannot be loaded or saved """
     def __init__(self, msg):
-        super(Exception, self).__init__()
+        super(ClassifierSaveLoadError, self).__init__()
         self.msg = msg
 
     def __str__(self):
@@ -97,7 +97,7 @@ class ClassifierSaveLoadError(Exception):
 class StrIdDecodeError(Exception):
     """ Class for reporting errors related to decoding a string id """
     def __init__(self, msg):
-        super(Exception, self).__init__()
+        super(StrIdDecodeError, self).__init__()
         self.msg = msg
 
     def __str__(self):

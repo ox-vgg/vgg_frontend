@@ -3,8 +3,9 @@
 import urllib2
 import os
 import uuid
-import imchecktools
 import base64
+import imchecktools
+
 
 class ImageUploader:
     """ Class with utility functions to upload an image """
@@ -31,7 +32,7 @@ class ImageUploader:
                 The full path to the uploaded file.
         """
         (localdir, localfilenames) = self.get_localimgs_from_files([filename,])
-        return os.path.join(localdir,localfilenames[0])
+        return os.path.join(localdir, localfilenames[0])
 
 
     def get_localimg_from_imgdata(self, img_data, is_data_base64=False):
@@ -52,27 +53,27 @@ class ImageUploader:
         remotefilename = img_data['filename'];
         localpath = os.path.join(self.upload_dir, localdir)
 
-        if os.path.isdir(localpath) == False:
-            os.makedirs(localpath,0755)
+        if not os.path.isdir(localpath):
+            os.makedirs(localpath, 0755)
         localfilepath = os.path.join(localpath, remotefilename)
         print '  ->' + localfilepath
         localfile = open(localfilepath, 'wb')
         if is_data_base64:
-           data = base64.b64decode( img_data['data'] )
+            data = base64.b64decode(img_data['data'])
         else:
-           data = img_data['data']
+            data = img_data['data']
         localfile.write(data)
         localfile.close()
         print '  Image Written'
 
         localfilepath = imchecktools.verify_image(localfilepath,
-                                                      self.maximwidth,
-                                                      self.maximheight)
+                                                  self.maximwidth,
+                                                  self.maximheight)
         print '  Image verified'
 
         localfilenames.append(remotefilename)
 
-        return os.path.join(localdir,localfilenames[0])
+        return os.path.join(localdir, localfilenames[0])
 
 
     def get_localimgs_from_files(self, files):
@@ -93,8 +94,8 @@ class ImageUploader:
         for src_filepath in files:
             src_filename = os.path.basename(src_filepath)
             localpath = os.path.join(self.upload_dir, localdir)
-            if os.path.isdir(localpath) == False:
-                os.makedirs(localpath,0755)
+            if not os.path.isdir(localpath):
+                os.makedirs(localpath, 0755)
             dest_filepath = os.path.join(localpath, src_filename)
             print '  ->' + dest_filepath
             with open(src_filepath, 'rb') as src_file:
@@ -126,8 +127,8 @@ class ImageUploader:
                 name of the created randomly-named-subfolder and localfilename
                 is the name of the uploaded file.
         """
-        (localdir, localfilenames) = self.get_localimgs_from_urls([url,])
-        return os.path.join(localdir,localfilenames[0])
+        (localdir, localfilenames) = self.get_localimgs_from_urls([url,], timeout)
+        return os.path.join(localdir, localfilenames[0])
 
 
     def get_localimgs_from_urls(self, urls, timeout=30):
@@ -149,12 +150,12 @@ class ImageUploader:
         for url in urls:
             remotefilename = os.path.basename(url)
             localpath = os.path.join(self.upload_dir, localdir)
-            if os.path.isdir(localpath) == False:
-                os.makedirs(localpath,0755)
+            if not os.path.isdir(localpath):
+                os.makedirs(localpath, 0755)
             localfilepath = os.path.join(localpath, remotefilename)
             print '  ' + url + '->' + localfilepath
             opener = urllib2.build_opener()
-            opener.addheaders = [('User-agent','Mozilla/5.0')] # pretend to be firefox
+            opener.addheaders = [('User-agent', 'Mozilla/5.0')] # pretend to be firefox
             img = opener.open(url, None, timeout)
 
             localfile = open(localfilepath, 'wb')

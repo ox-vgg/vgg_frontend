@@ -1,0 +1,118 @@
+# Dockerfile for the GPU-based VFF application. See http://www.robots.ox.ac.uk/~vgg/software/vff/
+
+# Start from a clean Ubuntu Trusty machine with cuda 7.5 support
+FROM nvidia/cuda:7.5-devel-ubuntu14.04
+
+# Update repositories and install all apt-get dependencies, including cuDNN 4.
+RUN echo "deb http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1404/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list \
+    && apt-get update && apt-get install -y \
+    python-pip \
+    python-dev \
+    memcached \
+    libz-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libevent-dev \
+    libzmq-dev \
+    screen \
+    cmake \
+    pkg-config \
+    libgoogle-glog-dev \
+    libhdf5-serial-dev \
+    liblmdb-dev \
+    libleveldb-dev \
+    libprotobuf-dev \
+    protobuf-compiler \
+    libopencv-dev \
+    libatlas-base-dev \
+    gfortran \
+    libsnappy-dev \
+    libgflags-dev \
+    libssl-dev \
+    python-opencv \
+    unzip \
+    wget \
+    nano \
+    && apt-get install -y --no-install-recommends libboost-all-dev \
+    && apt-get install -y --no-install-recommends libcudnn4-dev=4.0.8 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create requirements files for pip, install all pip requirements, create main folders and secret key file
+RUN printf "django==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==1.1.0\ngevent-zeromq==0.2.5\nnumpy==1.11.1\nsimplejson==3.8.2\nscipy==0.18.1\nscikit-image==0.13.1\neasydict==1.7\nCython==0.27.3\npyyaml==3.12\nmatplotlib==2.1.0\nsix==1.11.0\nWhoosh==2.7.4" > /tmp/requirements.txt \
+    && pip install -r /tmp/requirements.txt \
+    && mkdir /webapps/  \
+    && chmod 777 /webapps/ \
+    && mkdir /webapps/visorgen /webapps/visorgen/backend_dependencies  /webapps/visorgen/backend_data /webapps/visorgen/backend_data/faces \
+          /webapps/visorgen/datasets  /webapps/visorgen/datasets/images/  /webapps/visorgen/datasets/images/mydataset \
+          /webapps/visorgen/datasets/metadata/  /webapps/visorgen/datasets/metadata/mydataset \
+          /webapps/visorgen/datasets/negatives/  /webapps/visorgen/datasets/negatives/mydataset \
+          /webapps/visorgen/frontend_data  /webapps/visorgen/frontend_data/searchdata/ /webapps/visorgen/frontend_data/curatedtrainimgs \
+          /webapps/visorgen/frontend_data/searchdata/classifiers /webapps/visorgen/frontend_data/searchdata/postrainanno \
+          /webapps/visorgen/frontend_data/searchdata/postrainfeats /webapps/visorgen/frontend_data/searchdata/postrainimgs \
+          /webapps/visorgen/frontend_data/searchdata/rankinglists /webapps/visorgen/frontend_data/searchdata/uploadedimgs \
+    && echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
+
+# Install face-py-faster-rcnn
+RUN wget https://github.com/playerkk/face-py-faster-rcnn/archive/9d8c143e0ff214a1dcc6ec5650fb5045f3002c2c.zip -P /tmp \
+    && unzip /tmp/9d8c143e0ff214a1dcc6ec5650fb5045f3002c2c.zip -d /webapps/visorgen/backend_dependencies/ \
+    && mv /webapps/visorgen/backend_dependencies/face-py-faster-rcnn-* /webapps/visorgen/backend_dependencies/face-py-faster-rcnn \
+    && wget https://github.com/rbgirshick/caffe-fast-rcnn/archive/0dcd397b29507b8314e252e850518c5695efbb83.zip -P /tmp \
+    && unzip /tmp/0dcd397b29507b8314e252e850518c5695efbb83.zip -d /webapps/visorgen/backend_dependencies/face-py-faster-rcnn \
+    && rm -r /webapps/visorgen/backend_dependencies/face-py-faster-rcnn/caffe-fast-rcnn  \
+    && mv /webapps/visorgen/backend_dependencies/face-py-faster-rcnn/caffe-fast-rcnn-* /webapps/visorgen/backend_dependencies/face-py-faster-rcnn/caffe-fast-rcnn  \
+    && rm -rf /tmp/*.zip \
+    && cd /webapps/visorgen/backend_dependencies/face-py-faster-rcnn/lib \
+    && make
+
+# compile caffe-fast-rcnn and shot detector
+RUN cd /webapps/visorgen/backend_dependencies/face-py-faster-rcnn/caffe-fast-rcnn \
+    && cp Makefile.config.example Makefile.config \
+    && sed -i 's/# USE_CUDNN/USE_CUDNN/g' Makefile.config \
+    && sed -i 's/# WITH_PYTHON_LAYER/WITH_PYTHON_LAYER/g' Makefile.config \
+    && sed -i 's/\/usr\/include\/python2.7/\/usr\/include\/python2.7 \/usr\/local\/lib\/python2.7\/dist-packages\/numpy\/core\/include/g' Makefile.config \
+    && make all \
+    && make pycaffe
+
+# Download and configure vgg repos and models
+RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O /tmp/vgg_frontend.zip \
+    && unzip /tmp/vgg_frontend.zip -d /webapps/visorgen/ \
+    && mv /webapps/visorgen/vgg_frontend*  /webapps/visorgen/vgg_frontend \
+    && cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_faces.py /webapps/visorgen/vgg_frontend/visorgen/settings.py \
+    && sed -i 's/"\/vgg_frontend"/"\/vff"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py \
+    && wget https://gitlab.com/vgg/vgg_face_search/-/archive/master/vgg_face_search-master.zip -O /tmp/vgg_face_search.zip \
+    && unzip /tmp/vgg_face_search.zip -d /webapps/visorgen/ \
+    && mv /webapps/visorgen/vgg_face_search*  /webapps/visorgen/vgg_face_search \
+    && sed -i 's/CUDA_ENABLED = False/CUDA_ENABLED = True/g' /webapps/visorgen/vgg_face_search/service/settings.py \
+    && sed -i 's/DATASET_FEATS_FILE/DATASET_FEATS_FILE="\/webapps\/visorgen\/backend_data\/faces\/database.pkl"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
+    && sed -i 's/FEATURES_CAFFE_MODEL/FEATURES_CAFFE_MODEL="\/webapps\/visorgen\/backend_data\/faces\/resnet50_256.caffemodel"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
+    && sed -i 's/FEATURES_CAFFE_PROTOTXT/FEATURES_CAFFE_PROTOTXT="\/webapps\/visorgen\/backend_data\/faces\/resnet50_256.prototxt"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
+    && sed -i 's/GPU_FACE_DETECTION_CAFFE_MODEL/GPU_FACE_DETECTION_CAFFE_MODEL="\/webapps\/visorgen\/backend_data\/faces\/vgg16_faster_rcnn_iter_80000.caffemodel"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
+    && sed -i 's/DEPENDENCIES_PATH/DEPENDENCIES_PATH="\/webapps\/visorgen\/backend_dependencies\/"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
+    && rm -rf /tmp/*.zip
+
+# Install ffmpeg and compile shot detector
+RUN wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz -O /tmp/ffmpeg-release-64bit-static.tar.xz \
+    && tar -xf /tmp/ffmpeg-release-64bit-static.tar.xz -C /webapps/visorgen/backend_dependencies/ \
+    && mv /webapps/visorgen/backend_dependencies/ffmpeg* /webapps/visorgen/backend_dependencies/ffmpeg \
+    && sed -i "s|ffmpeg|/webapps/visorgen/backend_dependencies/ffmpeg/ffmpeg|g" /webapps/visorgen/vgg_face_search/pipeline/start_pipeline.sh \
+    && rm -rf /tmp/*.tar* \
+    && cd /webapps/visorgen/vgg_face_search/pipeline \
+    && mkdir build \
+    && cd build \
+    && cmake -DBoost_INCLUDE_DIR=/usr/include/ ../ \
+    && make
+
+# Download models. This is only here for reference. The models should not be copied inside the image to reduce the image size.
+#RUN cd /webapps/visorgen/backend_data/faces \
+#    && wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/resnet50_256.caffemodel \
+#    && wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/resnet50_256.prototxt \
+#    && wget http://supermoe.cs.umass.edu/%7Ehzjiang/data/vgg16_faster_rcnn_iter_80000.caffemodel
+
+# configure default user in frontend
+RUN cd /webapps/visorgen/vgg_frontend/ \
+    && python manage.py migrate \
+    && cd /webapps/visorgen/vgg_frontend/ \
+    && printf "import os\nfrom django.core.wsgi import get_wsgi_application\nos.environ['DJANGO_SETTINGS_MODULE']='visorgen.settings'\napplication = get_wsgi_application()\nfrom django.contrib.auth.models import User\nuser=User.objects.create_user('admin', password='vggadmin')\nuser.is_superuser=True\nuser.is_staff=True\nuser.save()" > super.py \
+    && python super.py \
+    && rm -f super.py \
+    && echo 'tail -f /dev/null' >> /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh

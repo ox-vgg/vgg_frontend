@@ -61,15 +61,19 @@
             <div class="results_box">
                 <div class="result_outer_wrapper">
                     <div class="result_inner_wrapper">
-                        <a class="result_image_link" href="{{HOME_LOCATION}}viewdetails?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;dsetresid={{RITEM.dsetresid}}&amp;dsetname={{QUERY.dsetname}}{% if RITEM.roi %}&amp;roi={{RITEM.roi}}{% endif %}">
-                            <img src="{{SA_THUMBS}}{{RITEM.path}}{{RITEM.thumbnailroi}}" />
+                        <a class="result_image_link" href="{{HOME_LOCATION}}viewdetails?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;dsetresid={{RITEM.dsetresid}}&amp;dsetname={{QUERY.dsetname}}&amp;view=grid{% if RITEM.roi %}&amp;roi={{RITEM.roi}}{% endif %}">
+                            <img src="{{SA_THUMBS}}{{RITEM.path}}" />
                         </a>
                         <div class="result_refinebtns">
                             <div class="result_refinebtn_url" style="display:none;">{{RITEM.dsetresid}}</div>
                             <a class="result_refinebtn result_refinebtn_unselected result_refinebtn_pos" href="#">+</a>
                         </div>
                         <div class="result_belowtext">
-                            <div><span class="result_belowtext_movsymbol"></span><span class="result_belowtext_text">{{RITEM.desc|trunc:20}}</span></div>
+                            {% if RITEM.score >= 0 %}
+                                <div><span class="result_belowtext_movsymbol" style="color:#008300;">/</span><span class="result_belowtext_text">{{RITEM.desc|trunc:20}}</span></div>
+                            {% else %}
+                                <div><span class="result_belowtext_movsymbol" style="color:#d9d900;">W</span><span class="result_belowtext_text">{{RITEM.desc|trunc:20}}</span></div>
+                            {% endif %}
                         </div>
                         {% if SIMILAR_ENGINE %}
                         <div class="result_extras">
@@ -110,11 +114,19 @@
         </div>
         <div class="results_nav_centre">
             {% if ENGINE_HAS_IMG_POSTPROC_MODULE %}
-                <br/><a class="results_nav_centre_link" href="{{HOME_LOCATION}}trainingimages?qsid={{QUERY_ID}}&amp;page={{PAGE}}">View Training Images</a>
+                <br/><a class="results_nav_centre_link" href="{{HOME_LOCATION}}trainingimages?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;view=grid">View Training Images</a>
             {% endif %}
             {% if ENGINE_CAN_SAVE_UBER %}
+                {% if ENGINE_HAS_IMG_POSTPROC_MODULE %}
                 &middot;
+                {% endif %}
                 <a id="save_uber_classif" onclick="save_uber()" href="#">Save as Uber Classifier</a>
+            {% endif %}
+            {% if IMAGE_COUNT > 0 %}
+                {% if ENGINE_HAS_IMG_POSTPROC_MODULE or ENGINE_CAN_SAVE_UBER %}
+                &middot;
+                {% endif %}
+                <a class="results_nav_centre_link" href="{{HOME_LOCATION}}selectpageimages?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;view=grid">Save page as Text List</a>
             {% endif %}
             <br/>
         </div>

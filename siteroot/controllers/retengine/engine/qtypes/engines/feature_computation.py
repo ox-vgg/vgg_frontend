@@ -30,12 +30,12 @@ class FeatureComputer(object):
             Returns:
                 The time it took to compute the features
         """
-        with retengine_utils.timing.TimerBlock() as t:
+        with retengine_utils.timing.TimerBlock() as timer:
             out_dicts = [dict(self.__dict__.items() + out_dict.items())
                          for out_dict in out_dicts]
             map(_compute_feat, out_dicts)
 
-        comp_time = t.interval
+        comp_time = timer.interval
         ##print 'Done with call to compute_feats for Query ID:', self.query_id
         return comp_time
 
@@ -89,7 +89,7 @@ def _compute_feat(out_dict):
     else:
         call_succeeded = True
 
-    if call_succeeded == False:
+    if not call_succeeded:
         raise models.errors.FeatureCompError('Failed computing features of ' + canonical_impath)
 
     if is_symlink:
@@ -99,5 +99,3 @@ def _compute_feat(out_dict):
         sys.stdout.write('computed features for: ' + impath + '\n')
 
     ##print "Backend call done: ", impath
-
-

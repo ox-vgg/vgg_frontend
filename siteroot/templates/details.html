@@ -8,6 +8,7 @@
         PAGE - page of results to display
         BACKPAGE - Page to go back to
         ROI_ENGINE - currently selected engine
+        AVAILABLE_ENGINES - engines info
         IMAGE_NAME - image name
         IMAGE_URL - full URL of the image
         IMAGE_LOCATION - image location
@@ -28,9 +29,15 @@
             <!-- ROI selection -->
             <script type="text/javascript" src="static/scripts/lib/jcrop/jquery.Jcrop.min.js"></script>
             <script language="javascript">
-            // the following (and closing tag) is needed for ampersand to work with javascript
-            //<![CDATA[
-            jQuery(function(){ jQuery('#detailimg').Jcrop({ onChange: recCoords, onSelect: recCoords}); });
+            var jcrop_api_detailimg = null;
+            var jcrop_api_canvas = null;
+            var jcrop_boxWidth =  window.innerWidth;
+            var jcrop_boxHeight =  window.innerHeight;
+            if (jcrop_api_detailimg == null) {
+                $('#detailimg').Jcrop({ onChange: recCoords, onSelect: recCoords, boxWidth: jcrop_boxWidth, boxHeight: jcrop_boxHeight }, function () {
+                      jcrop_api_detailimg = this;
+                });
+            }
             {% if ROI %}
                 selXMin = {{ROI.0}}; selYMin = {{ROI.1}};
             {% else %}
@@ -39,7 +46,6 @@
             imWidth = {{IMAGE_WIDTH}};
             imHeight = {{IMAGE_HEIGHT}};
             function recCoords(c){ selXMin = c.x; selYMin = c.y; selXMax = c.x2; selYMax = c.y2; selWidth = c.w; selHeight = c.h; }
-            // ]]>
             </script>
         {% endif %}
 
@@ -49,17 +55,34 @@
                         <table>
                                 <tr align="center">
                                          <td valign="bottom" align="center">
-                                                <img id="detailimg" src="datasets/{{IMAGE_URL}}" alt="" />
-                                         </td>
+                                               {% if ROI %}
+                                               <input id="show_roi" type="checkbox" onchange="toggleCheckbox(this)">
+                                               <label for="show_roi">Show detection</label>
+                                               {% endif %}
+                                               <div id="div_detailimg" >
+                                                   <img id="detailimg" src="datasets/{{IMAGE_URL}}" alt="" width="100%" height="100%">
+                                               </div>
+                                               <div id="div_canvas"  style="display:none;">
+                                                    <canvas id="canvas"></canvas>
+                                               </div>
+                                           </td>
                                 </tr>
                                 {% if ROI_ENGINE %}
                                     <tr align="center">
                                             <td valign="bottom" align="center">
                                                     <input id="imageroi_dsetname" type ="hidden" value="{{DATASET_NAME}}"/>
-                                                    <input id="imageroi_query_box_submit" type="button" value="Search" />
+                                                    <input id="imageroi_query_box_submit" type="button" value="Search" title="Search"/>
+                                                    {% if AVAILABLE_ENGINES %}
+                                                        <select id="imageroi_engine">
+                                                            {% for key,value in AVAILABLE_ENGINES.items %}
+                                                                <option value="{{key}}" {% if key == ROI_ENGINE %}selected="selected"{% endif %}>{{value.full_name}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    {% else %}
+                                                    <input id="imageroi_engine" type ="hidden" value="{{ROI_ENGINE}}"/>
+                                                    {% endif %}
                                                     <input id="imageroi_imagename" type ="hidden" value="{{IMAGE_NAME}}"/>
                                                     <input id="imageroi_dsetresid" type ="hidden" value="{{DSET_RES_ID}}"/>
-                                                    <input id="imageroi_engine" type ="hidden" value="{{ROI_ENGINE}}"/>
                                             </td>
                                     </tr>
                                 {% endif %}
@@ -98,9 +121,8 @@
             <a class="back_to_results" href="{{BACKPAGE}}?qsid={{QUERY_ID}}&amp;page={{PAGE}}">&lt;- Back to results</a>
         </p>
     </div>
-    <canvas id="snap_canvas" width="480" height="270" style="visibility:hidden;"></canvas>
-    <!-- dynamically load in styles associated specifically with this page -->
 
+    <!-- dynamically load in styles associated specifically with this page -->
     <script type="text/javascript">
     $(function() {
         $('head').append('<link href="static/styles/details.css" rel="stylesheet" type="text/css" />');
@@ -116,7 +138,65 @@
     <!-- load in linkify script to convert regular links to AJAX subpage links -->
     <script type="text/javascript" src="static/scripts/results-linkify.js"></script>
     <script type="text/javascript" src="static/scripts/ajax_setup.js"></script>
-    <!-- <script type="text/javascript" src="static/scripts/video-snap.js"></script>
-    <script type="text/javascript" src="static/scripts/ajax_setup.js"></script> -->
     <script type="text/javascript" src="static/scripts/roi-search.js"></script>
+    {% if ROI %}
+    <script type="text/javascript">
+    function toggleCheckbox() {
+      canvas=document.getElementById("canvas");
+      context=canvas.getContext("2d");
+      img=document.getElementById("detailimg");
+      divCanvas=document.getElementById("div_canvas");
+      divImg=document.getElementById("div_detailimg");
+      if (divCanvas.style.display === "none") {
+            {% if SELECT_ROI %}
+            clientWidth = {{IMAGE_WIDTH}};
+            clientHeight = {{IMAGE_HEIGHT}};
+            scaleWidth = 1;
+            scaleHeight = 1;
+            lineWidth = 4*Math.min(clientWidth/jcrop_boxWidth,clientHeight/jcrop_boxHeight);
+            {% else %}
+            clientWidth = divImg.clientWidth;
+            clientHeight = divImg.clientHeight;
+            scaleWidth = clientWidth/{{IMAGE_WIDTH}};
+            scaleHeight = clientHeight/{{IMAGE_HEIGHT}};
+            lineWidth = 4;
+            {% endif %}
+            divImg.style.display = "none";
+            divCanvas.style.display = "block";
+            canvas.height = clientHeight;
+            canvas.width = clientWidth;
+            context.drawImage(img, 0, 0, {{IMAGE_WIDTH}}, {{IMAGE_HEIGHT}}, 0, 0, canvas.width, canvas.height);
+            context.beginPath();
+            context.moveTo({{ROI.0}}*scaleWidth,{{ROI.1}}*scaleHeight);
+            context.lineTo({{ROI.2}}*scaleWidth,{{ROI.3}}*scaleHeight);
+            context.lineTo({{ROI.4}}*scaleWidth,{{ROI.5}}*scaleHeight);
+            context.lineTo({{ROI.6}}*scaleWidth,{{ROI.7}}*scaleHeight);
+            context.lineTo({{ROI.8}}*scaleWidth,{{ROI.9}}*scaleHeight);
+            context.lineWidth = lineWidth;
+            context.strokeStyle = "yellow";
+            context.stroke();
+            {% if SELECT_ROI %}
+                if (jcrop_api_canvas == null) {
+                    $('#canvas').Jcrop({ onChange: recCoords, onSelect: recCoords, boxWidth: jcrop_boxWidth, boxHeight: jcrop_boxHeight }, function () {
+                          jcrop_api_canvas = this;
+                    });
+                }
+                else {
+                    jcrop_api_canvas.enable();
+                }
+                jcrop_api_detailimg.release();
+            {% endif %}
+    } else {
+        canvas.height = 0;
+        canvas.width = 0;
+        divCanvas.style.display = "none";
+        divImg.style.display = "block";
+        {% if SELECT_ROI %}
+            jcrop_api_canvas.release();
+            jcrop_api_detailimg.enable();
+        {% endif %}
+    }
+   };
+   </script>
+   {% endif %}
 </html>

@@ -18,21 +18,13 @@ sudo mkdir /webapps/
 sudo chmod 777 /webapps/
 mkdir /webapps/visorgen
 
-# create empty file for secret key
-touch /webapps/visorgen/secret_key_visorgen
-
 # create data folders
-mkdir /webapps/visorgen/backend_data
-mkdir /webapps/visorgen/datasets  /webapps/visorgen/datasets/images/  /webapps/visorgen/datasets/images/mydataset
+mkdir /webapps/visorgen/datasets
+mkdir /webapps/visorgen/datasets/images/  /webapps/visorgen/datasets/images/mydataset
 mkdir /webapps/visorgen/datasets/metadata/  /webapps/visorgen/datasets/metadata/mydataset
-mkdir /webapps/visorgen/datasets/negatives/  /webapps/visorgen/datasets/negatives/mydataset
-mkdir /webapps/visorgen/frontend_data  /webapps/visorgen/frontend_data/searchdata/ /webapps/visorgen/frontend_data/curatedtrainimgs
-mkdir /webapps/visorgen/frontend_data/searchdata/classifiers
-mkdir /webapps/visorgen/frontend_data/searchdata/postrainanno
-mkdir /webapps/visorgen/frontend_data/searchdata/postrainfeats
-mkdir /webapps/visorgen/frontend_data/searchdata/postrainimgs
-mkdir /webapps/visorgen/frontend_data/searchdata/rankinglists
-mkdir /webapps/visorgen/frontend_data/searchdata/uploadedimgs
+mkdir /webapps/visorgen/frontend_data  /webapps/visorgen/frontend_data/searchdata/
+mkdir /webapps/visorgen/frontend_data/searchdata/predefined_rankinglists
+mkdir /webapps/visorgen/frontend_data/searchdata/predefined_rankinglists/display
 
 # Django dependencies
 sudo pip install django==1.10
@@ -43,6 +35,7 @@ sudo pip install python-memcached
 sudo apt-get install -y libz-dev libjpeg-dev libfreetype6-dev
 sudo pip install protobuf==2.6.1
 sudo pip install Pillow==2.3.0
+sudo pip install Whoosh==2.7.4
 
 # imsearch-tools dependencies
 sudo apt-get install -y libevent-dev
@@ -57,9 +50,14 @@ sudo pip install msgpack-python==0.3.0
 sudo pip install requests==1.1.0
 sudo pip install gevent-zeromq==0.2.5
 
-# dependencies for start/stop scripts
-sudo apt-get install -y screen
+# download and setup vgg_frontend for JUST displaying results
+wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O /tmp/vgg_frontend.zip
+unzip /tmp/vgg_frontend.zip -d /webapps/visorgen/
+rm -rf /tmp/vgg_frontend.zip
+mv /webapps/visorgen/vgg_frontend-* /webapps/visorgen/vgg_frontend/
+echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
+cp /webapps/visorgen/vgg_frontend/visorgen/settings_display.py /webapps/visorgen/vgg_frontend/visorgen/settings.py
+sed -i '.sed' "s|/webapps|${HOME}|g" /webapps/visorgen/vgg_frontend/visorgen/settings.py
+cd /webapps/visorgen/vgg_frontend
+python manage.py migrate
 
-# clone git repo
-cd /webapps/visorgen/
-git clone https://gitlab.com/vgg/vgg_frontend.git

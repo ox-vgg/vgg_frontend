@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 
 import opts
-try:
-    import simplejson as json
-except ImportError:
-    import json  # Python 2.6+ only
 
 # ----------------------------------
 ## Query data structures
@@ -14,7 +10,7 @@ class QueryStatus(object):
     """ Class for storing the status of a query at a given time """
 
     def __init__(self, qid=None, query=None,
-                 state=opts.states.inactive,
+                 state=opts.States.inactive,
                  postrainimg_paths=[], curatedtrainimgs_paths=[], negtrainimg_count=0,
                  exectime_processing=0.0, exectime_training=0.0,
                  exectime_ranking=0.0, err_msg=''):

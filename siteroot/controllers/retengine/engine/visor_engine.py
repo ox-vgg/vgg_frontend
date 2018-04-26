@@ -55,7 +55,7 @@ class VisorEngine(VisorEngineBase):
                 compdata_cache: Computational data cache manager.
                 result_cache: Results cache manager.
         """
-        super(VisorEngine,self).__init__()
+        super(VisorEngine, self).__init__()
 
         if not isinstance(compdata_cache, managers.CompDataCache):
             raise ValueError('compdata_cache must be of type managers.CompDataCache')
@@ -85,16 +85,16 @@ class VisorEngine(VisorEngineBase):
             reconstructing the instance.
         """
         # serializing
-        d = dict(self.__dict__)
-        return d
+        a_dict = dict(self.__dict__)
+        return a_dict
 
 
-    def __setstate__(self, d):
+    def __setstate__(self, a_dict):
         """
             Reconfigures the instance from the object specified in the parameter.
         """
         # deserializing
-        self.__dict__.update(d)
+        self.__dict__.update(a_dict)
 
 
     def get_query_id(self, engine, dsetname):
@@ -109,7 +109,7 @@ class VisorEngine(VisorEngineBase):
                 A positive integer number corresponding to the new query ID.
                 It raises a QueryIdError if the ID is negative or 0.
         """
-        ses = backend_client.Session( self.visor_opts.engines_dict[engine]['backend_port'])
+        ses = backend_client.Session(self.visor_opts.engines_dict[engine]['backend_port'])
         query_id = ses.get_query_id(dsetname)
 
         if query_id <= 0:
@@ -137,8 +137,8 @@ class VisorEngine(VisorEngineBase):
         if not isinstance(opts, models.param_sets.VisorEngineProcessOpts):
             raise ValueError('opts must be of type models.param_sets.VisorEngineProcessOpts')
 
-        backend_port = self.visor_opts.engines_dict[ query['engine'] ]['backend_port']
-        ses = backend_client.Session( backend_port )
+        backend_port = self.visor_opts.engines_dict[query['engine']]['backend_port']
+        ses = backend_client.Session(backend_port)
 
         try:
             # check if classifier has been trained and saved to file or not
@@ -166,16 +166,16 @@ class VisorEngine(VisorEngineBase):
                                                          user_ses_id=user_ses_id)
                 # train classifier now if it hasn't been already
                 #print 'Training classifier for Query ID: %d' % query_id
-                shared_vars.state = models.opts.states.training
-                with retengine_utils.timing.TimerBlock() as t:
+                shared_vars.state = models.opts.States.training
+                with retengine_utils.timing.TimerBlock() as timer:
                     anno_path = None
                     # if the query is in the exclude list, specify the annotation path as it can be used in the backend
-                    if self.result_cache[ query['engine'] ].query_in_exclude_list(query, ses_id=user_ses_id):
+                    if self.result_cache[query['engine']].query_in_exclude_list(query, ses_id=user_ses_id):
                         anno_path = self.compdata_cache._get_annotations_fname(query)
                     error = ses.train(query_id, anno_path)
                     if error:
-                        raise models.errors.ClassifierTrainError('Could not train classifier. Backend response:' + error.encode('ascii') )
-                shared_vars.exectime_training = t.interval
+                        raise models.errors.ClassifierTrainError('Could not train classifier. Backend response:' + error.encode('ascii'))
+                shared_vars.exectime_training = timer.interval
 
                 # and save it to file
                 self.compdata_cache.save_classifier(query,
@@ -188,11 +188,11 @@ class VisorEngine(VisorEngineBase):
 
             do_regular_rank = False
 
-            if opts.rf_rank_type == models.opts.rf_rank_types.full:
+            if opts.rf_rank_type == models.opts.RfRankTypes.full:
                 # set flag to do regular ranking
                 do_regular_rank = True
 
-            elif opts.rf_rank_type == models.opts.rf_rank_types.topn:
+            elif opts.rf_rank_type == models.opts.RfRankTypes.topn:
                 if 'prev_qsid' in query:
                     # reranking of top n results from previous query
 
@@ -200,13 +200,13 @@ class VisorEngine(VisorEngineBase):
                     topn = opts.rf_rank_topn
                     #print 'Computing reranking of top %d results from previous query (%s) for Query ID %d' % (topn, prev_qsid, query_id)
                     # Look up ranking list for previous query (by query session ID)
-                    prev_rlist = self.result_cache[ query['engine'] ].get_results_from_query_ses_id(prev_qsid, user_ses_id)
+                    prev_rlist = self.result_cache[query['engine']].get_results_from_query_ses_id(prev_qsid, user_ses_id)
                     # extract dataset string IDs for top N results from the ranking list
                     subset_ids = [ritem['path'] for ritem in prev_rlist[0:topn]]
 
-                    with retengine_utils.timing.TimerBlock() as t:
+                    with retengine_utils.timing.TimerBlock() as timer:
                         ses.rank(query_id, subset_ids)
-                    shared_vars.exectime_ranking = t.interval
+                    shared_vars.exectime_ranking = timer.interval
                 else:
                     # do regular rank if no previous query session id was specified
                     do_regular_rank = True
@@ -218,25 +218,25 @@ class VisorEngine(VisorEngineBase):
             if do_regular_rank:
                 # regular ranking
                 #print 'Computing ranking for Query ID: %d' % query_id
-                shared_vars.state = models.opts.states.ranking
-                with retengine_utils.timing.TimerBlock() as t:
+                shared_vars.state = models.opts.States.ranking
+                with retengine_utils.timing.TimerBlock() as timer:
                     ses.rank(query_id)
-                shared_vars.exectime_ranking = t.interval
+                shared_vars.exectime_ranking = timer.interval
 
             # mark results as ready
-            shared_vars.state = models.opts.states.results_ready
+            shared_vars.state = models.opts.States.results_ready
         except Exception, e:
             # determine if on cache exclude list
-            excl_query = self.result_cache[ query['engine'] ].query_in_exclude_list(query, ses_id=user_ses_id)
+            excl_query = self.result_cache[query['engine']].query_in_exclude_list(query, ses_id=user_ses_id)
             # do the clean up below only if the query is not in the excluded list, to avoid removing previous valid results by mistake
             if not excl_query:
                 # clear cache before leaving the method
                 self.compdata_cache.delete_compdata(query)
-                self.result_cache[ query['engine'] ].delete_results(query, for_all_datasets=True)
+                self.result_cache[query['engine']].delete_results(query, for_all_datasets=True)
             # logging
             #print 'Unexpected error occurred while processing Query ID: %d' % query_id
             traceback.print_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], limit=2)
-            shared_vars.state = models.opts.states.fatal_error_or_socket_timeout
+            shared_vars.state = models.opts.States.fatal_error_or_socket_timeout
             shared_vars.err_msg = str(e)
             print traceback.format_exc()
             raise e
@@ -253,8 +253,8 @@ class VisorEngine(VisorEngineBase):
                 A List with all the results.
                 It raises a ResultReadError if the results cannot be read.
         """
-        backend_port = self.visor_opts.engines_dict[ engine ]['backend_port']
-        ses = backend_client.Session( backend_port)
+        backend_port = self.visor_opts.engines_dict[engine]['backend_port']
+        ses = backend_client.Session(backend_port)
 
         # get ranking from backend
         rlist = ses.get_ranking(query_id)
@@ -270,7 +270,7 @@ class VisorEngine(VisorEngineBase):
         ses.release_query_id(query_id)
 
         # check if something went wrong
-        if isinstance(rlist, bool) and rlist==False:
+        if isinstance(rlist, bool) and not rlist:
             raise models.errors.ResultReadError('Could not read in results from backend')
 
         return rlist
@@ -287,8 +287,8 @@ class VisorEngine(VisorEngineBase):
             Results:
                 It raises a ClassifierSaveLoadError in case of error.
         """
-        backend_port = self.visor_opts.engines_dict[ query['engine'] ]['backend_port']
-        ses = backend_client.Session( backend_port)
+        backend_port = self.visor_opts.engines_dict[query['engine']]['backend_port']
+        ses = backend_client.Session(backend_port)
         if not ses.save_classifier(query_id, fname):
             raise models.errors.ClassifierSaveLoadError('Could not save classifier from %s' % fname)
 
@@ -307,8 +307,8 @@ class VisorEngine(VisorEngineBase):
         """
         if not os.path.isfile(fname):
             return False
-        backend_port = self.visor_opts.engines_dict[ query['engine'] ]['backend_port']
-        ses = backend_client.Session( backend_port)
+        backend_port = self.visor_opts.engines_dict[query['engine']]['backend_port']
+        ses = backend_client.Session(backend_port)
         if not ses.load_classifier(query_id, fname):
             raise models.errors.ClassifierSaveLoadError('Could not load classifier from %s' % fname)
         return True
@@ -325,8 +325,8 @@ class VisorEngine(VisorEngineBase):
             Results:
                 It raises a AnnoSaveLoadError in case of error.
         """
-        backend_port = self.visor_opts.engines_dict[ query['engine'] ]['backend_port']
-        ses = backend_client.Session( backend_port)
+        backend_port = self.visor_opts.engines_dict[query['engine']]['backend_port']
+        ses = backend_client.Session(backend_port)
         if not ses.save_annotations(query_id, fname):
             raise models.errors.AnnoSaveLoadError('Could not save annotations to %s' % fname)
 
@@ -344,8 +344,8 @@ class VisorEngine(VisorEngineBase):
         """
         if not os.path.isfile(fname):
             return False
-        backend_port = self.visor_opts.engines_dict[ query['engine'] ]['backend_port']
-        ses = backend_client.Session( backend_port)
+        backend_port = self.visor_opts.engines_dict[query['engine']]['backend_port']
+        ses = backend_client.Session(backend_port)
         loaded = ses.load_annotations_and_trs(query_id, fname)
         #if not loaded:
         #    raise models.errors.AnnoSaveLoadError('Could not get annotations from %s' % fname)
@@ -366,8 +366,8 @@ class VisorEngine(VisorEngineBase):
         """
         if not os.path.isfile(fname):
             return []
-        backend_port = self.visor_opts.engines_dict[ query['engine'] ]['backend_port']
-        ses = backend_client.Session( backend_port)
+        backend_port = self.visor_opts.engines_dict[query['engine']]['backend_port']
+        ses = backend_client.Session(backend_port)
         annos = ses.get_annotations(query_id, fname)
         if not annos:
             raise models.errors.AnnoSaveLoadError('Could not get annotations from %s' % fname)

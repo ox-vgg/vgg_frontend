@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-import requests
 import re
 import math
 from hashlib import md5
 
-from search_client import *
+import requests
+from search_client import SearchClient
 
 ## Engine Configuration
 #  --------------------------------------------
@@ -17,7 +17,8 @@ GOOGLE_WEB_FUNC = 'search'
 #  --------------------------------------------
 
 class GoogleWebSearch(requests.Session, SearchClient):
-    """Wrapper class for Google Image Search using web interface.
+    """
+    Wrapper class for Google Image Search using web interface.
     See https://www.google.com/advanced_image_search
 
     This class does not use any API, but instead extracts results directly from the
@@ -25,7 +26,7 @@ class GoogleWebSearch(requests.Session, SearchClient):
 
     Created November 2013.
     """
-    
+
     def __init__(self, async_query=True, timeout=5.0, **kwargs):
         super(GoogleWebSearch, self).__init__()
 
@@ -44,20 +45,20 @@ class GoogleWebSearch(requests.Session, SearchClient):
         self.async_query = async_query
 
     def _url_clean_up(self, url):
-        """ 
+        """
         Some extracted urls can include search parameters after the image file name or can contain complicated encoded redirections.
         This method does its best to clean up image url. After that it just assumes the url is correct and returns it.
         """
-        if url!=None and url!="":
+        if url != None and url != "":
             if '?' in url:
                 url = url.split('?')[0]
             if '\\' in url:
                 url = url.split('\\')[0]
             if '$' in url:
                 url = url.split('$')[0]
-            # add further filter her is necessary    
+            # add further filter her is necessary
         return url
-    
+
     def _fetch_results_from_offset(self, query, result_offset,
                                    aux_params={}, headers={},
                                    num_results=-1):
@@ -71,7 +72,7 @@ class GoogleWebSearch(requests.Session, SearchClient):
             page_offset = result_offset - page_start
 
             # add query position to auxilary parameters
-            aux_params['q'] = query
+            aux_params['as_q'] = query
             aux_params['ijn'] = page_idx  # ijn is the AJAX page index (0 = first page)
 
             resp = self.get(GOOGLE_WEB_ENTRY + GOOGLE_WEB_FUNC,
@@ -105,35 +106,29 @@ class GoogleWebSearch(requests.Session, SearchClient):
             return resp_dict
         except requests.exceptions.RequestException:
             return []
-        
+
     def query(self, query, size='medium', style='photo', num_results=100):
         # prepare query parameters
         size = self._size_to_native_size(size)
         style = self._style_to_native_style(style)
 
         # prepare auxilary parameters (contained in tbs)
-        tbs_list = []
+        aux_params = {}
         if size:
-            tbs_list.append('isz:%s' % size)
+            aux_params['imgsz'] = size
         if style:
-            tbs_list.append('itp:%s' % style)
-
-        tbs_str = ','.join(tbs_list)
+            aux_params['imgtype'] = style
 
         # prepare shared parameters
-        aux_params = {}
         aux_params['tbm'] = 'isch' #image search mode
         aux_params['ijn'] = 0      # causes AJAX request contents only to be returned
-        if tbs_str:
-            aux_params['tbs'] = tbs_str
-            
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:25.0) Gecko/20100101 Firefox/25.0'}
+
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0'}
 
         # do request
         results = self._fetch_results(query,
                                       num_results,
                                       aux_params=aux_params,
                                       headers=headers)
-        
+
         return results
-    

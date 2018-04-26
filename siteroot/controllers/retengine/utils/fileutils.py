@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import platform
 
 def delete_directory_contents(path):
     """
@@ -21,9 +22,9 @@ def delete_directory_contents(path):
                dir_path: Full path to the directory containing the files
                          in dir_list.
         """
-        for file in dir_list:
-            print 'Removing file: ' + os.path.join(dir_path, file)
-            os.remove(os.path.join(dir_path, file))
+        for afile in dir_list:
+            print 'Removing file: ' + os.path.join(dir_path, afile)
+            os.remove(os.path.join(dir_path, afile))
 
     def remove_directory(dir_entry):
         """
@@ -37,11 +38,27 @@ def delete_directory_contents(path):
         delete_files(dir_entry[2], dir_entry[0])
         empty_dirs.insert(0, dir_entry[0])
 
+    def samefile(file1, file2):
+        """
+            Checks the stats of two files in an attempt to determine if they are the same.
+            Arguments:
+               file1: filepath of the first file
+               file2: filepath of the second file
+        """
+        return os.stat(file1) == os.stat(file2)
+
     tree = os.walk(path)
     for directory in tree:
         remove_directory(directory)
 
-    for dir in empty_dirs:
-        if not os.path.samefile(path, dir):
-            print 'Removing directory: ' + dir
-            os.rmdir(dir)
+    if 'Windows' not in platform.system():
+        for adir in empty_dirs:
+            if not os.path.samefile(path, adir):
+                print 'Removing directory: ' + adir
+                os.rmdir(adir)
+    else:
+        # os.path.samefile not available in Windows
+        for adir in empty_dirs:
+            if not samefile(path, adir):
+                print 'Removing directory: ' + adir
+                os.rmdir(adir)

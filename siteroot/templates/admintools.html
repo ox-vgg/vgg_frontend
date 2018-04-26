@@ -13,10 +13,16 @@ The following variables are defined:
   RF_RANK_TOPN - If 'topn' RF type is used, this is the 'topn' number
   RF_TRAIN_TYPE - Relevance Feedback Train Type currently selected
   RF_TRAIN_TYPE_LIST - List of available Relevance Feedback Train Types
+  FEAT_DETECTOR_TYPE - Feature Detector Type currently selected for the backends
+  FEAT_DETECTOR_TYPE_LIST - List of available Feature Detector Types
   ENGINES_NAMES - Dictionary of engines names
   CPUVISOR_ENABLED - Boolean indicating the 'cpuvisor-srv' is included in the backend engines
+  FACES_ENABLED - Boolean indicating the 'faces' is included in the backend engines
   CACHED_TEXT_QUERIES - List of cached text queries
   HOME_LOCATION - location of the root home page taking into account possible redirections
+  MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES - Maximum amount of bytes when uploading individual files
+  MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES -  Maximum number of individual files to be uploaded
+  VALID_IMG_EXTENSIONS_STR - String list of valid image extensions + .txt (for supporting list of files)
 {% endcomment %}
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
@@ -44,7 +50,8 @@ The following variables are defined:
             <ul class="tab">
                 <li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'Configuration')">Global Server Configuration</a></li>
                 <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'Manage')">Manage Backend Service</a></li>
-                {% if CPUVISOR_ENABLED %}<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'Process')">Manage Backend Data</a></li>{% endif %}
+                {% if CPUVISOR_ENABLED %}<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ProcessCategory')">Manage Category Backend Data</a></li>{% endif %}
+                {% if FACES_ENABLED %}<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ProcessFaces')">Manage Faces Backend Data</a></li>{% endif %}
             </ul>
 
             <!-- "Global Server Configuration" tab -->
@@ -59,9 +66,19 @@ The following variables are defined:
                                 <dd>
                                     <input name="num_pos_train" type="number" size="6" min="1" max="200" value="{{NUM_POS_TRAIN}}" /> <small><em>(max 200)</em></small>
                                 </dd>
+                                <dt>Backend Feature Detector Type:</dt>
+                                <dd>
+                                    <select name="feat_detector_type">
+                                        {% for ITEM in FEAT_DETECTOR_TYPE_LIST %}
+                                            <option value="{{ITEM}}" {% if ITEM == FEAT_DETECTOR_TYPE %}selected="selected"{% endif %}>{{ITEM}}</option>
+                                        {% endfor %}
+                                    </select>
+                                     <small><em>(currently available only for the &quot;People&quot; search)</em></small>
+                                </dd>
                                  <dt>Query Download Timeout:</dt>
                                 <dd>
                                     <input name="improc_timeout" size="6" value="{{IMPROC_TIMEOUT}}" />
+                                    <small><em>(timeout doubles automatically when using the &quot;accurate&quot; feature detector and is overridden in engines that specify their own timeout)</em></small>
                                 </dd>
                                 <dt>Image Search Engine:</dt>
                                 <dd>
@@ -159,7 +176,7 @@ The following variables are defined:
 
             <!-- "Manage Service" tab -->
             <div id="Manage" class="tabcontent" style="display: none;">
-                <form id="config_pipeline" action="start_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
+                <form id="backend_start" action="start_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
                         <h2>Start Backend Service</h2>
                         Search Engine:
@@ -171,7 +188,7 @@ The following variables are defined:
                         <input type="submit" value="Start"/>
                     </div>
                 </form>
-                <form id="config_pipeline" action="stop_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
+                <form id="backend_end" action="stop_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
                         <h2>Stop Backend Service</h2>
                         Search Engine:
@@ -187,9 +204,9 @@ The following variables are defined:
             </div>
 
             {% if CPUVISOR_ENABLED %}
-            <!-- "Manage Backend Data" tab -->
-            <div id="Process" class="tabcontent" style="display: none;">
-                <form id="config_pipeline"  action="pipeline_start" enctype="multipart/form-data" method="post">{% csrf_token %}
+            <!-- "Manage Category Backend Data" tab -->
+            <div id="ProcessCategory" class="tabcontent" style="display: none;">
+                <form id="config_pipeline"  action="pipeline_input" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
                         <h2>Category search engine: DATA INGESTION</h2>
                         <div id="config-options-container">
@@ -202,8 +219,9 @@ The following variables are defined:
                                     <br/>
                                     <dt>(OPTIONAL) Select specific files to be ingested:</dt>
                                     <dd>
-                                        <input name="input_file" id="input_descriptor_file_input" type="file" multiple="true"/>
+                                        <input name="input_file" id="input_descriptor_file_input" type="file" multiple="true" accept="{{VALID_IMG_EXTENSIONS_STR}}"/>
                                     </dd>
+                                    <input type="hidden" name="engine" value="cpuvisor-srv" />
                                 </dl>
                         </div>
                         <strong>If no specific files are selected for ingestion, the full content of the images folder will be processed</strong>
@@ -213,7 +231,7 @@ The following variables are defined:
                     </div>
                 </form>
                 <br/>
-                <form id="config_pipeline" action="clear_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
+                <form id="clear_backend" action="clear_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
                         <h2>Category search engine: CLEAR BACKEND DATA</h2>
                         <div id="config-options-container">
@@ -223,8 +241,50 @@ The following variables are defined:
                                           <input type="radio" name="input_type" value="positive" checked> Positive Images<br>
                                           <input type="radio" name="input_type" value="negative"> Negative Images<br>
                                     </dd>
+                                    <input type="hidden" name="engine" value="cpuvisor-srv"/>
                                 </dl>
                         </div>
+                        <input type="submit" value="Clear"/>
+                    </div>
+                </form>
+                <br/>
+            </div>
+            {% endif %}
+
+            {% if FACES_ENABLED %}
+            <!-- "Manage Face Backend Data" tab -->
+            <div id="ProcessFaces" class="tabcontent" style="display: none;">
+                <form id="config_pipeline"  action="pipeline_input" enctype="multipart/form-data" method="post">{% csrf_token %}
+                    <div id="config-options-container">
+                        <h2>Face search engine: DATA INGESTION</h2>
+                        <div id="config-options-container">
+                                <dl>
+                                    <dt>Input type:</dt>
+                                    <dd>
+                                          <br>
+                                          <input type="radio" name="input_type" value="positive" checked> Images<br>
+                                          (OPTIONAL) Select specific files to be ingested:
+                                          <input name="input_file" id="input_descriptor_file_input" type="file" multiple="true" accept="{{VALID_IMG_EXTENSIONS_STR}}"/><br>
+                                          <strong>If no specific files are selected for ingestion, the full content of the images folder will be processed</strong><br>
+                                          <br>
+                                          <input type="radio" name="input_type" value="video"> Videos<br>
+                                          Select a text file (.txt) containing the COMPLETE paths to the videos:
+                                          <input name="input_video_list" id="input_descriptor_video_input" type="file" accept=".txt"/><br>
+                                          <strong>Only videos up to 90 minutes are supported. MP4 format is recommended.</strong><br>
+                                          <strong>BE ADVICED: Video ingestion is computationally intensive.</strong><br>
+                                    </dd>
+                                    <input type="hidden" name="engine" value="faces" />
+                                </dl>
+                        </div>
+                        <input type="submit" value="Ingest"/>
+                    </div>
+                </form>
+                <br/>
+                <form id="config_pipeline" action="clear_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
+                    <div id="config-options-container">
+                        <h2>Face search engine: CLEAR BACKEND DATA</h2>
+                        <input type="hidden" name="input_type" value="positive" />
+                        <input type="hidden" name="engine" value="faces" />
                         <input type="submit" value="Clear"/>
                     </div>
                 </form>
@@ -290,6 +350,33 @@ The following variables are defined:
                 evt.currentTarget.className += " active";
             }
             </script>
+            {% if MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES or MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES %}
+            <script>
+            $(function(){
+                $("input[type='submit']").click(function(){
+                    var $fileUpload = $("input[type='file']");
+                    var num_files = parseInt($fileUpload.get(0).files.length);
+                    if (num_files>{{MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES}}) {
+                        alert("You can only upload a maximum of {{MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES}} files at a time. In order to upload a larger number " +
+                              "of files, please place them in the images folder and upload a text file containing the relative paths to all " +
+                              "new files within the folder. If it is the fist time you will ingest data, you can also ingest the complete images folder.");
+                        return false;
+                    }
+                    var total_size = 0;
+                    for (i = 0; i < num_files; i++) {
+                        total_size = total_size + $fileUpload.get(0).files[i].size;
+                    }
+                    console.log(total_size);
+                    if (total_size>{{MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES}}){
+                        alert("You can only upload a maximum of {% widthratio MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES 1048576 1 %} MB at a time. In order to upload a larger amount " +
+                              "of files, please place them in the images folder and upload a text file containing the relative paths to all " +
+                              "new files within the folder. If it is the fist time you will ingest data, you can also ingest the complete images folder.");
+                        return false;
+                    }
+                });
+            });
+            </script>
+            {% endif %}
             <script type="text/javascript">
             $(function() {
                 $('#rf_rank_type_select').change(function() {

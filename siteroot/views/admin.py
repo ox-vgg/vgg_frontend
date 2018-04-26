@@ -27,7 +27,7 @@ class AdminPages:
             Arguments:
                 visor_controller: an instance of the visor backend interface controller
         """
-        self.visor_controller =  visor_controller
+        self.visor_controller = visor_controller
 
     @method_decorator(csrf_protect)
     @method_decorator(require_GET)
@@ -46,19 +46,24 @@ class AdminPages:
         # get all current settings from the options, to fill out the controls in the page
         num_pos_train = self.visor_controller.proc_opts.imsearchtools_opts['num_pos_train']
         improc_timeout = self.visor_controller.proc_opts.imsearchtools_opts['improc_timeout']
-        improc_engine_list = [ 'google_web' ]
+        improc_engine_list = ['google_web']
         improc_engine = self.visor_controller.proc_opts.imsearchtools_opts['engine']
 
-        rqt_objdict = retengine.models.opts.rf_rank_types.__dict__
+        rqt_objdict = retengine.models.opts.RfRankTypes.__dict__
         rf_rank_type_list = [rqt_objdict[a] for a in rqt_objdict.keys()
                                if not (a.startswith('__') and a.endswith('__'))]
         rf_rank_type = self.visor_controller.proc_opts.rf_rank_type
         rf_rank_topn = self.visor_controller.proc_opts.rf_rank_topn
 
-        rtt_objdict = retengine.models.opts.rf_train_types.__dict__
+        rtt_objdict = retengine.models.opts.RfTrainTypes.__dict__
         rf_train_type_list = [rtt_objdict[a] for a in rtt_objdict.keys()
                                if not (a.startswith('__') and a.endswith('__'))]
         rf_train_type = self.visor_controller.proc_opts.rf_train_type
+
+        fdt_objdict = retengine.models.opts.FeatDetectorType.__dict__
+        feat_detector_type_list = [fdt_objdict[a] for a in fdt_objdict.keys()
+                               if not (a.startswith('__') and a.endswith('__'))]
+        feat_detector_type = self.visor_controller.proc_opts.feat_detector_type
 
         disable_cache = self.visor_controller.proc_opts.disable_cache
 
@@ -71,6 +76,18 @@ class AdminPages:
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
             home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
+
+        # check if the following settings are specified or not
+        dir_settings = dir(settings)
+        MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES = None
+        MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES = None
+        VALID_IMG_EXTENSIONS_STR = ''
+        if 'MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES' in dir_settings:
+            MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES = settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES
+        if 'MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES' in dir_settings:
+            MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES = settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES
+        if 'VALID_IMG_EXTENSIONS_STR' in dir_settings:
+            VALID_IMG_EXTENSIONS_STR = settings.VALID_IMG_EXTENSIONS_STR + ", .txt" # accept .txt too for providing list of files
 
         # set up rendering context and render the page
         context = {
@@ -86,9 +103,15 @@ class AdminPages:
         'RF_RANK_TOPN' : rf_rank_topn,
         'RF_TRAIN_TYPE' : rf_train_type,
         'RF_TRAIN_TYPE_LIST' : rf_train_type_list,
+        'FEAT_DETECTOR_TYPE' : feat_detector_type,
+        'FEAT_DETECTOR_TYPE_LIST' : feat_detector_type_list,
         'ENGINES_NAMES': engines_names,
         'CPUVISOR_ENABLED': 'cpuvisor-srv' in engines_names.keys(),
-        'CACHED_TEXT_QUERIES' : cached_text_queries
+        'FACES_ENABLED': 'faces' in engines_names.keys(),
+        'CACHED_TEXT_QUERIES' : cached_text_queries,
+        'MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES': MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES,
+        'MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES': MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES,
+        'VALID_IMG_EXTENSIONS_STR': VALID_IMG_EXTENSIONS_STR
         }
         return render(request, "admintools.html", context)
 

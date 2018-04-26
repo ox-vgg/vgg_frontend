@@ -51,6 +51,7 @@ class CuratedQuery(object):
             Arguments:
                 shared_vars: holder of global shared variables
             Returns:
+                The time it took to compute the features.
                 It raises CuratedClassifierPathNotFoundError is the curated
                 training files are not found.
         """
@@ -62,13 +63,13 @@ class CuratedQuery(object):
             raise e
             # NOTE: Reverting to text query is disable for now. If there are no positive images, abort !.
             #print 'Curated classifier directory not found, reverting to text search'
-            #self.query['qtype'] = models.opts.qtypes.text
+            #self.query['qtype'] = models.opts.Qtypes.text
             #text_query_engine = TextQuery(self.query_id, self.query, self.backend_port, self.compdata_cache, self.opts)
             #return text_query_engine.compute_feats(shared_vars)
 
         # get full image paths for positive images
         query_in_text_form = self.query
-        query_in_text_form['qtype'] = models.opts.qtypes.text
+        query_in_text_form['qtype'] = models.opts.Qtypes.text
         featdir = self.compdata_cache.get_feature_dir(query_in_text_form)
         imgs_dict = []
         for image in images:
@@ -76,12 +77,13 @@ class CuratedQuery(object):
             featfn += '.bin'
 
             # add image path to query status
-            img_relative_path = imagedir[imagedir.index('/curatedtrainimgs'):]
+            img_relative_path = imagedir[imagedir.index( os.sep + 'curatedtrainimgs'):]
             img_relative_path = os.path.join(img_relative_path, 'positive', image)
             shared_vars.curatedtrainimgs_paths = shared_vars.curatedtrainimgs_paths + [img_relative_path,]
 
             # create the extra_params dictionary and add anything relevant
             extra_params = dict()
+            extra_params['detector'] = 'accurate' # use always the accurate detector for curated queries, if available in the backend
 
             # and register it for the next feature computation
             imgs_dict.append(
@@ -94,11 +96,11 @@ class CuratedQuery(object):
                 }
             )
 
-        with retengine_utils.timing.TimerBlock() as t:
+        with retengine_utils.timing.TimerBlock() as timer:
             feat_comp = feature_computation.FeatureComputer(self.query_id, self.backend_port)
             feat_comp.compute_feats(imgs_dict)
 
-        return t.interval
+        return timer.interval
 
         # NOTE: Not supporting negative images, for now.
         #

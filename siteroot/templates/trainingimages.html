@@ -14,8 +14,9 @@
     {% endcomment %}
     {% load siteroot_extras %}
      <div id="results_header_borderless">
-        <h1>Training Images</h1>
-        <p>{{TRAINIMGS|length}} training images</p>
+        <h1>{{TRAINIMGS|length}} Training Images</h1>
+        <p>If a new search is started from this page, only the images surrounded in green will be used as input for the search.
+           Click on each image to change the color of its surrounding rectangle.</p>
         <a class="back_to_results" href="{{BACKPAGE}}?qsid={{QUERY_ID}}&amp;page={{PAGE}}">&lt;- Back to results</a>
     </div>
     <div id="content">
@@ -24,7 +25,7 @@
             <div class="results_box">
                 <div class="result_outer_wrapper">
                     <div class="result_inner_wrapper">
-                        <div id={{IMAGE.img_id}} class="roi_box {{IMAGE.anno_style}}" dsetname="{{DATASET_NAME}}" anno="{{IMAGE.anno}}" qtype="{{QUERY_TYPE}}" engine="{{ENGINE}}">
+                        <div id="{{IMAGE.img_id}}" class="roi_box {{IMAGE.anno_style}}" dsetname="{{DATASET_NAME}}" anno="{{IMAGE.anno}}" qtype="{{QUERY_TYPE}}" engine="{{ENGINE}}">
                             <a anno="{{IMAGE.anno}}" class="result_image_link" >
                                 <img src="{{SA_THUMBS}}{{IMAGE.image}}" />
                             </a>
@@ -37,7 +38,7 @@
     </div>
     <div>
     <div id="results_header_borderless">
-        {% if TRAINIMGS %}<input id="selection_search" type="button" value="Search"></input>{% endif %}
+        {% if TRAINIMGS %}<input id="selection_search" type="button" value="Search">{% endif %}
         <br><br>
         <a class="back_to_results" href="{{BACKPAGE}}?qsid={{QUERY_ID}}&amp;page={{PAGE}}">&lt;- Back to results</a>
     </div>

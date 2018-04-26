@@ -19,9 +19,11 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <!-- main stylesheet for site -->
         <link href="static/styles/main.css" rel="stylesheet" type="text/css" />
-        <!-- stylesheets for querybar/imageuploader widgets -->
+        <!-- stylesheets for querybar/imageuploader/keyselector widgets -->
+        <link href="static/scripts/lib/select2-4.0.3/select2.min.css" rel="stylesheet" type="text/css" />
         <link href="static/scripts/widgets/jquery.ui.querybar.css" rel="stylesheet" type="text/css" />
         <link href="static/scripts/widgets/jquery.ui.imageuploader.css" rel="stylesheet" type="text/css" />
+        <link href="static/scripts/widgets/jquery.ui.keyselector.css" rel="stylesheet" type="text/css" />
         <link href="static/styles/searchproc.css" rel="stylesheet" type="text/css" />
         <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
         <title>{{SITE_TITLE}} - Results</title>
@@ -49,9 +51,11 @@
                               <div class="qbEngine">{{key}}|{{value.full_name}}</div>
                             {% endfor %}
                             <div class="qbImagePreviewPrefix">uploadedimgs/</div>
+                            <!-- avoid the presence of these controls while the search is running
                             <div id="imupControl"></div>
+                            <div id="selectKeywordControl"></div> -->
                         </div>
-                        <input id="query_box_submit" type="submit" value="&#xf002;" />
+                        <input id="query_box_submit" type="submit" value="&#xf002;" title="Search" />
                     </div>
                     <!-- end query box -->
                 </form>
@@ -96,8 +100,10 @@
         <script type="text/javascript" src="static/scripts/lib/jquery-1.11.3.min.js"></script>
         <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.widgets.animation.min.js"></script>
         <script type="text/javascript" src="static/scripts/lib/jquery.form.js"></script>
+        <script type="text/javascript" src="static/scripts/lib/select2-4.0.3/select2.full.min.js"></script>
         <script type="text/javascript" src="static/scripts/widgets/jquery.ui.querybar.js"></script>
         <script type="text/javascript" src="static/scripts/widgets/jquery.ui.imageuploader.js"></script>
+        <script type="text/javascript" src="static/scripts/widgets/jquery.ui.keyselector.js"></script>
         <script type="text/javascript" src="static/scripts/make-querybar-imup.js"></script>
         <!-- easel is used for display of imagescroller widget -->
         <!-- json2 is used to provide advanced JSON support in older browsers -->

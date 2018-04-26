@@ -16,6 +16,6 @@ def page_not_found(request):
     'SITE_PREFIX': settings.SITE_PREFIX,
     'HOME_LOCATION': home_location,
     }
-    response = render(request, template_name='404.html',  context=context)
+    response = render(request, template_name='404.html', context=context)
     response.status_code = 404
     return response

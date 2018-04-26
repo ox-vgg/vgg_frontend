@@ -1,0 +1,24 @@
+# Dockerfile for the VFF application. See http://www.robots.ox.ac.uk/~vgg/software/vff/
+# This Dockerfile intents to create a specific version for Kitematic, with only two exposed volumes
+# and a predefined entry point and access port
+
+# Start from the vff base WITH CPU SUPPORT ONLY, which has no defined ports, volumes or entry-points
+FROM oxvgg/vff:base
+
+# Remove data folders created in the parent image. Create simple access folders and links.
+RUN mkdir /appdata/ /userdata/ \
+    && chmod 777 /appdata/ /userdata/ \
+    && mkdir /appdata/backend_data /appdata/frontend_data  \
+    && rm -rf /webapps/visorgen/backend_data  /webapps/visorgen/frontend_data  /webapps/visorgen/datasets \
+    && ln -s /appdata/backend_data /webapps/visorgen/backend_data \
+    && ln -s /appdata/frontend_data /webapps/visorgen/frontend_data \
+    && ln -s /userdata /webapps/visorgen/datasets
+
+# expose Django port
+EXPOSE 8000
+
+# expose volumes
+VOLUME [ "/appdata/", "/userdata/" ]
+
+# define default entry point
+ENTRYPOINT /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh faces

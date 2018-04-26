@@ -1,4 +1,3 @@
-import string
 from hashlib import md5
 try:
     import simplejson as json
@@ -24,7 +23,7 @@ def querystr_tuple_to_query(querystr, qtype, dsetname, engine, prev_qsid=None):
            json_schema.query_schema.
     """
     query = {'qtype': qtype, 'dsetname': dsetname}
-    if qtype == models.opts.qtypes.text:
+    if qtype == models.opts.Qtypes.text:
         query['qdef'] = querystr
     else:
         query['qdef'] = decode_image_querystr(querystr)
@@ -69,7 +68,7 @@ def query_to_querystr(query):
         Returns:
            query string as sent originally by the frontend.
     """
-    if query['qtype'] == models.opts.qtypes.text:
+    if query['qtype'] == models.opts.Qtypes.text:
         querystr = query['qdef']
     else:
         querystr = encode_image_querystr(query['qdef'])
@@ -151,8 +150,8 @@ def encode_image_querystr(data):
     for image in data:
         qstr = qstr + image['image']
         if 'extra_params' in image:
-            if len(image['extra_params'])>0:
-                for param,value in image['extra_params'].iteritems():
+            if len(image['extra_params']) > 0:
+                for param, value in image['extra_params'].iteritems():
                     if param == 'anno':
                         value = str(value)
                     elif param == 'roi':

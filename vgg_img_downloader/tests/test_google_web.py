@@ -1,12 +1,12 @@
 import os
 import sys
-
-file_dir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(file_dir, '..', '..', 'imsearch-tools'))
-from imsearchtools import query as image_query
-
 import requests
 import re
+
+FILE_DIR = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(FILE_DIR, '..'))
+from imsearchtools import query as image_query
+
 
 class TestGoogleWeb(object):
 
@@ -21,9 +21,11 @@ class TestGoogleWeb(object):
     def test_ranking_correct(self):
         url = 'https://www.google.com/search'
         aux_params = {}
-        aux_params['q'] = self._q
+        aux_params['as_q'] = self._q
         aux_params['tbm'] = 'isch'
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:25.0) Gecko/20100101 Firefox/25.0'}
+        aux_params['imgsz'] = 'm'
+        aux_params['imgtype'] = 'photo'
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0'}
 
         resp = requests.get(url, params=aux_params, headers=headers)
         resp_str = resp.text
@@ -37,13 +39,13 @@ class TestGoogleWeb(object):
             image_urls.append(image_url_pattern.search(div).group(1))
 
         # test1: the GET and the QUERY return the same number of results
-        res = self._gws.query(self._q,
+        res = self._gws.query(self._q, size='medium', style='photo',
                               num_results=len(image_urls))
         assert len(res) == len(image_urls)
 
         # test2: two consecutive QUERYS return the same number of results
-        res2 = self._gws.query(self._q,
-                              num_results=len(image_urls))
+        res2 = self._gws.query(self._q, size='medium', style='photo',
+                               num_results=len(image_urls))
         assert len(res) == len(res2)
 
         # test3: two consecutive QUERYS contain the same urls as result (not necessarily in the same order)

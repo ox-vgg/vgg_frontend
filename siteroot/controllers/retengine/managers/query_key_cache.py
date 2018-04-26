@@ -4,7 +4,6 @@ from hashlib import md5
 from time import time as unix_time
 
 import base_caches
-import utils
 
 #
 # Cache Inheritance Hierarchy:
@@ -109,7 +108,7 @@ class QueryKeyCache(object):
             Arguments:
                 query_ses_id: ID associated to the query in this cache.
         """
-        self._session_cache.delete_session(self, query_ses_id)
+        self._session_cache.delete_session(query_ses_id)
         #print 'Deleted qsid data: %s' % query_ses_id
 
 

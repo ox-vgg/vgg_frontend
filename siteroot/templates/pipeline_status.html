@@ -28,7 +28,12 @@
         <br/>
         <h3><strong>THE DATA PIPELINE IS EXECUTING. PLEASE WAIT.</strong></h3>
         <br/>
-        <h3><strong>{{PROCESSED_FRAME_CHUNKS}} OUT OF {{TOTAL_FRAME_CHUNKS}} FRAME-CHUNKS ({{TOTAL_FRAMES}} FRAMES) HAVE FINISHED PROCESSING</strong></h3>
+        {% if TOTAL_VIDEOS != 0 %}
+            <h3><strong>{{PROCESSED_VIDEOS}} OUT OF {{TOTAL_VIDEOS}} VIDEOS HAVE FINISHED PROCESSING</strong></h3>
+        {% endif %}
+        {% if TOTAL_FRAMES != 0 %}
+            <h3><strong>{{PROCESSED_FRAME_CHUNKS}} OUT OF {{TOTAL_FRAME_CHUNKS}} FRAME-CHUNKS ({{TOTAL_FRAMES}} FRAMES) HAVE FINISHED PROCESSING</strong></h3>
+        {% endif %}
         <br/>
         <h3>The status of the data pipeline will be automatically checked in </h3><div id="timer_div" style="text-align:center; margin:0 auto;">5</div>
         <h3>seconds</h3>

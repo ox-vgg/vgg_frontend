@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create requirements files for pip, install all pip requirements, create main folders and secret key file
-RUN printf "django==1.10\npython-memcached\nprotobuf==2.6.1\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==1.1.0\ngevent-zeromq==0.2.5" > /tmp/requirements.txt \
+RUN printf "django==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==1.1.0\ngevent-zeromq==0.2.5\nWhoosh==2.7.4" > /tmp/requirements.txt \
     && pip install -r /tmp/requirements.txt \
     && mkdir /webapps/  \
     && chmod 777 /webapps/ \
@@ -44,7 +44,8 @@ RUN printf "django==1.10\npython-memcached\nprotobuf==2.6.1\nPillow==2.3.0\ngree
           /webapps/visorgen/frontend_data  /webapps/visorgen/frontend_data/searchdata/ /webapps/visorgen/frontend_data/curatedtrainimgs \
           /webapps/visorgen/frontend_data/searchdata/classifiers /webapps/visorgen/frontend_data/searchdata/postrainanno \
           /webapps/visorgen/frontend_data/searchdata/postrainfeats /webapps/visorgen/frontend_data/searchdata/postrainimgs \
-          /webapps/visorgen/frontend_data/searchdata/rankinglists /webapps/visorgen/frontend_data/searchdata/uploadedimgs \
+          /webapps/visorgen/frontend_data/searchdata/rankinglists /webapps/visorgen/frontend_data/searchdata/predefined_rankinglists \
+          /webapps/visorgen/frontend_data/searchdata/uploadedimgs \
     && echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
 
 # Download caffe, cpp-netlib and liblinear
@@ -57,10 +58,10 @@ RUN wget https://github.com/BVLC/caffe/archive/rc3.zip -P /tmp \
     && rm -rf /tmp/*.zip
 
 # Download vgg repos
-RUN wget https://gitlab.com/vgg/vgg_frontend/repository/archive.zip?ref=master -O /tmp/vgg_frontend.zip \
+RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O /tmp/vgg_frontend.zip \
     && unzip /tmp/vgg_frontend.zip -d /webapps/visorgen/ \
     && mv /webapps/visorgen/vgg_frontend*  /webapps/visorgen/vgg_frontend \
-    && wget https://gitlab.com/vgg/vgg_classifier/repository/archive.zip?ref=master -O /tmp/vgg_classifier.zip \
+    && wget https://gitlab.com/vgg/vgg_classifier/-/archive/master/vgg_classifier-master.zip -O /tmp/vgg_classifier.zip \
     && unzip /tmp/vgg_classifier.zip -d /webapps/visorgen/ \
     && mv /webapps/visorgen/vgg_classifier*  /webapps/visorgen/vgg_classifier \
     && rm -rf /tmp/*.zip \
@@ -103,7 +104,6 @@ RUN cd /webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/ \
 # configure default user in frontend
 RUN cd /webapps/visorgen/vgg_frontend/ \
     && python manage.py migrate \
-    && cd /webapps/visorgen/vgg_frontend/ \
     && printf "import os\nfrom django.core.wsgi import get_wsgi_application\nos.environ['DJANGO_SETTINGS_MODULE']='visorgen.settings'\napplication = get_wsgi_application()\nfrom django.contrib.auth.models import User\nuser=User.objects.create_user('admin', password='vggadmin')\nuser.is_superuser=True\nuser.is_staff=True\nuser.save()" > super.py \
     && python super.py \
     && rm -f super.py \

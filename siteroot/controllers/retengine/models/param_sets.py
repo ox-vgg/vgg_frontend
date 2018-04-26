@@ -12,10 +12,12 @@ class VisorOptions(object):
     def __init__(self,
                  title='VISOR',
                  datasets={},
-                 default_view=retengine_opts.vmode.grid,
+                 default_view=retengine_opts.Vmode.grid,
                  results_per_page=20,
                  engines={},
-                 select_roi=True,
+                 select_roi=False,
+                 enable_viewsel=False,
+                 check_backends_reachable=True,
                  disable_autocomplete=False):
         """
             Initializes the class
@@ -26,6 +28,8 @@ class VisorOptions(object):
                  results_per_page: Number of items per results page
                  engines: Dictionary of supported engines
                  select_roi: Boolean indicating whether ROIs can be selected in the details page
+                 enable_viewsel: Boolean indicating whether the view mode selector should be enable or not
+                 check_backends_reachable: Boolean indicating whether the connection to the backend should be checked or not
                  disable_autocomplete: Boolean indicating whether autocomplete should be enable or not in the main query box
         """
         self.engines_dict = engines
@@ -34,6 +38,8 @@ class VisorOptions(object):
         self.default_view = default_view
         self.results_per_page = results_per_page
         self.select_roi = select_roi
+        self.enable_viewsel = enable_viewsel
+        self.check_backends_reachable = check_backends_reachable
         self.disable_autocomplete = disable_autocomplete
 
 
@@ -68,7 +74,7 @@ class CompDataPaths(object):
 class MetaDataPaths(object):
     """ Class for storing the different paths for the metadata files """
 
-    def __init__(self, metadata ):
+    def __init__(self, metadata):
         """
             Initializes the class
             Arguments:
@@ -92,10 +98,11 @@ class VisorEngineProcessOpts(object):
                                          improc_timeout=15.0,
                                          per_image_timeout=1.0,
                                          num_pos_train=200),
-                 rf_rank_type=retengine_opts.rf_rank_types.full,
+                 rf_rank_type=retengine_opts.RfRankTypes.full,
                  rf_rank_topn=2000,
-                 rf_train_type=retengine_opts.rf_train_types.regular,
-                 ):
+                 rf_train_type=retengine_opts.RfTrainTypes.regular,
+                 feat_detector_type=retengine_opts.FeatDetectorType.fast
+                ):
         """
             Initializes the class
             Arguments:
@@ -115,6 +122,7 @@ class VisorEngineProcessOpts(object):
                 rf_rank_type: Relevance feedback rank type
                 rf_rank_topn: Relevance feedback rank type - Top N
                 rf_train_type: Relevance feedback train type
+                feat_detector_type: feature detector type to be used in the backend
         """
         self.pool_workers = pool_workers
         self.resize_width = resize_width
@@ -124,3 +132,4 @@ class VisorEngineProcessOpts(object):
         self.rf_rank_type = rf_rank_type
         self.rf_rank_topn = rf_rank_topn
         self.rf_train_type = rf_train_type
+        self.feat_detector_type = feat_detector_type

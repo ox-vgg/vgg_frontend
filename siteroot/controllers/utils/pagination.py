@@ -71,4 +71,3 @@ class PageManager(object):
             max_idx = page * self.page_len
 
         return (rlist[min_idx:max_idx], num_pages)
-
