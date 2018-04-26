@@ -544,6 +544,12 @@ class UserPages:
         # When the image_count == None some information won't be displayed in the results page.
         image_count = len(rlist)
 
+        # Check we don't have JUST one result with an empty list
+        if image_count==1 and len(rlist[0]['path'])==0:
+            message = 'This query did not return any results. Please enter a diferent query in the home page.'
+            redirect_to = settings.SITE_PREFIX
+            return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
+
         # extract pages
         (rlist, page_count) = self.visor_controller.page_manager.get_page(rlist, page)
         pages = self.visor_controller.page_manager.construct_page_array(page, page_count)
