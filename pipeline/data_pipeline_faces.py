@@ -183,6 +183,7 @@ def data_processing_pipeline_faces_videos(input_list_of_videos, index, lock, DAT
                     DATASET_IM_BASE_PATH,
                     tmp_chunk_output_file
                 ]
+            fout.write(('DATA-PIPELINE [%s]: %s\n') % (time.strftime("%H:%M:%S"), str(popen_cmd)))
             popen_obj = Popen(popen_cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             output, err = popen_obj.communicate()
             splitted_output = None
