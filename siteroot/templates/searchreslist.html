@@ -113,8 +113,9 @@
             {% endfor %}
         </div>
         <div class="results_nav_centre">
+            <br/>
             {% if ENGINE_HAS_IMG_POSTPROC_MODULE %}
-                <br/><a class="results_nav_centre_link" href="{{HOME_LOCATION}}trainingimages?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;view=grid">View Training Images</a>
+                <a class="results_nav_centre_link" href="{{HOME_LOCATION}}trainingimages?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;view=grid">View Training Images</a>
             {% endif %}
             {% if ENGINE_CAN_SAVE_UBER %}
                 {% if ENGINE_HAS_IMG_POSTPROC_MODULE %}
