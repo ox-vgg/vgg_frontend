@@ -93,13 +93,13 @@ RUN cd /webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/ \
     && make \
     && make install \
     && rm -rf /webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/build \
-    && sed -i 's/<full_path_to_this_directory>/\/webapps\/visorgen\/backend_data\/cpuvisor-srv/g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's/<full_path_to_this_directory>\/dsetpaths_sample/\/webapps\/visorgen\/backend_data\/cpuvisor-srv\/dsetpaths/g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's/<full_path_to_this_directory>\/negpaths_sample/\/webapps\/visorgen\/backend_data\/cpuvisor-srv\/negpaths/g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's/<full_path_to_this_directory>/\/webapps\/visorgen\/vgg_classifier/g' /webapps/visorgen/vgg_classifier/config.prototxt \
     && sed -i 's/<full_path_to_base_folder_where_images_in_dsetpaths_sample.txt_are_located>/\/webapps\/visorgen\/datasets\/images\/mydataset/g' /webapps/visorgen/vgg_classifier/config.prototxt \
     && sed -i 's/<full_path_to_base_folder_where_images_in_negpaths_sample.txt_are_located>/\/webapps\/visorgen\/datasets\/negatives\/mydataset/g' /webapps/visorgen/vgg_classifier/config.prototxt \
     && sed -i 's/<full_path_to_dsetfeats_binaryproto_file_produced_by_cpuvisor_preproc>/\/webapps\/visorgen\/backend_data\/cpuvisor-srv\/dsetfeats.binaryproto/g' /webapps/visorgen/vgg_classifier/config.prototxt \
-    && sed -i 's/<full_path_to_negpaths_binaryproto_file_produced_by_cpuvisor_preproc>/\/webapps\/visorgen\/backend_data\/cpuvisor-srv\/negfeats.binaryproto/g' /webapps/visorgen/vgg_classifier/config.prototxt \
-    && sed -i 's/negpaths_sample/negpaths/g' /webapps/visorgen/vgg_classifier/config.prototxt \
-    && sed -i 's/dsetpaths_sample/dsetpaths/g' /webapps/visorgen/vgg_classifier/config.prototxt
+    && sed -i 's/<full_path_to_negpaths_binaryproto_file_produced_by_cpuvisor_preproc>/\/webapps\/visorgen\/backend_data\/cpuvisor-srv\/negfeats.binaryproto/g' /webapps/visorgen/vgg_classifier/config.prototxt
 
 # configure default user in frontend
 RUN cd /webapps/visorgen/vgg_frontend/ \
