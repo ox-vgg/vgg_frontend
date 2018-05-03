@@ -300,7 +300,11 @@ class UserPages:
                         search_finished = False
                         seconds_between_requests = 0.25 # Adjust to your needs, but if results are almost instant this should be ok.
                         if 'HTTP_X_FORWARDED_HOST' not in request.META:
-                            home_location = 'http://' + request.META['HTTP_HOST'] + home_location
+                            host = request.META['HTTP_HOST']
+                            if 'SERVER_PORT' in request.META and request.META['SERVER_PORT'] not in host:
+                                host = host.split(':')[0]
+                                host = host + ':' + request.META['SERVER_PORT']
+                            home_location = 'http://' + host + home_location
                         while not search_finished:
                             # Start query or get query status
                             result = requests.get(home_location + 'execquery?qsid=' + query_ses_info['query_ses_id'])
@@ -318,7 +322,8 @@ class UserPages:
                     except Exception as e:
                         # display error message and go back home
                         redirect_to = settings.SITE_PREFIX
-                        msg = e.message.replace('\'', '')
+                        msg = str(e.message)
+                        msg = msg.replace('\'', '')
                         return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': msg})
 
                     # if we actually manage to reach this point, display search results
