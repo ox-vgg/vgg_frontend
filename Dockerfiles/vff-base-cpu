@@ -80,7 +80,7 @@ RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-maste
     && wget https://gitlab.com/vgg/vgg_face_search/-/archive/master/vgg_face_search-master.zip -O /tmp/vgg_face_search.zip \
     && unzip /tmp/vgg_face_search.zip -d /webapps/visorgen/ \
     && mv /webapps/visorgen/vgg_face_search*  /webapps/visorgen/vgg_face_search \
-    && sed -i 's/DATASET_FEATS_FILE/DATASET_FEATS_FILE="\/webapps\/visorgen\/backend_data\/faces\/database.pkl"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
+    && sed -i 's/DATASET_FEATS_FILE/DATASET_FEATS_FILE="\/webapps\/visorgen\/backend_data\/faces\/features\/database.pkl"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
     && sed -i 's/FEATURES_CAFFE_MODEL/FEATURES_CAFFE_MODEL="\/webapps\/visorgen\/backend_data\/faces\/resnet50_256.caffemodel"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
     && sed -i 's/FEATURES_CAFFE_PROTOTXT/FEATURES_CAFFE_PROTOTXT="\/webapps\/visorgen\/backend_data\/faces\/resnet50_256.prototxt"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
     && sed -i 's/GPU_FACE_DETECTION_CAFFE_MODEL/#GPU_FACE_DETECTION_CAFFE_MODEL/g' /webapps/visorgen/vgg_face_search/service/settings.py \
