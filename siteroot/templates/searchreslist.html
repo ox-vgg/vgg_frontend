@@ -62,7 +62,7 @@
                 <div class="result_outer_wrapper">
                     <div class="result_inner_wrapper">
                         <a class="result_image_link" href="{{HOME_LOCATION}}viewdetails?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;dsetresid={{RITEM.dsetresid}}&amp;dsetname={{QUERY.dsetname}}&amp;view=grid{% if RITEM.roi %}&amp;roi={{RITEM.roi}}{% endif %}">
-                            <img src="{{SA_THUMBS}}{{RITEM.path}}" />
+                            <img src="{{SA_THUMBS}}{{RITEM.path|urlencode}}" />
                         </a>
                         <div class="result_refinebtns">
                             <div class="result_refinebtn_url" style="display:none;">{{RITEM.dsetresid}}</div>
@@ -77,7 +77,7 @@
                         </div>
                         {% if SIMILAR_ENGINE %}
                         <div class="result_extras">
-                            <a href="{{HOME_LOCATION}}searchproc_qstr?engine={{SIMILAR_ENGINE}}&amp;q={{RITEM.dsetresid}}&amp;qtype=dsetimage&amp;dsetname={{QUERY.dsetname}}"><img src="static/images/search_more.png" />similar</a>
+                            <a href="{{HOME_LOCATION}}searchproc_qstr?engine={{SIMILAR_ENGINE}}&amp;q={{RITEM.dsetresid|urlencode}}&amp;qtype=dsetimage&amp;dsetname={{QUERY.dsetname}}"><img src="static/images/search_more.png" />similar</a>
                         </div>
                         {% endif %}
                     </div>
