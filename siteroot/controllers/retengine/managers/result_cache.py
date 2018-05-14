@@ -151,12 +151,14 @@ class ResultCache(base_caches.SessionExcludeListCache):
             if os.path.exists(self.ranklistpath):
                 rankfiles = os.listdir(self.ranklistpath)
                 for rankfile in rankfiles:
-                    rankfile, rankfileext = os.path.splitext(rankfile)
-                    dsetname, strid = rankfile.split('___', 2)
-
                     try:
+                        rankfile, rankfileext = os.path.splitext(rankfile)
+                        dsetname, strid = rankfile.split('___', 2)
                         querystr, qtype = utils.tag_utils.decode_query_strid(strid)
                     except models.errors.StrIdDecodeError:
+                        continue
+                    except ValueError:
+                        print 'Invalid filename for cached text query: %s' % rankfile
                         continue
 
                     querystrs.append(querystr)
