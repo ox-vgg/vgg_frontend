@@ -66,15 +66,6 @@ The following variables are defined:
                                 <dd>
                                     <input name="num_pos_train" type="number" size="6" min="1" max="200" value="{{NUM_POS_TRAIN}}" /> <small><em>(max 200)</em></small>
                                 </dd>
-                                <dt>Backend Feature Detector Type:</dt>
-                                <dd>
-                                    <select name="feat_detector_type">
-                                        {% for ITEM in FEAT_DETECTOR_TYPE_LIST %}
-                                            <option value="{{ITEM}}" {% if ITEM == FEAT_DETECTOR_TYPE %}selected="selected"{% endif %}>{{ITEM}}</option>
-                                        {% endfor %}
-                                    </select>
-                                     <small><em>(currently available only for the &quot;People&quot; search)</em></small>
-                                </dd>
                                  <dt>Query Download Timeout:</dt>
                                 <dd>
                                     <input name="improc_timeout" size="6" value="{{IMPROC_TIMEOUT}}" />
