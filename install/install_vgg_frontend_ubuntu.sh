@@ -6,9 +6,6 @@
 # update repositories
 sudo apt-get update
 
-# install git to clone repo
-sudo apt-get install -y git
-
 # pip and python dependencies
 sudo apt-get install -y python-pip
 sudo apt-get install -y python-dev
