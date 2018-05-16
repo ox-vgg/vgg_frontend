@@ -174,7 +174,9 @@ class VisorEngine(VisorEngineBase):
                         anno_path = self.compdata_cache._get_annotations_fname(query)
                     error = ses.train(query_id, anno_path)
                     if error:
-                        raise models.errors.ClassifierTrainError('Could not train classifier. Backend response:' + error.encode('ascii'))
+                        if isinstance(error, basestring):
+                            error = error.encode('ascii')
+                        raise models.errors.ClassifierTrainError('Could not train classifier. Backend response: ' + str(error))
                 shared_vars.exectime_training = timer.interval
 
                 # and save it to file
