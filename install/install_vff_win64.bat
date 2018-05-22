@@ -66,6 +66,7 @@ virtualenv .
 call Scripts\activate
 
 REM Install vgg_face_search dependencies
+pip install setuptools==39.1.0
 pip install simplejson==3.8.2
 pip install Pillow==2.3.0
 pip install numpy==1.14.0
@@ -86,6 +87,7 @@ REM Install vgg_img_downloader additional dependencies
 pip install greenlet==0.4.10
 pip install gevent==0.13.8
 pip install Flask==0.10.1
+pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
 
 REM Install vgg_frontend controller additional dependencies
 pip install validictory==0.9.1

@@ -27,41 +27,50 @@ sudo apt-get install -y libsnappy-dev
 sudo apt-get install -y libgflags-dev
 sudo apt-get install -y --no-install-recommends libboost-all-dev
 
-# Django dependencies
-sudo pip install django==1.10
-sudo apt-get install -y memcached
-sudo pip install python-memcached
-
-# frontend dependencies
-sudo apt-get install -y libz-dev libjpeg-dev libfreetype6-dev
-sudo pip install protobuf==3.0.0
-sudo pip install Pillow==2.3.0
-sudo pip install Whoosh==2.7.4
-
-# vgg_img_downloader dependencies
-sudo apt-get install -y libevent-dev
-sudo pip install greenlet==0.4.10
-sudo pip install gevent==0.13.8
-sudo pip install Flask==0.10.1
-
-# controller dependencies
-sudo apt-get install -y libzmq-dev
-sudo pip install validictory==0.9.1
-sudo pip install msgpack-python==0.3.0
-sudo pip install requests==1.1.0
-sudo pip install gevent-zeromq==0.2.5
-
 # dependencies for start/stop scripts
 sudo apt-get install -y screen
 
-# caffe-backend aditional dependencies
+# controller dependencies
 sudo apt-get install -y libzmq-dev
 # liblinear installed below is also a dependency.
 # caffe installed below is also a dependency.
 # cpp-netlib installed below is also a dependency.
 
-# cpp-netlib aditional dependencies
+# cpp-netlib dependencies
 sudo apt-get install -y libssl-dev
+
+# frontend dependencies
+sudo apt-get install -y libz-dev libjpeg-dev libfreetype6-dev
+
+# vgg_img_downloader dependencies
+sudo apt-get install -y libevent-dev
+
+# Django dependencies
+sudo apt-get install -y memcached
+
+# update setuptools
+sudo pip install setuptools==39.1.0
+
+# Django python dependencies
+sudo pip install django==1.10
+sudo pip install python-memcached
+
+# frontend python dependencies
+sudo pip install protobuf==3.0.0
+sudo pip install Pillow==2.3.0
+sudo pip install Whoosh==2.7.4
+
+# vgg_img_downloader python dependencies
+sudo pip install greenlet==0.4.10
+sudo pip install gevent==0.13.8
+sudo pip install Flask==0.10.1
+sudo pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
+
+# controller python dependencies
+sudo pip install validictory==0.9.1
+sudo pip install msgpack-python==0.3.0
+sudo pip install requests==1.1.0
+sudo pip install gevent-zeromq==0.2.5
 
 # create main folders
 sudo mkdir /webapps/

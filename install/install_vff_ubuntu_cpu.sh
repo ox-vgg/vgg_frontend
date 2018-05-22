@@ -59,6 +59,7 @@ source ./bin/activate
 
 # backend python dependencies
 pip install --upgrade pip
+pip install setuptools==39.1.0
 pip install simplejson==3.8.2
 pip install Pillow==2.3.0
 pip install numpy==1.13.3
@@ -81,6 +82,7 @@ sudo apt-get install -y libevent-dev
 pip install greenlet==0.4.10
 pip install gevent==0.13.8
 pip install Flask==0.10.1
+pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
 
 # controller dependencies
 sudo apt-get install -y libzmq-dev

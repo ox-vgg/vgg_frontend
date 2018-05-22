@@ -56,6 +56,9 @@ PROTOBUF_NUMPY_VERSION=$(brew info protobuf | grep Cellar/protobuf | awk -F '[/|
 # register the openblas directory for compiling the vgg_classifier
 OPENBLAS_DIR=$(brew --prefix openblas)
 
+# update setuptools
+pip install setuptools==39.1.0
+
 # install django dependencies
 pip install django==1.10
 brew install -vd libevent
@@ -78,6 +81,9 @@ pip install requests==1.1.0
 pip install validictory==0.9.1
 pip install msgpack-python==0.3.0
 pip install gevent-zeromq
+
+# vgg_img_downloader additional dependencies
+pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
 
 # download caffe
 wget https://github.com/BVLC/caffe/archive/1.0.zip -O /tmp/1.0.zip

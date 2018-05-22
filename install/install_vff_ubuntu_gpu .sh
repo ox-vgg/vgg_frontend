@@ -63,6 +63,7 @@ virtualenv .
 source ./bin/activate
 
 # backend python dependencies
+pip install setuptools==39.1.0
 pip install simplejson==3.8.2
 pip install Pillow==2.3.0
 pip install numpy==1.13.3
@@ -85,6 +86,7 @@ sudo apt-get install -y libevent-dev
 pip install greenlet==0.4.10
 pip install gevent==0.13.8
 pip install Flask==0.10.1
+pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
 
 # controller dependencies
 sudo apt-get install -y libzmq-dev
@@ -146,11 +148,10 @@ make all
 make pycaffe
 
 # compile shot detector
-BREW_BOOST_ROOT=$(brew info boost | grep Cellar/boost | awk '{print $1}' )
 cd $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_face_search/pipeline
 mkdir build
 cd build
-cmake -DBOOST_ROOT=$BREW_BOOST_ROOT ../
+cmake -DBoost_INCLUDE_DIR=/usr/include/ ../
 make
 
 # configure vgg_face_search

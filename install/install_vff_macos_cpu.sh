@@ -52,6 +52,7 @@ mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies
 cd $VGG_FACE_INSTALL_FOLDER/visorgen/
 virtualenv .
 source ./bin/activate
+pip install setuptools==39.1.0
 
 # register the numpy version used by opencv, so that python-opencv can be used in the virtualenv
 BREW_NUMPY_VERSION=$(brew info numpy | grep Cellar/numpy | awk -F '[/| |_]' '{print $6}'  )
@@ -71,9 +72,10 @@ pip install protobuf==$PROTOBUF_NUMPY_VERSION
 pip install numpy==$BREW_NUMPY_VERSION
 pip install Whoosh==2.7.4
 
-# imsearch-tools dependencies
+# vgg_img_downloader dependencies
 pip install gevent
 pip install Flask==0.10.1
+pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
 
 # controller dependencies
 brew install -vd zeromq
