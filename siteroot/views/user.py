@@ -246,6 +246,34 @@ class UserPages:
                 redirect_to = settings.SITE_PREFIX
                 return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
+            # In case of a text query, with the image postprocessing module set to 'download_disabled',
+            # try to transform the text query into a keyword query. If it is not possible, report an error.
+            img_postproc_module_is_download_disabled = self.visor_controller.opts.engines_dict[engine].get('imgtools_postproc_module', None) == 'download_disabled'
+            if query_type == retengine.models.opts.Qtypes.text and img_postproc_module_is_download_disabled and not query_string.startswith('keywords:'):
+                new_query_string = None
+                try:
+                    keyword_list = self.visor_controller.metadata_handler.get_search_suggestions(query_string)
+                    new_query_string = 'keywords:'
+                    for idx in range(len(keyword_list)):
+                        if idx > 0:
+                            new_query_string = new_query_string + ','
+                        new_query_string = new_query_string + keyword_list[idx]
+                except Exception as e:
+                    print e
+                    new_query_string = None
+                    pass
+                if new_query_string is None or new_query_string=='keywords:':
+                    message = 'Your text query does not match any keyword in the dataset. Please input an image or use the keyword-selection button to find a valid keyword.'
+                    redirect_to = settings.SITE_PREFIX
+                    return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
+                else:
+                    try:
+                        new_query_string = urllib.quote(new_query_string)
+                        return redirect(settings.SITE_PREFIX + '/searchproc_qstr?q=%s&qtype=%s&dsetname=%s&engine=%s' % (new_query_string, query_type, dataset_name, engine))
+                    except Exception as e:
+                        print e
+                        pass
+
             # save main details in session
             request.session['query_string'] = query_string
             request.session['query_type'] = query_type
