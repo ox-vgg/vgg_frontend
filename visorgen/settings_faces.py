@@ -203,7 +203,7 @@ VISOR = {
                 'faces' :   { 'full_name' : 'People',
                               'url': '/',
                               'backend_port' : 55302,
-                              'imgtools_postproc_module' : 'visor_faces',
+                              'imgtools_postproc_module' : 'download_disabled',  # Disable image download before postprocessing
                               'imgtools_style': 'face',
                               'pattern_fname_classifier' : 'dummy', # Not used but cannot be 'None'
                               'can_save_uber_classifier': True,
