@@ -6,8 +6,9 @@
       AUTHENTICATED - boolean that indicates whether the current user is authenticated or not
       AVAILABLE_ENGINES - engines info
       SITE_TITLE - page title
-      DISABLE_AUTOCOMPLETE - if true, disable autocomplete for the form field. True by default.
-      OPEN_TOUR - boolean indicating whether the tour should be automtically started or not
+      DISABLE_AUTOCOMPLETE - if true, disable autocomplete for the form field. True by default
+      ENABLE_TOUR - boolean indicating whether the tour link should be enable or not
+      OPEN_TOUR - boolean indicating whether the tour should be automatically started or not
       DATASETS - dictionary of supported datasets { name_id1:real_name1, name_id2:real_name2, ... }
       ENGINES_WITH_IMAGE_SEARCH_SUPPORT - list of strings with the ids of those engines supporting images as input
       HOME_LOCATION - location of the root home page taking into account possible redirections
@@ -71,7 +72,9 @@
                 <img src="static/images/ack-ox.png" />
             </div>
         </div>
-        <a id="getting_started" href="#">Getting Started</a>
+        {% if ENABLE_TOUR %}
+            <a id="getting_started" href="#">Getting Started</a>
+        {% endif %}
         <script type="text/javascript" src="static/scripts/lib/jquery-1.11.3.min.js"></script>
         <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.widgets.animation.min.js"></script>
         <script type="text/javascript" src="static/scripts/lib/jquery-ui-1.11.4.autocomplete.min.js"></script>

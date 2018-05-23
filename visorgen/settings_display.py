@@ -188,6 +188,7 @@ VISOR = {
     'disable_autocomplete': True,
     'results_per_page' : 50,
     'check_backends_reachable': False,
+    'enable_tour': False,
     'enable_viewsel' : True, # enable only when the selected backend is able to return ROIs
     'datasets' : {  # Dictionary of datasets. Only one dataset at a time is supported.
                     # The key-name of the dataset is used to locate subfolders within

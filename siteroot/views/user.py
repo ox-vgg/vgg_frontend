@@ -121,10 +121,6 @@ class UserPages:
         if self.visor_controller.opts.check_backends_reachable and self.visor_controller.is_backend_reachable() == "0":
             return redirect('nobackend')
 
-        # check if the 'Getting Started' tour should be activated
-        tour = request.GET.get('tour', 0)
-        open_tour = (int(tour) != 0)
-
         # get engines info, for including it in the page
         available_engines = self.visor_controller.opts.engines_dict
 
@@ -147,14 +143,20 @@ class UserPages:
                     str_engines_with_image_input_support = str_engines_with_image_input_support + ' '
                 str_engines_with_image_input_support = str_engines_with_image_input_support + key
 
-        # set up rendering context and render the page
+        # check if the 'Getting Started' tour should be activated
         VISOR_SETTINGS = settings.VISOR
+        enable_tour = self.visor_controller.opts.enable_tour
+        tour = request.GET.get('tour', 0)
+        open_tour = (int(tour) != 0) and enable_tour
+
+        # set up rendering context and render the page
         context = {
         'AUTHENTICATED' : request.user.is_authenticated(),
         'AVAILABLE_ENGINES': available_engines,
         'DATASETS': VISOR_SETTINGS['datasets'],
         'SITE_TITLE': VISOR_SETTINGS['title'],
         'DISABLE_AUTOCOMPLETE': VISOR_SETTINGS['disable_autocomplete'],
+        'ENABLE_TOUR' : enable_tour,
         'OPEN_TOUR' : open_tour,
         'ENGINES_WITH_IMAGE_SEARCH_SUPPORT': str_engines_with_image_input_support,
         }
