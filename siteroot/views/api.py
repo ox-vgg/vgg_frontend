@@ -517,14 +517,16 @@ class APIFunctions:
         json_response = {}
         if 'query' not in request.GET or 'engine' not in request.GET:
             return HttpResponse(json.dumps(json_response))
+        query_text = ''
 
         try:
             if request.GET['engine'] in self.visor_controller.opts.engines_dict:
                 backend_port = self.visor_controller.opts.engines_dict[request.GET['engine']]['backend_port']
                 ses = retengine.engine.backend_client.Session(backend_port)
+                query_text = request.GET['query']
                 func_in = {}
                 func_in['func'] = 'getSearchSuggestions'
-                func_in['query_string'] = request.GET['query']
+                func_in['query_string'] = query_text
                 request = json.dumps(func_in)
                 response = ses.custom_request(request)
                 json_response = json.loads(response)
@@ -533,6 +535,18 @@ class APIFunctions:
         except:
             json_response = {}
             pass
+
+        # last chance to get a suggestion, use the keywords in the metadata
+        if json_response == {}:
+            try:
+                json_response["results"] = []
+                json_response["success"] = True
+                keyword_list = self.visor_controller.metadata_handler.get_search_suggestions(query_text)
+                for idx in range(len(keyword_list)):
+                    json_response["results"].append(keyword_list[idx])
+            except:
+                json_response = {}
+                pass
 
         return HttpResponse(json.dumps(json_response))
 
