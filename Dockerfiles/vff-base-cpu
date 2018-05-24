@@ -76,6 +76,7 @@ RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-maste
     && unzip /tmp/vgg_frontend.zip -d /webapps/visorgen/ \
     && mv /webapps/visorgen/vgg_frontend*  /webapps/visorgen/vgg_frontend \
     && cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_faces.py /webapps/visorgen/vgg_frontend/visorgen/settings.py \
+    && cp -f /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb-vff.js /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js \
     && sed -i 's/"\/vgg_frontend"/"\/vff"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py \
     && wget https://gitlab.com/vgg/vgg_face_search/-/archive/master/vgg_face_search-master.zip -O /tmp/vgg_face_search.zip \
     && unzip /tmp/vgg_face_search.zip -d /webapps/visorgen/ \

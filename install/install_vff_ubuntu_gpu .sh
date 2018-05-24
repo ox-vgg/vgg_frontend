@@ -165,6 +165,7 @@ sed -i "s|DEPENDENCIES_PATH|DEPENDENCIES_PATH='${VGG_FACE_INSTALL_FOLDER}/visorg
 # configure vgg_frontend
 echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > $VGG_FACE_INSTALL_FOLDER/visorgen/secret_key_visorgen
 cp -f $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_frontend/visorgen/settings_faces.py $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_frontend/visorgen/settings.py
+cp -f $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb-vff.js $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js
 sed -i 's/"\/vgg_frontend"/"\/vff"/g' $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_frontend/visorgen/settings.py
 sed -i "s|/webapps|${VGG_FACE_INSTALL_FOLDER}|g" $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_frontend/visorgen/settings.py
 sed -i "s|/webapps|${VGG_FACE_INSTALL_FOLDER}|g" $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_frontend/scripts/*.sh

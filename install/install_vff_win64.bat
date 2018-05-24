@@ -136,6 +136,7 @@ echo (Get-Content $path -Raw).Replace("`r`n","`n") ^| Set-Content -NoNewline $pa
 powershell.exe -nologo -noprofile -ExecutionPolicy ByPass -file replaceends.ps1
 copy /Y vgg_frontend\visorgen\settings.replace.py vgg_frontend\visorgen\settings_faces.py
 copy /Y vgg_frontend\visorgen\settings_faces.py vgg_frontend\visorgen\settings.py
+copy /Y vgg_frontend\siteroot\static\scripts\add-getting-started-lb-vff.js vgg_frontend\siteroot\static\scripts\add-getting-started-lb.js
 del replaceends.ps1
 del vgg_frontend\visorgen\settings.replace.py
 
