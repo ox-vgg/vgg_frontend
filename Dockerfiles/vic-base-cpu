@@ -69,8 +69,8 @@ RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-maste
     && mv /webapps/visorgen/vgg_classifier*  /webapps/visorgen/vgg_classifier \
     && rm -rf /tmp/*.zip \
     && cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_cpuvisor-srv.py /webapps/visorgen/vgg_frontend/visorgen/settings.py \
-    && sed -i 's/"\/vgg_frontend"/"\/vic"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py \
-    && sed -i 's/images\/tour/images\/tour\/vic/g' /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js
+    && cp -f /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb-vic.js /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js \
+    && sed -i 's/"\/vgg_frontend"/"\/vic"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py
 
 # Compile caffe
 RUN cd /webapps/visorgen/backend_dependencies/caffe-rc3/ \
