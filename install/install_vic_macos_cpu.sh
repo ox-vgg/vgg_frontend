@@ -165,6 +165,7 @@ cp -f $HOME/visorgen/vgg_frontend/visorgen/settings_cpuvisor-srv.py $HOME/visorg
 sed -i '.sed' 's/"\/vgg_frontend"/"\/vic"/g' $HOME/visorgen/vgg_frontend/visorgen/settings.py
 sed -i '.sed' "s|/webapps|${HOME}|g" $HOME/visorgen/vgg_frontend/visorgen/settings.py
 sed -i '.sed' "s|/webapps|${HOME}|g" $HOME/visorgen/vgg_frontend/scripts/*.sh
+sed -i '.sed' 's/images\/tour/images\/tour\/vic/g' /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js
 
 # configure default user in vgg_frontend
 cd $HOME/visorgen/vgg_frontend/

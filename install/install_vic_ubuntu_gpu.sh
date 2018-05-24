@@ -162,6 +162,7 @@ sed -i 's/dsetpaths_sample/dsetpaths/g' /webapps/visorgen/vgg_classifier/config.
 echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
 cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_cpuvisor-srv.py /webapps/visorgen/vgg_frontend/visorgen/settings.py
 sed -i 's/"\/vgg_frontend"/"\/vic"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py
+sed -i 's/images\/tour/images\/tour\/vic/g' /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js
 
 # configure default user in vgg_frontend
 cd /webapps/visorgen/vgg_frontend/

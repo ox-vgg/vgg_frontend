@@ -169,6 +169,7 @@ cp -f $HOME/visorgen/vgg_frontend/visorgen/settings_cpuvisor-srv.py $HOME/visorg
 sed -i '.sed' 's/"\/vgg_frontend"/"\/vic"/g' $HOME/visorgen/vgg_frontend/visorgen/settings.py
 sed -i '.sed' "s|/webapps|${HOME}|g" $HOME/visorgen/vgg_frontend/visorgen/settings.py
 sed -i '.sed' "s|/webapps|${HOME}|g" $HOME/visorgen/vgg_frontend/scripts/*.sh
+sed -i '.sed' 's/images\/tour/images\/tour\/vic/g' /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js
 
 # configure default user in vgg_frontend
 cd $HOME/visorgen/vgg_frontend/
@@ -177,6 +178,6 @@ printf "import os\nfrom django.core.wsgi import get_wsgi_application\nos.environ
 python super.py
 rm -f super.py
 
-#add dylb paths to vgg_classifier dependencies
+# add dylb paths to vgg_classifier dependencies
 echo "export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$CUDAHOME/lib:$HOME/visorgen/backend_dependencies/liblinear-210:$HOME/visorgen/backend_dependencies/caffe/build/lib" >> $HOME/.profile
 source $HOME/.profile
