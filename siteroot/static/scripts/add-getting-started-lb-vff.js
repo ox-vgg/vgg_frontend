@@ -11,9 +11,9 @@ var FinalPageHTML = '<div style="padding-left: 40px; padding-right:40px; padding
     <h1>What is next ?...</h1>\
     <p>This system is an early beta which can be enhanced to perform more advanced queries. We have our own advanced protoype, which you can test with some sample queries for each different search engine:</p>\
     <ul>\
-    <li><a href="' + fullPrototypeLocation + 'searchproc_qstr?q=car&engine=objects&qtype=text&dsetname=BBCn" target="_blank">Category: car</a></li>\
-    <li><a href="' + fullPrototypeLocation + 'searchproc_qstr?q=chair&engine=objects&qtype=text&dsetname=BBCn" target="_blank">Category: chair</a></li>\
-    <li><a href="' + fullPrototypeLocation + 'searchproc_qstr?q=demonstration&engine=objects&qtype=text&dsetname=BBCn" target="_blank">Category: demonstration</a></li>\
+    <li><a href="' + fullPrototypeLocation + 'searchproc_qstr?engine=faces&qtype=text&q=David+Cameron&dsetname=BBCn" target="_blank">People: David Cameron</a></li>\
+    <li><a href="' + fullPrototypeLocation + 'searchproc_qstr?engine=faces&qtype=text&q=Boris+Johnson&dsetname=BBCn" target="_blank">People: Boris Johnson</a></li>\
+    <li><a href="' + fullPrototypeLocation + 'searchproc_qstr?engine=faces&qtype=text&q=Queen+Elizabeth&dsetname=BBCn" target="_blank">People: Queen Elizabeth</a></li>\
     </ul>\
     <p>Bugs in this system should be expected, but if you have any major issues \
     please contact <a href="mailto:ecoto-removemeifyouarehuman@robots.ox.ac.uk">Ernesto @ VGG Oxford</a>.</p>\
@@ -21,17 +21,17 @@ var FinalPageHTML = '<div style="padding-left: 40px; padding-right:40px; padding
     </div>'
 
 function openTour() {
-    $.fancybox.open([{'href': 'static/images/tour/vic/tour1.png',
+    $.fancybox.open([{'href': 'static/images/tour/vff/tour1.png',
                       'title': 'Getting Started'},
-                     {'href': 'static/images/tour/vic/tour2.png',
+                     {'href': 'static/images/tour/vff/tour2.png',
+                      'title': 'Starting a Search'},
+                     {'href': 'static/images/tour/vff/tour3.png',
                       'title': 'Executing a Search'},
-                     {'href': 'static/images/tour/vic/tour3.png',
-                      'title': 'Viewing Results'},
-                     {'href': 'static/images/tour/vic/tour4.png',
-                      'title': 'Refining Results'},
-                     {'href': 'static/images/tour/vic/tour5.png',
+                     {'href': 'static/images/tour/vff/tour4.png',
+                      'title': 'Viewing and Refining Results'},
+                     {'href': 'static/images/tour/vff/tour5.png',
                       'title': 'Searching by Image'},
-                     {'href': 'static/images/tour/vic/tour6.png',
+                     {'href': 'static/images/tour/vff/tour6.png',
                       'title': 'Searching by Keyword'},
                      FinalPageHTML],
                     {autoSize: true,
