@@ -248,10 +248,11 @@ class UserPages:
                 redirect_to = settings.SITE_PREFIX
                 return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
-            # In case of a text query, with the image postprocessing module set to 'download_disabled',
+            # In case of a (non-curated) text query, with the image postprocessing module set to 'download_disabled',
             # try to transform the text query into a keyword query. If it is not possible, report an error.
             img_postproc_module_is_download_disabled = self.visor_controller.opts.engines_dict[engine].get('imgtools_postproc_module', None) == 'download_disabled'
-            if query_type == retengine.models.opts.Qtypes.text and img_postproc_module_is_download_disabled and not query_string.startswith('keywords:'):
+            if (query_type == retengine.models.opts.Qtypes.text and img_postproc_module_is_download_disabled and
+                not query_string.startswith('keywords:') and query_string[0] != '#' ):
                 new_query_string = None
                 try:
                     keyword_list = self.visor_controller.metadata_handler.get_search_suggestions(query_string)
