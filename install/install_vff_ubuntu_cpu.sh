@@ -104,7 +104,7 @@ mv $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/caffe* $VGG_FACE_INSTA
 
 # download davidsandberg's facenet (Dec 2017)
 wget https://github.com/davidsandberg/facenet/archive/28d3bf2fa7254037229035cac398632a5ef6fc24.zip -P /tmp
-unzip /tmp/28d3bf2fa7254037229035cac398632a5ef6fc24.zip -d $HOME/visorgen/backend_dependencies/
+unzip /tmp/28d3bf2fa7254037229035cac398632a5ef6fc24.zip -d $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/
 mv $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/facenet* $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/facenet
 
 # download vgg_face_search repo
