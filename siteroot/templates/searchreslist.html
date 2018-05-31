@@ -61,7 +61,7 @@
             <div class="results_box">
                 <div class="result_outer_wrapper">
                     <div class="result_inner_wrapper">
-                        <a class="result_image_link" href="{{HOME_LOCATION}}viewdetails?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;dsetresid={{RITEM.dsetresid}}&amp;dsetname={{QUERY.dsetname}}&amp;view=grid{% if RITEM.roi %}&amp;roi={{RITEM.roi}}{% endif %}">
+                        <a class="result_image_link" href="{{HOME_LOCATION}}viewdetails?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;dsetresid={{RITEM.dsetresid|urlencode}}&amp;dsetname={{QUERY.dsetname}}&amp;view=grid{% if RITEM.roi %}&amp;roi={{RITEM.roi}}{% endif %}">
                             <img src="{{SA_THUMBS}}{{RITEM.path|urlencode}}" />
                         </a>
                         <div class="result_refinebtns">
