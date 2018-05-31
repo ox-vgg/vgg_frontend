@@ -92,7 +92,7 @@ Metadata Structure
 
 Each line of the CSV file corresponds to a series of text strings, separated from each other by a comma (`,`) character. This kind of file can be created/edited with almost any modern spreadsheet application (MS Excel, LibreOffice Calc, etc.), therefore each line of the CSV corresponds to a `row` of the spreadsheet, and each `column` is formed by the comma-separated text values at each row.
 
-The first row of the CSV should contain the titles of the columns, and there should be at least two columns. The title of the first column should be `filename` (quotes just for clarity), and the title of the second column should be `file_attributes` (quotes just for clarity).
+The first row of the CSV should contain the titles of the columns, and there should be at least two columns. The title of the first column should be `filename`, and the title of the second column should be `file_attributes`.
 
 The `filename` column should contain the path to the images, relative to the `MY_FOLDER/visorgen/datasets/images/mydataset` folder. The `file_attributes` column should contain a string in [JSON format](https://en.wikipedia.org/wiki/JSON). This string should correspond to a list of elements, similar to the one in this [example](https://en.wikipedia.org/wiki/JSON#Example). The following two elements are used by `vgg_frontend`:
 
