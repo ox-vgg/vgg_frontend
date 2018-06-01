@@ -332,7 +332,8 @@ class UserPages:
                         seconds_between_requests = 0.25 # Adjust to your needs, but if results are almost instant this should be ok.
                         if 'HTTP_X_FORWARDED_HOST' not in request.META:
                             host = request.META['HTTP_HOST']
-                            if 'SERVER_PORT' in request.META and request.META['SERVER_PORT'] not in host:
+                            if host.startswith('127.0.0.1') or host.startswith('localhost') and (
+                               'SERVER_PORT' in request.META and request.META['SERVER_PORT'] not in host):
                                 host = host.split(':')[0]
                                 host = host + ':' + request.META['SERVER_PORT']
                             home_location = 'http://' + host + home_location
