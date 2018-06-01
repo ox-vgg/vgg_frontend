@@ -155,7 +155,7 @@ class ImageUploader:
             localfilepath = os.path.join(localpath, remotefilename)
             print '  ' + url + '->' + localfilepath
             opener = urllib2.build_opener()
-            opener.addheaders = [('User-agent', 'Mozilla/5.0')] # pretend to be firefox
+            opener.addheaders = [('User-agent', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0')] # pretend to be firefox
             img = opener.open(url, None, timeout)
 
             localfile = open(localfilepath, 'wb')
