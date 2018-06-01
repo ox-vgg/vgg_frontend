@@ -337,6 +337,12 @@ class UserPages:
                                 host = host.split(':')[0]
                                 host = host + ':' + request.META['SERVER_PORT']
                             home_location = 'http://' + host + home_location
+                        else:
+                            if 'SERVER_PORT' in request.META:
+                                home_location = 'http://127.0.0.1:' + request.META['SERVER_PORT'] + settings.SITE_PREFIX + '/'
+                            else:
+                                home_location = 'http://127.0.0.1:8000' + settings.SITE_PREFIX + '/'
+
                         while not search_finished:
                             # Start query or get query status
                             result = requests.get(home_location + 'execquery?qsid=' + query_ses_info['query_ses_id'])
