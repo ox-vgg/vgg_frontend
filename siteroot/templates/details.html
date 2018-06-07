@@ -60,7 +60,11 @@
                                                <label for="show_roi">Show detection</label>
                                                {% endif %}
                                                <div id="div_detailimg" >
+                                                   {% if SELECT_ROI %}
+                                                   <img id="detailimg" src="datasets/{{IMAGE_URL}}" alt="">
+                                                   {% else %}
                                                    <img id="detailimg" src="datasets/{{IMAGE_URL}}" alt="" width="100%" height="100%">
+                                                   {% endif %}
                                                </div>
                                                <div id="div_canvas"  style="display:none;">
                                                     <canvas id="canvas"></canvas>
