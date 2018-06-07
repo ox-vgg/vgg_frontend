@@ -252,7 +252,7 @@ class UserPages:
             # try to transform the text query into a keyword query. If it is not possible, report an error.
             img_postproc_module_is_download_disabled = self.visor_controller.opts.engines_dict[engine].get('imgtools_postproc_module', None) == 'download_disabled'
             if (query_type == retengine.models.opts.Qtypes.text and img_postproc_module_is_download_disabled and
-                not query_string.startswith('keywords:') and query_string[0] != '#' ):
+                not query_string.startswith('keywords:') and query_string[0] != '#' and query_string[0] != '$' ):
                 new_query_string = None
                 try:
                     keyword_list = self.visor_controller.metadata_handler.get_search_suggestions(query_string)
