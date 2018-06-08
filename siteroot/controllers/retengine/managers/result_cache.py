@@ -327,15 +327,20 @@ class ResultCache(base_caches.SessionExcludeListCache):
     ## Clear caches
     # ----------------------------------
 
-    def clear_all_caches(self):
-        """ Clears up all caches """
+    def clear_all_caches(self, name_filter=None):
+        """
+        Clears up all caches.
+        Arguments:
+           name_filter: When different to 'None', a string that must be
+                        contained in a filename in order to delete it.
+        """
         # clear memory cache
         self._mem_cache.clear_cache()
         # clear session caches
         self.clear_all_sessions()
         self._query_ses_cache.clear_all_sessions()
         # clear disk cache
-        utils.fileutils.delete_directory_contents(self.ranklistpath)
+        utils.fileutils.delete_directory_contents(self.ranklistpath, name_filter)
 
     # ----------------------------------
     ## Get paths and disk filenames

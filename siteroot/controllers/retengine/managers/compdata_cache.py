@@ -332,32 +332,48 @@ class CompDataCache(base_caches.SessionExcludeListCache):
     ## Clear caches
     # ----------------------------------
 
-    def clear_features_cache(self):
-        """  Clears up the directory of cached features for all configured engines """
+    def clear_features_cache(self, name_filter=None):
+        """
+        Clears up the directory of cached features for all configured engines.
+        Arguments:
+           name_filter: When different to 'None', a string that must be
+                        contained in a feature filename in order to delete it.
+        """
         for engine in self.engines_dict:
             postrainfeats_path = os.path.join(self._compdata_paths.postrainfeats, engine)
-            utils.fileutils.delete_directory_contents(postrainfeats_path)
+            utils.fileutils.delete_directory_contents(postrainfeats_path, name_filter)
 
 
-    def clear_annotations_cache(self):
-        """  Clears up the directory of cached annotations for all configured engines """
+    def clear_annotations_cache(self, name_filter=None):
+        """
+        Clears up the directory of cached annotations for all configured engines.
+        Arguments:
+           name_filter: When different to 'None', a string that must be
+                        contained in an annotations filename in order to delete it.
+        """
         for engine in self.engines_dict:
             postrainanno_path = os.path.join(self._compdata_paths.postrainanno, engine)
-            utils.fileutils.delete_directory_contents(postrainanno_path)
+            utils.fileutils.delete_directory_contents(postrainanno_path, name_filter)
 
 
-    def clear_classifiers_cache(self):
+    def clear_classifiers_cache(self, name_filter=None):
         """  Clears up the directory of cached classifiers for all configured engines """
+        print 'clear_classifiers_cache', name_filter
         for engine in self.engines_dict:
             classifiers_path = os.path.join(self._compdata_paths.classifiers, engine)
-            utils.fileutils.delete_directory_contents(classifiers_path)
+            utils.fileutils.delete_directory_contents(classifiers_path, name_filter)
 
 
-    def clear_postrainimgs_cache(self):
-        """  Clears up the directory of downloaded positive training images for all configured engines """
+    def clear_postrainimgs_cache(self, name_filter=None):
+        """
+        Clears up the directory of downloaded positive training images for all configured engines.
+        Arguments:
+           name_filter: When different to 'None', a string that must be
+                        contained in a trainimgs dir in order to delete it.
+        """
         for engine in self.engines_dict:
             postrainimgs_path = os.path.join(self._compdata_paths.postrainimgs, engine)
-            utils.fileutils.delete_directory_contents(postrainimgs_path)
+            utils.fileutils.delete_directory_subdirectories(postrainimgs_path, name_filter)
 
 
     def cleanup_unused_query_postrainimgs_cache(self, query):

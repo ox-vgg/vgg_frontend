@@ -322,17 +322,27 @@ class VisorInterface(object):
                 'features', 'annotations, 'classifiers', 'postrainimgs'
                 and 'ranking_lists'
         """
-        if cache_type == 'features':
-            self.compdata_cache.clear_features_cache()
-        elif cache_type == 'annotations':
-            self.compdata_cache.clear_annotations_cache()
-        elif cache_type == 'classifiers':
-            self.compdata_cache.clear_classifiers_cache()
-        elif cache_type == 'postrainimgs':
-            self.compdata_cache.clear_postrainimgs_cache()
-        elif cache_type == 'ranking_lists':
+        # if clearing cache by query type ....
+        if cache_type in ['text', 'image']:
+            self.compdata_cache.clear_features_cache(cache_type)
+            self.compdata_cache.clear_annotations_cache(cache_type)
+            self.compdata_cache.clear_classifiers_cache(cache_type)
+            self.compdata_cache.clear_postrainimgs_cache(cache_type)
             for engine in self.opts.engines_dict:
-                self.result_cache[engine].clear_all_caches()
+                self.result_cache[engine].clear_all_caches(cache_type)
+        else:
+            #... or if clearing cache by type of computational data
+            if cache_type == 'features':
+                self.compdata_cache.clear_features_cache()
+            elif cache_type == 'annotations':
+                self.compdata_cache.clear_annotations_cache()
+            elif cache_type == 'classifiers':
+                self.compdata_cache.clear_classifiers_cache()
+            elif cache_type == 'postrainimgs':
+                self.compdata_cache.clear_postrainimgs_cache()
+            elif cache_type == 'ranking_lists':
+                for engine in self.opts.engines_dict:
+                    self.result_cache[engine].clear_all_caches()
 
 
     def set_cache_disabled(self, disabled):

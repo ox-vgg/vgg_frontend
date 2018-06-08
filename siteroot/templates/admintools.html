@@ -127,12 +127,10 @@ The following variables are defined:
                             <a href="" id="show_cache_clear_tools">Display cache clear tools</a>
                             <dl id="cache_clear_tools" style="display:none;">
                                 <dt>Clear caches:</dt>
+                                <p class="warning-message">Please note that clearing any cache also makes ALL current queries expire.</p>
                                 <dd>
-                                    <button type="button" id="btn_clear_feats" href="{{HOME_LOCATION}}clear_cache?type=features">Clear features</button>
-                                    <button type="button" id="btn_clear_classifs" href="{{HOME_LOCATION}}clear_cache?type=classifiers">Clear classifiers</button>
-                                    <button type="button" id="btn_clear_postrainimgs" href="{{HOME_LOCATION}}clear_cache?type=postrainimgs">Clear postraining images</button>
-                                    <button type="button" id="btn_clear_annos" href="{{HOME_LOCATION}}clear_cache?type=annotations">Clear annotation lists</button>
-                                    <button type="button" id="btn_clear_rlists" onclick="clearCacheAndReload('ranking_lists');">Clear ranking lists</button>
+                                    <button type="button" id="btn_clear_text_queries" onclick="clearCacheAndReload('text');">Clear Text Queries</button>
+                                    <button type="button" id="btn_clear_image_queries" onclick="clearCacheAndReload('image');">Clear Images Queries</button>
                                 </dd>
                             </dl>
                         </div>
@@ -363,33 +361,6 @@ The following variables are defined:
 
                     return false;
                 })
-                $('#btn_clear_feats').click(function(e) {
-                    $(this).attr('disabled','disabled');
-
-                    $.get($(this).attr('href'));
-                });
-                $('#btn_clear_annos').click(function(e) {
-                    $(this).attr('disabled','disabled');
-
-                    $.get($(this).attr('href'));
-                });
-                $('#btn_clear_postrainimgs').click(function(e) {
-                    $(this).attr('disabled','disabled');
-
-                    $.get($(this).attr('href'));
-                });
-                $('#btn_clear_classifs').click(function(e) {
-                    $(this).attr('disabled','disabled');
-
-                    $.get($(this).attr('href'));
-                });
-                $('#btn_clear_rlists').click(function(e) {
-                    $(this).attr('disabled','disabled');
-
-                    $.get($(this).attr('href'));
-
-                    $('#cached_text_queries').empty();
-                });
                 $('#cache_disabled').change(function() {
                     disable_cache = Boolean(parseInt($(this).val()));
 
