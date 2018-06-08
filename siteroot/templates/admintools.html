@@ -8,13 +8,6 @@ The following variables are defined:
   IMPROC_TIMEOUT - Query Download Timeout
   IMPROC_ENGINE - Image Search Engine currently selected
   IMPROC_ENGINE_LIST - List of Image Search Engines
-  RF_RANK_TYPE - Relevance Feedback Rank Type currently selected
-  RF_RANK_TYPE_LIST - List of Relevance Feedback Rank Type
-  RF_RANK_TOPN - If 'topn' RF type is used, this is the 'topn' number
-  RF_TRAIN_TYPE - Relevance Feedback Train Type currently selected
-  RF_TRAIN_TYPE_LIST - List of available Relevance Feedback Train Types
-  FEAT_DETECTOR_TYPE - Feature Detector Type currently selected for the backends
-  FEAT_DETECTOR_TYPE_LIST - List of available Feature Detector Types
   ENGINES_NAMES - Dictionary of engines names
   CPUVISOR_ENABLED - Boolean indicating the 'cpuvisor-srv' is included in the backend engines
   FACES_ENABLED - Boolean indicating the 'faces' is included in the backend engines
@@ -76,23 +69,6 @@ The following variables are defined:
                                     <select name="improc_engine">
                                         {% for ITEM in IMPROC_ENGINE_LIST %}
                                             <option value="{{ITEM}}" {% if ITEM == IMPROC_ENGINE %}selected="selected"{% endif %}>{{ITEM}}</option>
-                                        {% endfor %}
-                                    </select>
-                                </dd>
-                                <dt>Relevance Feedback Rank Type:</dt>
-                                <dd>
-                                    <select name="rf_rank_type" id="rf_rank_type_select">
-                                        {% for ITEM in RF_RANK_TYPE_LIST %}
-                                            <option value="{{ITEM}}" {% if ITEM == RF_RANK_TYPE %}selected="selected"{% endif %}>{{ITEM}}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <input name="rf_rank_topn" id="rf_rank_topn_input" type="number" size="6" min="1" value="{{RF_RANK_TOPN}}" {% if RF_RANK_TYPE != 'topn' %}style="visibility:hidden;"{% endif %} />
-                                </dd>
-                                <dt>Relevance Feedback Train Type:</dt>
-                                <dd>
-                                    <select name="rf_train_type">
-                                        {% for ITEM in RF_TRAIN_TYPE_LIST %}
-                                            <option value="{{ITEM}}" {% if ITEM == RF_TRAIN_TYPE %}selected="selected"{% endif %} disabled="disabled">{{ITEM}}</option>
                                         {% endfor %}
                                     </select>
                                 </dd>
@@ -370,21 +346,6 @@ The following variables are defined:
             {% endif %}
             <script type="text/javascript">
             $(function() {
-                $('#rf_rank_type_select').change(function() {
-                    var val = $(this).val();
-                    if (val == 'topn') {
-                        $('#rf_rank_topn_input').css({opacity: 0.0,
-                                                      visibility: 'visible'}).animate({opacity: 1.0},
-                                                                                      'fast');
-                    } else {
-                        $('#rf_rank_topn_input').css({opacity: 1.0,
-                                                      visibility: 'visible'}).animate({opacity: 0.0},
-                                                                                      'fast',
-                                                                                      function() {
-                            $(this).css({visibility: 'hidden'});
-                        });
-                    }
-                });
                 $('.del_link').click(function(e) {
                     e.stopPropagation();
 

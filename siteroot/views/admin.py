@@ -49,22 +49,6 @@ class AdminPages:
         improc_engine_list = ['google_web']
         improc_engine = self.visor_controller.proc_opts.imsearchtools_opts['engine']
 
-        rqt_objdict = retengine.models.opts.RfRankTypes.__dict__
-        rf_rank_type_list = [rqt_objdict[a] for a in rqt_objdict.keys()
-                               if not (a.startswith('__') and a.endswith('__'))]
-        rf_rank_type = self.visor_controller.proc_opts.rf_rank_type
-        rf_rank_topn = self.visor_controller.proc_opts.rf_rank_topn
-
-        rtt_objdict = retengine.models.opts.RfTrainTypes.__dict__
-        rf_train_type_list = [rtt_objdict[a] for a in rtt_objdict.keys()
-                               if not (a.startswith('__') and a.endswith('__'))]
-        rf_train_type = self.visor_controller.proc_opts.rf_train_type
-
-        fdt_objdict = retengine.models.opts.FeatDetectorType.__dict__
-        feat_detector_type_list = [fdt_objdict[a] for a in fdt_objdict.keys()
-                               if not (a.startswith('__') and a.endswith('__'))]
-        feat_detector_type = self.visor_controller.proc_opts.feat_detector_type
-
         disable_cache = self.visor_controller.proc_opts.disable_cache
 
         cached_text_queries = self.visor_controller.interface.get_cached_text_queries(user_ses_id=request.session.session_key)
@@ -98,13 +82,6 @@ class AdminPages:
         'IMPROC_TIMEOUT' : improc_timeout,
         'IMPROC_ENGINE' : improc_engine,
         'IMPROC_ENGINE_LIST' : improc_engine_list,
-        'RF_RANK_TYPE' : rf_rank_type,
-        'RF_RANK_TYPE_LIST' : rf_rank_type_list,
-        'RF_RANK_TOPN' : rf_rank_topn,
-        'RF_TRAIN_TYPE' : rf_train_type,
-        'RF_TRAIN_TYPE_LIST' : rf_train_type_list,
-        'FEAT_DETECTOR_TYPE' : feat_detector_type,
-        'FEAT_DETECTOR_TYPE_LIST' : feat_detector_type_list,
         'ENGINES_NAMES': engines_names,
         'CPUVISOR_ENABLED': 'cpuvisor-srv' in engines_names.keys(),
         'FACES_ENABLED': 'faces' in engines_names.keys(),
