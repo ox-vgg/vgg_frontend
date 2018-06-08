@@ -34,11 +34,14 @@ def get_query_strid(query, escape=False):
     else:
         querystr = queryhash
 
+    ### The code below causes with the saving of uber classifiers.
+    ### There is no need to show the source of the query in the files
+    ### that are saved to disk.
     # add previous qsid if present (to show source of query)
-    if 'prev_qsid' in query and query['prev_qsid']:
-        prev_qsid_str = query['prev_qsid']
-        prev_qsid_str = prev_qsid_str[0:min(len(prev_qsid_str), 5)]
-        querystr = 'prevqsid[%s]__%s' % (prev_qsid_str, querystr)
+    #if 'prev_qsid' in query and query['prev_qsid']:
+    #    prev_qsid_str = query['prev_qsid']
+    #    prev_qsid_str = prev_qsid_str[0:min(len(prev_qsid_str), 5)]
+    #    querystr = 'prevqsid[%s]__%s' % (prev_qsid_str, querystr)
 
     # combine with query identifier for the query type
     query_strid = '%s__%s' % (query['qtype'], querystr)
