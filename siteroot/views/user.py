@@ -960,17 +960,18 @@ class UserPages:
             # If the ROI was not specified, do a final attempt to retrieve it
             # from the backend
             query = self.visor_controller.query_key_cache.get_query_details(query_id)
-            backend_port = self.visor_controller.opts.engines_dict[engine]['backend_port']
-            ses = retengine.engine.backend_client.Session(backend_port)
-            func_in = {}
-            func_in['func'] = 'getRoi'
-            func_in['frame_path'] = imagename
-            func_in['query_string'] = query['qdef']
-            request = json.dumps(func_in)
-            response = ses.custom_request(request)
-            json_response = json.loads(response)
-            if 'roi' in json_response and  len(json_response['roi']) > 0:
-                roi = json_response['roi']
+            if query:
+                backend_port = self.visor_controller.opts.engines_dict[engine]['backend_port']
+                ses = retengine.engine.backend_client.Session(backend_port)
+                func_in = {}
+                func_in['func'] = 'getRoi'
+                func_in['frame_path'] = imagename
+                func_in['query_string'] = query['qdef']
+                request = json.dumps(func_in)
+                response = ses.custom_request(request)
+                json_response = json.loads(response)
+                if 'roi' in json_response and  len(json_response['roi']) > 0:
+                    roi = json_response['roi']
 
         # check if an engine for 'similar' searches was specified in the settings
         # and use it as the engine for the ROIs
