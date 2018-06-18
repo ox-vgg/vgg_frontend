@@ -159,9 +159,10 @@ class SessionCache(object):
         with self._sessions_lock:
             found_ses = []
             for ses_id in self._sessions:
-                for (key_, item) in self._sessions[ses_id].data[key].items():
-                    if data == item:
-                        found_ses.append(ses_id)
+                if key and key in self._sessions[ses_id].data:
+                    for (key_, item) in self._sessions[ses_id].data[key].items():
+                        if data == item:
+                            found_ses.append(ses_id)
             for ses_id in found_ses:
                 del self._sessions[ses_id]
 
