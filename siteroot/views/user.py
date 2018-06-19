@@ -301,7 +301,7 @@ class UserPages:
                 if not query_ses_info['cached']:
                     # if it is not cached, check the status of the query, in case another thread is running it
                     status = self.visor_controller.interface.query_manager.get_query_status_from_definition(query)
-                    if status != None and status.state <= retengine.models.opts.States.results_ready:
+                    if status != None and status.state < retengine.models.opts.States.results_ready:
                         # if another thread is running it and it is not done, redirect to the 'wait for it' page,
                         # which will automatically redirect to this page to retry the search
                         if query_string[0] == '#':
