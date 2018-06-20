@@ -46,6 +46,15 @@
 
 /* @group Progress Box */
 
+#results_progress_global_message {
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+    font-family: "Myriad Pro", Calibri, "Gill Sans", "Trebuchet MS", "Liberation Sans Narrow", sans-serif;
+    color: #AD2323;
+    text-align: center;
+}
+
 #results_progress_box {
     padding: 5px 15px 5px 15px;
     background-color: #E7E9ED;
