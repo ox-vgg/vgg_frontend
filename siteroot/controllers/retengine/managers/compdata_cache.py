@@ -512,9 +512,10 @@ class CompDataCache(base_caches.SessionExcludeListCache):
             return annos
         elif query['qtype'] == models.opts.Qtypes.dsetimage:
             annos = self.get_annotations(query, **kwargs)
+            dsetimage_dir = os.path.join(self._compdata_paths.datasets, query['dsetname'])
             for anno in annos:
                 anno['image'] = self.convert_system_path_to_server_path(anno['image'],
-                                                                        query['dsetname'] + os.sep)
+                                                                        dsetimage_dir + os.sep)
             return annos
         else:
             raise models.errors.UnsupportedQtypeError('qtype not supported')
