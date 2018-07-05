@@ -5,7 +5,8 @@ import os
 import uuid
 import base64
 import imchecktools
-
+import re
+import string
 
 class ImageUploader:
     """ Class with utility functions to upload an image """
@@ -48,15 +49,20 @@ class ImageUploader:
                 is the of the file created with img_data.
         """
         localdir = str(uuid.uuid4())
-        print 'Getting local image from file(s)'
+        print 'Getting local image from imgdata'
         localfilenames = []
         remotefilename = img_data['filename'];
         localpath = os.path.join(self.upload_dir, localdir)
-
         if not os.path.isdir(localpath):
             os.makedirs(localpath, 0755)
+
+        # remove unpleasant characters from the filename
+        pattern = re.compile('[^a-zA-Z0-9_.]')
+        string_accepted = pattern.sub('', string.printable)
+        remotefilename = ''.join(filter(lambda afunc: afunc in string_accepted, remotefilename))
+        # now proceed to save it in the localpath
+        print '  ->' + remotefilename
         localfilepath = os.path.join(localpath, remotefilename)
-        print '  ->' + localfilepath
         localfile = open(localfilepath, 'wb')
         if is_data_base64:
             data = base64.b64decode(img_data['data'])
@@ -96,7 +102,12 @@ class ImageUploader:
             localpath = os.path.join(self.upload_dir, localdir)
             if not os.path.isdir(localpath):
                 os.makedirs(localpath, 0755)
-            dest_filepath = os.path.join(localpath, src_filename)
+            # remove unpleasant characters from the filename
+            pattern = re.compile('[^a-zA-Z0-9_.]')
+            string_accepted = pattern.sub('', string.printable)
+            src_filename_clean = ''.join(filter(lambda afunc: afunc in string_accepted, src_filename))
+            # now proceed to compute dest_filepath
+            dest_filepath = os.path.join(localpath, src_filename_clean)
             print '  ->' + dest_filepath
             with open(src_filepath, 'rb') as src_file:
                 data = src_file.read()
@@ -109,7 +120,7 @@ class ImageUploader:
                                                       self.maximheight)
             print '  Image verified'
 
-            localfilenames.append(src_filename)
+            localfilenames.append(src_filename_clean)
 
         return (localdir, localfilenames)
 
