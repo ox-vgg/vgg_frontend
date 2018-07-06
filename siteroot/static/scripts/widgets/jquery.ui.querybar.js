@@ -624,7 +624,7 @@ var querybar = {
             el.find('#qbPreviewImageFilename').find('input').attr('value', opts.queryStr);
             previewName = opts.queryStr.replace(/^.*[\\\/]/, '');  // remove path
             previewName = previewName.split(",")[0]; // remove extra parameters
-            el.find('#qbPreviewImageFilename').html(this._shortenString(previewName,25)); // shorten if necessary
+            el.find('#qbPreviewImageFilename').html(this._shortenString(previewName,20)); // shorten if necessary
             /* Get the currently selected dataset and make it part of the querystring.
                It will be only used by the code that uploads the image thumbnail to the querybar */
             selectedDataset = document.getElementById("qbSelDataset").value;
