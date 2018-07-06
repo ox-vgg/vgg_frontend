@@ -647,7 +647,13 @@ var querybar = {
             /* restore placeholder (removed on switch to image mode) */
             this._updateControlState();
             /* update contents */
-            el.find('#qbQueryInputText').attr('value',opts.queryStr);
+            try {
+                el.find('#qbQueryInputText').attr('value',opts.queryStr);
+                el.find('#qbQueryInputText')[0].value = opts.queryStr;
+            }
+            catch(err) {
+                console.log("Warning: could not set the value of qbQueryInputText");
+            }
             break;
         default:
             throw 'Unrecognised query type';
