@@ -69,7 +69,7 @@ pip install setuptools==39.1.0
 BREW_NUMPY_VERSION=$(brew info numpy | grep Cellar/numpy | awk -F '[/| |_]' '{print $6}'  )
 
 # register the protobuf installed by homebrew, so that pycaffe can be used in the virtualenv
-PROTOBUF_NUMPY_VERSION=$(brew info protobuf | grep Cellar/protobuf | awk -F '[/| |_]' '{print $6}' )
+PROTOBUF_NUMPY_VERSION=$(brew info protobuf@2.6 | grep Cellar/protobuf@2.6 | awk -F '[/| |_]' '{print $6}' )
 
 # install django dependencies
 pip install django==1.10
