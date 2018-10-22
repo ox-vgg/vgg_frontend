@@ -187,6 +187,7 @@ VISOR = {
     'title': 'My Visual Search Engine',
     'disable_autocomplete': True,
     'results_per_page' : 50,
+    #'enable_tour': True, # enable if you wish to disable the tour. It's "False" by default if not present
     'check_backends_reachable': True,
     #'select_roi' : True, # enable only when the selected backend is able to receive ROIs as input
     #'enable_viewsel' : True, # enable only when the selected backend is able to return ROIs

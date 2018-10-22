@@ -72,8 +72,17 @@ class APIFunctions:
         # init vars to support pipeline input acquisition
         self.pipeline_input_thread = None
 
-    def get_engine_config(self, engine):
 
+    def get_engine_config(self, engine):
+        """
+            Retrieves the data ingestion pipeline configuration for the specified engine.
+            Arguments:
+               engine: Key to the engine in the dictionary of supported engines in the settings
+            Returns:
+               A tuple with at least the path to the base folder for the image ingestion and the
+               names and paths to the holders for the positive feature files. Additionally, it
+               can return the names and paths to the holders for the negative feature files.
+        """
         if engine == 'cpuvisor-srv':
 
             # read cpuvisor configuration file
@@ -341,7 +350,7 @@ class APIFunctions:
         # If it is an uploaded image (with a roi or not), it could relate to an image that
         # has been uploaded by the user, or an image that was selected in the search results.
         # If it corresponds to the latter, redirect the search to 'datasets' in
-        # an attempt to find the rigth image.
+        # an attempt to find the right image.
         # This could happen mostly when showing the thumbnail image in the query bar, in which
         # case it is not useful to show a ROI, so do not draw it !
         if ('uploadedimgs' in url_path) and dataset:
@@ -701,9 +710,9 @@ class APIFunctions:
             else:
                 # When uploading files in this way, we cannot use a separate thread, since the files are loaded in memory as stream
                 # objects by Django and if we start another thread the streams are closed, so the separate thread cannot save them.
-                # Therefore, the files must be checked and saved in this thread. Apply all limitatios here and in the corresponding HTML.
+                # Therefore, the files must be checked and saved in this thread. Apply all limitations here and in the corresponding HTML.
                 if len(file_list) > settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES:
-                    # abort !. File ingestion migth take too long a lead to a time-out or a crash
+                    # abort !. File ingestion might take too long a lead to a time-out or a crash
                     message = ('You can only upload a maximum of %d files in total. Please select less files and try again. ') % settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES
                     redirect_to = settings.SITE_PREFIX + '/admintools'
                     return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
@@ -713,7 +722,7 @@ class APIFunctions:
                     total_size = total_size + afile.size
                     # check the accumulated total size of the files to be ingested
                     if total_size > settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES:
-                        # abort !. File ingestion migth take too long a lead to a time-out or a crash
+                        # abort !. File ingestion might take too long a lead to a time-out or a crash
                         message = ('You can only upload a maximum of %d MB in total. Please select less files and try again. ') % (settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES/1048576)
                         redirect_to = settings.SITE_PREFIX + '/admintools'
                         return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
