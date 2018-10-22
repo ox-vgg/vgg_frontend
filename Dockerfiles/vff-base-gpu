@@ -29,6 +29,7 @@ RUN echo "deb http://developer.download.nvidia.com/compute/machine-learning/repo
     libsnappy-dev \
     libgflags-dev \
     libssl-dev \
+    libffi-dev \
     python-opencv \
     unzip \
     wget \
@@ -38,9 +39,9 @@ RUN echo "deb http://developer.download.nvidia.com/compute/machine-learning/repo
     && rm -rf /var/lib/apt/lists/*
 
 # Create requirements files for pip, install all pip requirements, create main folders and secret key file
-RUN printf "setuptools==39.1.0\ndjango==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==2.2.1\ngevent-zeromq==0.2.5\nnumpy==1.11.1\nsimplejson==3.8.2\nscipy==0.18.1\nscikit-image==0.13.1\neasydict==1.7\nCython==0.27.3\npyyaml==3.12\nmatplotlib==2.1.0\nsix==1.11.0\nWhoosh==2.7.4" > /tmp/requirements.txt \
+RUN printf "setuptools==39.1.0\ndjango==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==2.2.1\ngevent-zeromq==0.2.5\nnumpy==1.11.1\nsimplejson==3.8.2\nscipy==0.18.1\nmatplotlib==2.1.0\neasydict==1.7\nCython==0.27.3\npyyaml==3.12\nsix==1.11.0\nWhoosh==2.7.4" > /tmp/requirements.txt \
     && pip install -r /tmp/requirements.txt \
-    && printf "pyopenssl==17.5.0\npyasn1\nndg-httpsclient" > /tmp/requirements-2.txt \
+    && printf "scikit-image==0.13.1\npyopenssl==17.5.0\npyasn1\nndg-httpsclient" > /tmp/requirements-2.txt \
     && pip install -r /tmp/requirements-2.txt \
     && rm  /tmp/requirements*.txt \
     && mkdir /webapps/  \
@@ -55,7 +56,7 @@ RUN printf "setuptools==39.1.0\ndjango==1.10\npython-memcached\nprotobuf==3.0.0\
           /webapps/visorgen/frontend_data/searchdata/rankinglists /webapps/visorgen/frontend_data/searchdata/uploadedimgs \
     && echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
 
-# Install face-py-faster-rcnn
+# Install face-py-faster-rcnn and SENet modifications (Sep 2017) for caffe
 RUN wget https://github.com/playerkk/face-py-faster-rcnn/archive/9d8c143e0ff214a1dcc6ec5650fb5045f3002c2c.zip -P /tmp \
     && unzip /tmp/9d8c143e0ff214a1dcc6ec5650fb5045f3002c2c.zip -d /webapps/visorgen/backend_dependencies/ \
     && mv /webapps/visorgen/backend_dependencies/face-py-faster-rcnn-* /webapps/visorgen/backend_dependencies/face-py-faster-rcnn \
@@ -63,6 +64,11 @@ RUN wget https://github.com/playerkk/face-py-faster-rcnn/archive/9d8c143e0ff214a
     && unzip /tmp/0dcd397b29507b8314e252e850518c5695efbb83.zip -d /webapps/visorgen/backend_dependencies/face-py-faster-rcnn \
     && rm -r /webapps/visorgen/backend_dependencies/face-py-faster-rcnn/caffe-fast-rcnn  \
     && mv /webapps/visorgen/backend_dependencies/face-py-faster-rcnn/caffe-fast-rcnn-* /webapps/visorgen/backend_dependencies/face-py-faster-rcnn/caffe-fast-rcnn  \
+    && wget https://github.com/lishen-shirley/SENet/archive/c8f7b4e311fc9b5680047e14648fde86fb23cb17.zip -P /tmp \
+    && unzip /tmp/c8f7b4e311fc9b5680047e14648fde86fb23cb17.zip -d /webapps/visorgen/backend_dependencies/ \
+    && mv /webapps/visorgen/backend_dependencies/SENet* /webapps/visorgen/backend_dependencies/SENet \
+    && cp -v /webapps/visorgen/backend_dependencies/SENet/include/caffe/layers/* /webapps/visorgen/backend_dependencies/face-py-faster-rcnn/caffe-fast-rcnn/include/caffe/layers/ \
+    && cp -v /webapps/visorgen/backend_dependencies/SENet/src/caffe/layers/* /webapps/visorgen/backend_dependencies/face-py-faster-rcnn/caffe-fast-rcnn/src/caffe/layers/ \
     && rm -rf /tmp/*.zip \
     && cd /webapps/visorgen/backend_dependencies/face-py-faster-rcnn/lib \
     && make
@@ -92,6 +98,7 @@ RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-maste
     && sed -i 's/FEATURES_CAFFE_PROTOTXT/FEATURES_CAFFE_PROTOTXT="\/webapps\/visorgen\/backend_data\/faces\/resnet50_256.prototxt"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
     && sed -i 's/GPU_FACE_DETECTION_CAFFE_MODEL/GPU_FACE_DETECTION_CAFFE_MODEL="\/webapps\/visorgen\/backend_data\/faces\/vgg16_faster_rcnn_iter_80000.caffemodel"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
     && sed -i 's/DEPENDENCIES_PATH/DEPENDENCIES_PATH="\/webapps\/visorgen\/backend_dependencies\/"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
+    && sed -i 's/resnet50_256/senet50_256/g' /webapps/visorgen/vgg_face_search/service/settings.py \
     && rm -rf /tmp/*.zip
 
 # Install ffmpeg and compile shot detector
@@ -108,8 +115,8 @@ RUN wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.t
 
 # Download models. This is only here for reference. The models should not be copied inside the image to reduce the image size.
 #RUN cd /webapps/visorgen/backend_data/faces \
-#    && wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/resnet50_256.caffemodel \
-#    && wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/resnet50_256.prototxt \
+#    && wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/senet50_256.caffemodel \
+#    && wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/senet50_256.prototxt \
 #    && wget http://supermoe.cs.umass.edu/%7Ehzjiang/data/vgg16_faster_rcnn_iter_80000.caffemodel
 
 # configure default user in frontend

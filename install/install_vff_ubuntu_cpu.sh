@@ -102,6 +102,13 @@ wget https://github.com/BVLC/caffe/archive/1.0.zip -P /tmp
 unzip /tmp/1.0.zip -d $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/
 mv $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/caffe* $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/caffe
 
+# download SENet modifications to caffe (Sep 2017) and apply them
+wget https://github.com/lishen-shirley/SENet/archive/c8f7b4e311fc9b5680047e14648fde86fb23cb17.zip -P /tmp
+unzip /tmp/c8f7b4e311fc9b5680047e14648fde86fb23cb17.zip -d $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/
+mv $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/SENet* $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/SENet
+cp -v $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/SENet/include/caffe/layers/* $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/caffe/include/caffe/layers/
+cp -v $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/SENet/src/caffe/layers/* $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/caffe/src/caffe/layers/
+
 # download davidsandberg's facenet (Dec 2017)
 wget https://github.com/davidsandberg/facenet/archive/28d3bf2fa7254037229035cac398632a5ef6fc24.zip -P /tmp
 unzip /tmp/28d3bf2fa7254037229035cac398632a5ef6fc24.zip -d $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/
@@ -115,8 +122,8 @@ mv $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_face_search*  $VGG_FACE_INSTALL_FOLDER/
 
 # download models
 cd $VGG_FACE_INSTALL_FOLDER/visorgen/backend_data/faces
-wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/resnet50_256.caffemodel
-wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/resnet50_256.prototxt
+wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/senet50_256.caffemodel
+wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/senet50_256.prototxt
 
 # download vgg_frontend repo (REMOVE - DEVELOP) !!!
 wget https://gitlab.com/vgg/vgg_frontend/-/archive/develop/vgg_frontend-develop.zip -O /tmp/vgg_frontend.zip
@@ -154,6 +161,7 @@ sed -i "s|FEATURES_CAFFE_MODEL|FEATURES_CAFFE_MODEL='${VGG_FACE_INSTALL_FOLDER}/
 sed -i "s|FEATURES_CAFFE_PROTOTXT|FEATURES_CAFFE_PROTOTXT='${VGG_FACE_INSTALL_FOLDER}/visorgen/backend_data/faces/resnet50_256.prototxt'#|g" $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_face_search/service/settings.py
 sed -i "s|GPU_FACE_DETECTION_CAFFE_MODEL|#GPU_FACE_DETECTION_CAFFE_MODEL|g" $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_face_search/service/settings.py
 sed -i "s|DEPENDENCIES_PATH|DEPENDENCIES_PATH='${VGG_FACE_INSTALL_FOLDER}/visorgen/backend_dependencies/'#|g" $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_face_search/service/settings.py
+sed -i "s|resnet50_256|senet50_256|g" $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_face_search/service/settings.py
 
 # configure vgg_frontend
 echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > $VGG_FACE_INSTALL_FOLDER/visorgen/secret_key_visorgen
