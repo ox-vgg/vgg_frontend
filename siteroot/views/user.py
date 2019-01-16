@@ -232,7 +232,9 @@ class UserPages:
                 return redirect(home_location + '?engine=' + engine)
 
         # Only accept text queries with acceptable characters
-        if query_type == retengine.models.opts.Qtypes.text and not re.match("^[#$]?[a-zA-Z0-9_\-\ +,:;.!\?()\[\]]*$", query_string):
+        if ((query_type == retengine.models.opts.Qtypes.text) and
+            (query_string != 'keywords:%s' % settings.KEYWORDS_WILDCARD) and
+            (not re.match("^[#$]?[a-zA-Z0-9_\-\ +,:;.!\?()\[\]]*$", query_string))):
             message = 'Your text query contains invalid characters. Please use only letters, numbers, spaces or common word dividers'
             redirect_to = settings.SITE_PREFIX
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
