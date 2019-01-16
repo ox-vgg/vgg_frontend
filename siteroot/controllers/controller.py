@@ -50,7 +50,8 @@ class VisorController:
         # initialize class for metadata extraction
         self.metadata_handler = meta.metadata_handler.MetaDataHandler(self.opts.datasets,
                                                                       self.metadata_paths.metadata,
-                                                                      self.process_pool)
+                                                                      self.process_pool,
+                                                                      settings.KEYWORDS_WILDCARD)
 
         # initialize interface class for all interactions
         self.interface = retengine.VisorInterface(engine_class,

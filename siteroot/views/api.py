@@ -550,6 +550,8 @@ class APIFunctions:
                 json_response["results"] = []
                 json_response["success"] = True
                 keyword_list = self.visor_controller.metadata_handler.get_search_suggestions(query_text)
+                if settings.KEYWORDS_WILDCARD in keyword_list:
+                    keyword_list.remove(settings.KEYWORDS_WILDCARD)
                 for idx in range(len(keyword_list)):
                     json_response["results"].append(keyword_list[idx])
             except:

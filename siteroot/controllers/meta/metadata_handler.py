@@ -30,7 +30,7 @@ class MetaDataHandler:
         DESC_ONLY = 2
 
 
-    def __init__(self, prep_dsets, metadata_dir, process_pool):
+    def __init__(self, prep_dsets, metadata_dir, process_pool, keywords_wildcard='*'):
         """
             Initializes the class and sets the list of supported datasets.
             Arguments:
@@ -45,6 +45,7 @@ class MetaDataHandler:
         self.keyword2fname = {}
         self.metadata_dir = metadata_dir
         self.process_pool = process_pool
+        self.keywords_wildcard = keywords_wildcard
         # load metadata for each dataset
         self.metaindex = None
         self.is_all_metadata_loaded = False
@@ -165,7 +166,11 @@ class MetaDataHandler:
         """
         results_list = []
         try:
-            results_list = self.keyword2fname[dsetname][keyword]
+            if keyword == self.keywords_wildcard:
+                for key in self.keyword2fname[dsetname].keys():
+                    results_list.extend(self.keyword2fname[dsetname][key])
+            else:
+                results_list = self.keyword2fname[dsetname][keyword]
         except Exception as e:
             print e
             results_list = []
@@ -216,7 +221,7 @@ class MetaDataHandler:
             Returns:
                 A list of maximum 100 suggestions
         """
-        suggestions = []
+        suggestions = [ self.keywords_wildcard ]
         results = self.search_metaindex_by_keyword(text + '*', limit=100, timelimit=0.5)
         for res in results:
             suggestions.append(res['key'])
