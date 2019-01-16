@@ -1045,3 +1045,21 @@ class APIFunctions:
         message = 'The ' + clear_backend_type + ' backend data has been cleared!.'
         redirect_to = settings.SITE_PREFIX + '/admintools'
         return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
+
+
+    @method_decorator(login_required)
+    @method_decorator(require_POST)
+    def metadata_reset(self, request):
+        """
+            API function that clears the metadata index used by the frontend.
+            Arguments:
+               request: request object containing details of the user session, etc.
+        """
+        if self.visor_controller.reset_metadata_index():
+            message = 'The metadata index has been cleared and it will start rebuilding. This process might take a few minutes. In the meantime the metadata information will be partially available.'
+            redirect_to = settings.SITE_PREFIX + '/admintools'
+            return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
+        else:
+            message = 'Either there is no metadata available or the metadata index is still loading information (please wait until it is finished to reset it).'
+            redirect_to = settings.SITE_PREFIX + '/admintools'
+            return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})

@@ -54,5 +54,6 @@ urlpatterns = [
     url(r'^start_backend$', api_functions.start_backend, name='start_backend'),
     url(r'^stop_backend$', api_functions.stop_backend, name='stop_backend'),
     url(r'^clear_backend$', api_functions.clear_backend, name='clear_backend'),
+    url(r'^metadata_reset$', api_functions.metadata_reset, name='metadata_reset'),
 
 ]

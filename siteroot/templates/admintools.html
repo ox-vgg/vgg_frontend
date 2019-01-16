@@ -165,6 +165,12 @@ The following variables are defined:
                         <input type="submit" value="Stop"/>
                     </div>
                 </form>
+                <form id="metadata_backend" action="metadata_reset" enctype="multipart/form-data" method="post">{% csrf_token %}
+                    <div id="config-options-container">
+                        <h2>Reset Metadata Service</h2>
+                        <input type="submit" value="Reset"/> <strong>This will NOT delete your metadata. It will just reload it all from scratch.</strong>
+                    </div>
+                </form>
                 <br/>
             </div>
 

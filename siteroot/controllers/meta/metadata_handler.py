@@ -4,6 +4,7 @@ import csv
 import os
 import time
 import json
+import shutil
 
 from whoosh.index import create_in, open_dir
 from whoosh.fields import Schema, KEYWORD, TEXT
@@ -46,6 +47,7 @@ class MetaDataHandler:
         self.process_pool = process_pool
         # load metadata for each dataset
         self.metaindex = None
+        self.is_all_metadata_loaded = False
         found_a_csv = False
         for (dset, pretty) in prep_dsets.iteritems():
             self.fname2meta[dset] = {}
@@ -145,6 +147,7 @@ class MetaDataHandler:
                                 raise Exception('"filename" and/or "file_attributes" columns not found in ' + afile + ' (are you missing the column names?). Metadata will not be available!.')
 
                         print 'Finished loading metadata for %s in %s' % (dsetname, str(time.time()-t))
+                        self.is_all_metadata_loaded = True
                     break
         except Exception as e:
             print "load_all_dset_metadata Exception:" + str(e) + '\n'
@@ -283,3 +286,15 @@ class MetaDataHandler:
     def get_supported_datasets(self):
         """ Returns the list of supported datasets """
         return self.fname2meta.keys()
+
+
+    def clear_metadata_index(self):
+        """
+            Clears the metadata index by removing the index directory
+        """
+        try:
+            shutil.rmtree(self.index_dir)
+            self.is_all_metadata_loaded = False
+        except Exception as e:
+            print 'clear_metadata_index Exception: ' + str(e)
+            pass

@@ -467,3 +467,25 @@ class VisorController:
         for engine in self.opts.engines_dict:
             urls[engine] = self.opts.engines_dict[engine]['url']
         return urls
+
+
+    def reset_metadata_index(self):
+        """
+            Clears the metadata index and creates a new one with the
+            same settings. This is meant to rebuild the index from
+            scratch.
+            Returns:
+                'True' if the metadata is all loaded and the new metadata
+                handler is created. 'False ' is either there is no metadata
+                index of the metadata is still loading.
+        """
+        if self.metadata_handler.metaindex is None or (self.metadata_handler.metaindex is not None
+           and self.metadata_handler.is_all_metadata_loaded):
+            self.metadata_handler.clear_metadata_index()
+            self.metadata_handler = meta.metadata_handler.MetaDataHandler(self.opts.datasets,
+                                                              self.metadata_paths.metadata,
+                                                              self.process_pool)
+            self.interface.metadata_handler = self.metadata_handler
+            return True
+
+        return False
