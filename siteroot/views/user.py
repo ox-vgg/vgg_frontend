@@ -986,6 +986,21 @@ class UserPages:
             #imgurl = imgurl + ',roi:' + roi  # Disable. Now the ROI is drawn with javascript.
             roi = roi.split('_')
 
+        # format metadata to make it look nicer in the page
+        metadata = self.visor_controller.metadata_handler.get_meta_from_fname(imagename, dsetname)
+        try:
+            # the metadata comes form the "file_attributes" column of the metadata CSV file, so
+            # it should be a list of tuples. The parsing below should fail otherwise, and then
+            # the raw metadata will be rendered
+            if isinstance(metadata, list):
+                formatted_metadata = '<ul>'
+                for item in metadata:
+                    formatted_metadata += '<li>%s: %s</li>' % (item[0], item[1])
+                formatted_metadata += '</ul>'
+            metadata = formatted_metadata
+        except:
+            pass
+
         # set up rendering context and render the page
         context = {
         'QUERY_ID': query_id,
@@ -1003,7 +1018,7 @@ class UserPages:
         'ROI': roi,
         'SELECT_ROI' : self.visor_controller.opts.select_roi,
         'DSET_RES_ID': dsetresid,
-        'METADATA': self.visor_controller.metadata_handler.get_meta_from_fname(imagename, dsetname)
+        'METADATA': metadata
         }
         return render_to_response(template, context)
 
