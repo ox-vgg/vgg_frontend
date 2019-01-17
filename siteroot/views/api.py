@@ -12,6 +12,7 @@ import json
 import glob
 import threading
 import ast
+import tempfile
 
 PATH_TO_CAFFE_BACKEND_PROTO = os.path.join(settings.BASE_DIR, '../vgg_classifier/proto')
 if os.path.exists(PATH_TO_CAFFE_BACKEND_PROTO):
@@ -569,7 +570,6 @@ class APIFunctions:
             Arguments:
                request: request object containing details of the user session, etc.
         """
-
         if self.pipeline_input_thread != None:
 
             if self.pipeline_input_thread.is_alive():
@@ -613,6 +613,10 @@ class APIFunctions:
             Arguments:
                request: request object containing details of the user session, etc.
         """
+        if ('input_type' not in request.POST) or (request.POST['input_type'] not in ['positive', 'negative', 'video']):
+            message = 'The input type descriptor is missing or invalid. The pipeline cannot be started.'
+            redirect_to = settings.SITE_PREFIX + '/admintools'
+            return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
         if ('input_type' not in request.POST) or (request.POST['input_type'] not in ['positive', 'negative', 'video']):
             message = 'The input type descriptor is missing or invalid. The pipeline cannot be started.'
@@ -623,6 +627,14 @@ class APIFunctions:
             message = 'There is no data pipeline defined for the selected engine. A pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
+
+        if self.pipeline_input_type != 'video':
+            check_one = len(request.FILES.getlist('input_file'))>0 and len(request.FILES.getlist('input_json'))>0
+            check_two = len(request.POST.get('input_url', ''))>0  and (len(request.FILES.getlist('input_file'))>0 or len(request.FILES.getlist('input_json'))>0)
+            if check_one or check_two:
+                message = 'Please choose just one input to the pipeline. The pipeline cannot be started.'
+                redirect_to = settings.SITE_PREFIX + '/admintools'
+                return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
         if request.POST['engine'] == 'faces' and request.POST['input_type'] == 'video':
             file_list = request.FILES.getlist('input_video_list')
@@ -671,30 +683,42 @@ class APIFunctions:
             img_base_path = str(img_base_path)  # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
 
         if self.pipeline_input_type != 'video' and len(request.FILES) == 0:
-            # if no input file or list is provided with the names of the files to ingest, so ingest the whole directory by default
-            self.pipeline_input_thread = threading.Thread(target=api_globals.gather_pipeline_input,
-                            args=('dir', img_base_path, None, file_system_encoding_not_UTF8, self.pipeline_frame_list), )
-            # start the thread and redirect to the status-checking page
-            self.pipeline_input_thread.start()
-            return redirect('pipeline_input_status')
+            if request.POST.get('input_url', None) is None:
+                # if no input file or list is provided with the names of the files to ingest, ingest the whole directory by default
+                self.pipeline_input_thread = threading.Thread(target=api_globals.gather_pipeline_input,
+                                args=('dir', img_base_path, None, file_system_encoding_not_UTF8, self.pipeline_frame_list), )
+                # start the thread and redirect to the status-checking page
+                self.pipeline_input_thread.start()
+                return redirect('pipeline_input_status')
+            else:
+                # get the list of files from a IIIF manifest that is online, pointed at by the specified URL
+                url = request.POST.get('input_url')
+                dset = settings.VISOR['datasets'].keys()[0] # I don't like this, but we have to do it like this for now
+                metadata_dir = os.path.join(self.visor_controller.metadata_paths.metadata , dset)
+                self.pipeline_input_thread = threading.Thread(target=api_globals.gather_pipeline_input,
+                                args=('url', img_base_path, [url], file_system_encoding_not_UTF8, self.pipeline_frame_list, metadata_dir), )
+                # start the thread and redirect to the status-checking page
+                self.pipeline_input_thread.start()
+                return redirect('pipeline_input_status')
 
         if len(request.FILES) != 0:
 
-            if self.pipeline_input_type != 'video':
-                file_list = request.FILES.getlist('input_file')
-            else:
-                file_list = request.FILES.getlist('input_video_list')
+            if self.pipeline_input_type == 'video':
+                # for videos, just go straight to the pipeline
+                self.pipeline_video_list = request.FILES.getlist('input_video_list')
+                return redirect('pipeline_start')
 
-            if len(file_list) == 1 and file_list[0].name.endswith('.txt'):
-                # This allows the possibility of uploading a list of images in a text file
-                # However, the whole file must be read before leaving this thread and starting the other.
-                uploaded_file = file_list[0].read()
-                file_list = uploaded_file.split('\n')
-                if len(file_list[-1]) == 0:
-                    file_list = file_list[:-1]
-                self.total_input_files = len(file_list)
+            file_list = request.FILES.getlist('input_file')
+            if len(file_list)>0:
+                if len(file_list) == 1 and file_list[0].name.endswith('.txt'):
+                    # This allows the possibility of uploading a list of images in a text file
+                    # However, the whole file must be read before leaving this thread and starting the other.
+                    uploaded_file = file_list[0].read()
+                    file_list = uploaded_file.split('\n')
+                    if len(file_list[-1]) == 0:
+                        file_list = file_list[:-1]
+                    self.total_input_files = len(file_list)
 
-                if self.pipeline_input_type != 'video':
                     # check the number of images to ingest. If less than MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES don't start a separate thread
                     if self.total_input_files < settings.MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES:
                         api_globals.gather_pipeline_input('file', img_base_path, file_list, file_system_encoding_not_UTF8, self.pipeline_frame_list)
@@ -705,10 +729,21 @@ class APIFunctions:
                         # start the thread and redirect to the status-checking page
                         self.pipeline_input_thread.start()
                         return redirect('pipeline_input_status')
-                else:
-                    # for videos, just go straight to the pipeline
-                    self.pipeline_video_list = file_list
-                    return redirect('pipeline_start')
+            elif len(request.FILES.getlist('input_json')) == 1 :
+                # get the list of files from a local IIIF manifest in JSON format
+                json_file_in = request.FILES.getlist('input_json')[0]
+                temp_json_file = tempfile.NamedTemporaryFile(delete=False)
+                for chunk in json_file_in.chunks():
+                    temp_json_file.write(chunk)
+                temp_json_file.close()
+                dset = settings.VISOR['datasets'].keys()[0] # I don't like this, but we have to do it like this for now
+                metadata_dir = os.path.join(self.visor_controller.metadata_paths.metadata , dset)
+                self.pipeline_input_thread = threading.Thread(target=api_globals.gather_pipeline_input,
+                                args=('json', img_base_path, [temp_json_file.name], file_system_encoding_not_UTF8,
+                                    self.pipeline_frame_list, metadata_dir), )
+                # start the thread and redirect to the status-checking page
+                self.pipeline_input_thread.start()
+                return redirect('pipeline_input_status')
             else:
                 # When uploading files in this way, we cannot use a separate thread, since the files are loaded in memory as stream
                 # objects by Django and if we start another thread the streams are closed, so the separate thread cannot save them.
@@ -748,6 +783,10 @@ class APIFunctions:
                 # ... and if we made it until here, we are ready to start the pipeline
                 return redirect('pipeline_start')
 
+        message = 'The input to the pipeline is invalid!. Please try again.'
+        redirect_to = settings.SITE_PREFIX + '/admintools'
+        return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
+
 
     @method_decorator(login_required)
     @method_decorator(require_GET)
@@ -757,7 +796,6 @@ class APIFunctions:
             Arguments:
                request: request object containing details of the user session, etc.
         """
-
         if len(self.threads_map) != 0 or self.pipeline_input_thread != None:
             for thread_index in self.threads_map:
                 if self.threads_map[thread_index].is_alive():
@@ -871,7 +909,6 @@ class APIFunctions:
             Arguments:
                request: request object containing details of the user session, etc.
         """
-
         if len(self.threads_map) == 0:
             message = 'There is NO data pipeline running !.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
@@ -994,11 +1031,10 @@ class APIFunctions:
     @method_decorator(require_POST)
     def clear_backend(self, request):
         """
-            API function that clear the data files used by the backend service.
+            API function that clears the data files used by the backend service.
             Arguments:
                request: request object containing details of the user session, etc.
         """
-
         if ('input_type' not in request.POST) or (request.POST['input_type'] not in ['positive', 'negative']):
             message = 'The input type descriptor is missing or invalid. The clearing cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'

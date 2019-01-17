@@ -339,6 +339,8 @@ MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES = 1000000
 VALID_IMG_EXTENSIONS = { ".jpeg", ".jpg", ".png", ".bmp", ".dib", ".tiff", ".tif", ".ppm" }
 VALID_IMG_EXTENSIONS_STR = ', '.join(VALID_IMG_EXTENSIONS) # '.txt' is added later in the admin view
 
+# Set the maximum width for an image obtained from a IIIF manifest specification
+IIIF_IMAGE_MAX_WIDTH = 500
 
 ######
 # Category search engine - Data Ingestion settings
