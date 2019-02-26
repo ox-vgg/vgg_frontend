@@ -52,6 +52,10 @@ LOGIN_URL = SITE_PREFIX + '/login/'
 # https://docs.djangoproject.com/en/1.10/ref/settings/#data-upload-max-number-fields
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
+# Set a character to be a wildcard for keyword-based search.
+# It should be JUST ONE CHARACTER and cannot be '#'.
+KEYWORDS_WILDCARD = '*'
+
 ######
 # Application definition
 ######
@@ -289,6 +293,9 @@ MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES = 1000000
 # of images are ingested.
 VALID_IMG_EXTENSIONS = { ".jpeg", ".jpg", ".png", ".bmp", ".dib", ".tiff", ".tif", ".ppm" }
 VALID_IMG_EXTENSIONS_STR = ', '.join(VALID_IMG_EXTENSIONS) # '.txt' is added later in the admin view
+
+# Set the maximum width for an image obtained from a IIIF manifest specification
+IIIF_IMAGE_MAX_WIDTH = 500
 
 ######
 # Category search engine - Data Ingestion settings

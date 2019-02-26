@@ -52,6 +52,10 @@ LOGIN_URL = SITE_PREFIX + '/login/'
 # https://docs.djangoproject.com/en/1.10/ref/settings/#data-upload-max-number-fields
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
+# Set a character to be a wildcard for keyword-based search.
+# It should be JUST ONE CHARACTER and cannot be '#'.
+KEYWORDS_WILDCARD = '*'
+
 ######
 # Application definition
 ######
