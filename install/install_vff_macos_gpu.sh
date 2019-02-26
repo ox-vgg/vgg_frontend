@@ -138,8 +138,8 @@ wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/senet50_256.prototxt
 wget http://supermoe.cs.umass.edu/%7Ehzjiang/data/vgg16_faster_rcnn_iter_80000.caffemodel
 
 # download static ffmpeg
-wget https://ffmpeg.zeranoe.com/builds/macos64/static/ffmpeg-20180411-9825f77-macos64-static.zip -P /tmp
-unzip /tmp/ffmpeg-20180411-9825f77-macos64-static.zip -d $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies
+wget https://ffmpeg.zeranoe.com/builds/macos64/static/ffmpeg-4.1.1-macos64-static.zip -P /tmp
+unzip /tmp/ffmpeg-4.1.1-macos64-static.zip -d $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies
 mv $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/ffmpeg*  $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/ffmpeg
 sed -i '.sed' "s|ffmpeg|${VGG_FACE_INSTALL_FOLDER}/visorgen/backend_dependencies/ffmpeg/bin/ffmpeg|g" $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_face_search/pipeline/start_pipeline.sh
 

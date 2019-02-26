@@ -92,7 +92,7 @@ pip install scipy==0.18.1
 pip install matplotlib==2.1.0
 pip install scikit-image==0.13.1
 pip install scikit-learn==0.19.1
-pip install --upgrade https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-1.4.0-py2-none-any.whl
+pip install https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-1.4.0-py2-none-any.whl
 
 # Download vgg_face_search git repo and create virtual environment
 wget https://gitlab.com/vgg/vgg_face_search/-/archive/master/vgg_face_search-master.zip -O /tmp/vgg_face_search.zip
@@ -127,8 +127,8 @@ wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/senet50_256.caffemodel
 wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/senet50_256.prototxt
 
 # download static ffmpeg
-wget https://ffmpeg.zeranoe.com/builds/macos64/static/ffmpeg-20180411-9825f77-macos64-static.zip -P /tmp
-unzip /tmp/ffmpeg-20180411-9825f77-macos64-static.zip -d $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies
+wget https://ffmpeg.zeranoe.com/builds/macos64/static/ffmpeg-4.1.1-macos64-static.zip -P /tmp
+unzip /tmp/ffmpeg-4.1.1-macos64-static.zip -d $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies
 mv $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/ffmpeg*  $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/ffmpeg
 sed -i '.sed' "s|ffmpeg|${VGG_FACE_INSTALL_FOLDER}/visorgen/backend_dependencies/ffmpeg/bin/ffmpeg|g" $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_face_search/pipeline/start_pipeline.sh
 

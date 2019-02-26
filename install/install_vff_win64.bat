@@ -53,8 +53,8 @@ move resnet50_256.caffemodel backend_data\faces\
 move resnet50_256.prototxt backend_data\faces\
 
 REM Download ffmpeg
-wget https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-20180412-8d381b5-win64-static.zip
-powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('ffmpeg-20180412-8d381b5-win64-static.zip', 'backend_dependencies'); }"
+wget https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-4.1.1-win64-static.zip
+powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('ffmpeg-4.1.1-win64-static.zip', 'backend_dependencies'); }"
 move backend_dependencies\ffmpeg-* backend_dependencies\ffmpeg
 powershell.exe -nologo -noprofile -command "$mod='""'+$pwd.Path+'\backend_dependencies\ffmpeg\bin\ffmpeg"';$mod=$mod+'"""'; cat vgg_face_search\pipeline\start_pipeline.bat | %%{$_ -replace 'ffmpeg', $mod } | Out-File -encoding ascii vgg_face_search\pipeline\start_pipeline.replace.bat"
 copy /Y vgg_face_search\pipeline\start_pipeline.replace.bat vgg_face_search\pipeline\start_pipeline.bat

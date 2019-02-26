@@ -69,7 +69,7 @@ pip install matplotlib==2.1.0
 pip install protobuf==3.0.0
 pip install scikit-image==0.13.1
 pip install scikit-learn==0.19.1
-pip install --upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.4.0-cp27-none-linux_x86_64.whl
+pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.4.0-cp27-none-linux_x86_64.whl
 
 # frontend dependencies
 pip install django==1.10
@@ -131,8 +131,8 @@ unzip /tmp/vgg_frontend.zip -d $VGG_FACE_INSTALL_FOLDER/visorgen/
 mv $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_frontend*  $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_frontend
 
 # download static ffmpeg
-wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz -O /tmp/ffmpeg-release-64bit-static.tar.xz
-tar -xf /tmp/ffmpeg-release-64bit-static.tar.xz -C $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/
+wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -O /tmp/ffmpeg-release-amd64-static.tar.xz
+tar -xf /tmp/ffmpeg-release-amd64-static.tar.xz -C $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/
 mv $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/ffmpeg*  $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/ffmpeg
 sed -i "s|ffmpeg|${VGG_FACE_INSTALL_FOLDER}/visorgen/backend_dependencies/ffmpeg/ffmpeg|g" $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_face_search/pipeline/start_pipeline.sh
 
