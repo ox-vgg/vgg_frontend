@@ -705,7 +705,13 @@ class APIFunctions:
 
             if self.pipeline_input_type == 'video':
                 # for videos, just go straight to the pipeline
-                self.pipeline_video_list = request.FILES.getlist('input_video_list')
+                file_list = request.FILES.getlist('input_video_list')
+                uploaded_file = file_list[0].read()
+                file_list = uploaded_file.split('\n')
+                if len(file_list[-1]) == 0:
+                    file_list = file_list[:-1]
+                self.total_input_files = len(file_list)
+                self.pipeline_video_list = file_list
                 return redirect('pipeline_start')
 
             file_list = request.FILES.getlist('input_file')
