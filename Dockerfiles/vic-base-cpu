@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y \
     libsnappy-dev \
     libgflags-dev \
     libssl-dev \
+    libffi-dev \
     unzip \
     wget \
     && apt-get install -y --no-install-recommends libboost-all-dev \
