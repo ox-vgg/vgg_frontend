@@ -113,7 +113,7 @@ def download_manifest(manifest_url, pipeline_frame_list, img_base_path, metadata
                                 image_url = image['resource']['service']['@id'] + '/full/' + str(settings.IIIF_IMAGE_MAX_WIDTH) + ',/0/default'
                                 head_response = requests.head(image_url, allow_redirects=True, verify=False)
                                 if head_response.status_code != 200:
-                                    response = requests.get(image['resource']['service']['@id'], allow_redirects=True, verify=False)
+                                    response = requests.get(image['resource']['service']['@id'] + '/info.json', allow_redirects=True, verify=False)
                                     service_document = response.json()
                                     if len(service_document['profile']) > 1:
                                         service_profiles = service_document['profile'][1:] # 0 is always a compliance URL
@@ -122,20 +122,24 @@ def download_manifest(manifest_url, pipeline_frame_list, img_base_path, metadata
                                             image_url = image_url + '.' + image_format
                                         else:
                                             image_url = image['resource']['@id']
+                                            scale_image = True
                                     else:
                                         image_url = image['resource']['@id']
+                                        scale_image = True
                             else:
                                 image_url = image['resource']['@id']
                                 scale_image = True
 
                             destination_file_path = os.path.join(destination_folder_path, str(images_counter) )
                             r = requests.get(image_url, allow_redirects=True, verify=False)
-                            open(destination_file_path, 'wb').write(r.content)
+                            with open(destination_file_path, 'wb') as newimg:
+                                newimg.write(r.content)
                             if scale_image:
                                 img = Image.open(destination_file_path)
                                 imW, imH = img.size
-                                scale = float(settings.IIIF_IMAGE_MAX_WIDTH)/imW
-                                img.thumbnail((int(imW*scale), int(imH*scale)), resample=Image.BICUBIC)
+                                if imW > settings.IIIF_IMAGE_MAX_WIDTH: # make sure we are downscaling
+                                    scale = float(settings.IIIF_IMAGE_MAX_WIDTH)/imW
+                                    img.thumbnail((int(imW*scale), int(imH*scale)), resample=Image.BICUBIC)
                                 img.save(destination_file_path  + '.jpg', 'JPEG') # always store jpg
                                 os.remove(destination_file_path)
                             else:
