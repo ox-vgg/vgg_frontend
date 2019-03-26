@@ -40,6 +40,7 @@ class MetaDataHandler:
                             metadata_dir where the metadata of each dataset
                             should be stored.
                 process_pool: instance of CpProcessPool, used to support multi-threading
+                keywords_wildcard: wildcard character for keyword-based search. It should be JUST ONE CHARACTER and cannot be '#'.
         """
         self.fname2meta = {}
         self.keyword2fname = {}
