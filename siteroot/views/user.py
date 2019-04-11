@@ -991,15 +991,20 @@ class UserPages:
         # format metadata to make it look nicer in the page
         metadata = self.visor_controller.metadata_handler.get_meta_from_fname(imagename, dsetname)
         try:
-            # the metadata comes form the "file_attributes" column of the metadata CSV file, so
+            # the metadata comes from the "file_attributes" column of the metadata CSV file, so
             # it should be a list of tuples. The parsing below should fail otherwise, and then
             # the raw metadata will be rendered
             if isinstance(metadata, list):
                 formatted_metadata = '<ul>'
+                iii_source = None
                 for item in metadata:
-                    formatted_metadata += '<li>%s: %s</li>' % (item[0], item[1])
+                    if 'IIIF Source' not in item[0]:
+                        formatted_metadata += '<li>%s: %s</li>' % (item[0], item[1])
+                    else:
+                        iii_source =  '<li>%s</li>' % ('<a href="' + item[1] +
+                         '" target="_blank"><img src="static/images/logo-iiif.png" alt="Open IIIF manifest"></a></img>')
                 formatted_metadata += '</ul>'
-            metadata = formatted_metadata
+            metadata = formatted_metadata.replace('<ul>', '<ul>' + iii_source)
         except:
             pass
 

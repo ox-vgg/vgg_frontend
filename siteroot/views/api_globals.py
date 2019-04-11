@@ -151,6 +151,7 @@ def download_manifest(manifest_url, pipeline_frame_list, img_base_path, metadata
                             # save metadata of current image
                             img_metadata = { 'filename': os.path.join(destination_folder_name, str(images_counter) + '.jpg') }
                             img_metadata['file_attributes'] = manifest_metadata.copy()
+                            img_metadata['file_attributes']['IIIF Source'] = manifest_url
                             if canvas_label:
                                 img_metadata['file_attributes']['caption'] = canvas_label
                                 img_metadata['file_attributes']['keywords'] = canvas_label
