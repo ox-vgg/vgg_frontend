@@ -152,9 +152,25 @@ def download_manifest(manifest_url, pipeline_frame_list, img_base_path, metadata
                             img_metadata = { 'filename': os.path.join(destination_folder_name, str(images_counter) + '.jpg') }
                             img_metadata['file_attributes'] = manifest_metadata.copy()
                             img_metadata['file_attributes']['IIIF Source'] = manifest_url
+                            pattern = re.compile('[^a-zA-Z0-9_ ]')
                             if canvas_label:
                                 img_metadata['file_attributes']['caption'] = canvas_label
-                                img_metadata['file_attributes']['keywords'] = canvas_label
+                                shortened_label = pattern.sub('', canvas_label)
+                                if len(canvas_label) > 28:
+                                    shortened_label = shortened_label[:25] + '...'
+                                else:
+                                    shortened_label = shortened_label[:28]
+                                img_metadata['file_attributes']['keywords'] = shortened_label
+                            if 'label' in manifest_metadata.keys():
+                                shortened_label = pattern.sub('', manifest_metadata['label'])
+                                if len(manifest_metadata['label']) > 28:
+                                    shortened_label = shortened_label[:25] + '...'
+                                else:
+                                    shortened_label = shortened_label[:28]
+                                if 'keywords' in img_metadata['file_attributes'].keys():
+                                    img_metadata['file_attributes']['keywords'] = img_metadata['file_attributes']['keywords'] + ',' + shortened_label
+                                else:
+                                    img_metadata['file_attributes']['keywords'] = shortened_label
 
                             images_metadata.append(img_metadata)
                             images_counter = images_counter + 1
