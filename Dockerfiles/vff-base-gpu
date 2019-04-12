@@ -39,7 +39,7 @@ RUN echo "deb http://developer.download.nvidia.com/compute/machine-learning/repo
     && rm -rf /var/lib/apt/lists/*
 
 # Create requirements files for pip, install all pip requirements, create main folders and secret key file
-RUN printf "setuptools==39.1.0\ndjango==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==2.2.1\ngevent-zeromq==0.2.5\nnumpy==1.11.1\nsimplejson==3.8.2\nscipy==0.18.1\nmatplotlib==2.1.0\neasydict==1.7\nCython==0.27.3\npyyaml==3.12\nsix==1.11.0\nWhoosh==2.7.4" > /tmp/requirements.txt \
+RUN printf "setuptools==39.1.0\ndjango==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==2.2.1\ngevent-zeromq==0.2.5\nnumpy==1.11.1\nsimplejson==3.8.2\nscipy==0.18.1\nmatplotlib==2.1.0\neasydict==1.7\nCython==0.27.3\npyyaml==3.12\nsix==1.11.0\nWhoosh==2.7.4\nnetworkx==2.2" > /tmp/requirements.txt \
     && pip install -r /tmp/requirements.txt \
     && printf "scikit-image==0.13.1\npyopenssl==17.5.0\npyasn1\nndg-httpsclient" > /tmp/requirements-2.txt \
     && pip install -r /tmp/requirements-2.txt \
