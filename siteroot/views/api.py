@@ -683,7 +683,8 @@ class APIFunctions:
             img_base_path = str(img_base_path)  # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
 
         if self.pipeline_input_type != 'video' and len(request.FILES) == 0:
-            if request.POST.get('input_url', None) is None:
+            url = request.POST.get('input_url', None)
+            if url is None or len(url)==0:
                 # if no input file or list is provided with the names of the files to ingest, ingest the whole directory by default
                 self.pipeline_input_thread = threading.Thread(target=api_globals.gather_pipeline_input,
                                 args=('dir', img_base_path, None, file_system_encoding_not_UTF8, self.pipeline_frame_list), )
@@ -692,7 +693,6 @@ class APIFunctions:
                 return redirect('pipeline_input_status')
             else:
                 # get the list of files from a IIIF manifest that is online, pointed at by the specified URL
-                url = request.POST.get('input_url')
                 dset = settings.VISOR['datasets'].keys()[0] # I don't like this, but we have to do it like this for now
                 metadata_dir = os.path.join(self.visor_controller.metadata_paths.metadata , dset)
                 self.pipeline_input_thread = threading.Thread(target=api_globals.gather_pipeline_input,
