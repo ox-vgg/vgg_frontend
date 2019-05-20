@@ -8,7 +8,6 @@
          QUERY_TYPE - query type (text or image)
          IMAGE_LIST - list of images
          PAGE - page of results to display
-         BACKPAGE - Page to go back to
          SA_THUMBS - location of thumbnail images
          ENGINE - currently selected engine
     {% endcomment %}
@@ -18,7 +17,7 @@
         <p>Only the images surrounded in green are considered selected. Click on each image to select/unselect it or use the buttons below to select/unselect all images. <strong>Only the paths to images surrounded in green will be saved</strong>.</p>
         {% if IMAGE_LIST %}<input id="set_all_images_green" type="button" value="Select all images"></input>{% endif %}
         {% if IMAGE_LIST %}<input id="set_all_images_yellow" type="button" value="Unselect all images"></input><br/><br/>{% endif %}
-        <a class="back_to_results" href="{{BACKPAGE}}?qsid={{QUERY_ID}}&amp;page={{PAGE}}">&lt;- Back to results</a>
+        <a href="javascript:history.go(-1)" title="&laquo; Back to the previous page">&laquo; Back to the previous page</a>
     </div>
     <div id="content">
         <div id="results_list" class="grid_list">
@@ -41,7 +40,7 @@
     <div id="results_header_borderless">
         {% if IMAGE_LIST %}<input id="selection_save" type="button" value="Save selection"></input>{% endif %}
         <br><br>
-        <a class="back_to_results" href="{{BACKPAGE}}?qsid={{QUERY_ID}}&amp;page={{PAGE}}">&lt;- Back to results</a>
+        <a href="javascript:history.go(-1)" title="&laquo; Back to the previous page">&laquo; Back to the previous page</a>
     </div>
     <!-- dynamically load in styles associated specifically with this page -->
     <script type="text/javascript">

@@ -20,6 +20,4 @@ $(function() {
     $('.more_results_btn').divtransition('slideleft');
     $('#results_prevpane,#results_pagespane,#results_nextpane,#results_prevpane_top,#results_nextpane_top').find('a').divtransition('fadein', {doneFunction: resizeResultBoxes, fadeInElem: '#results_list'});
     $('.results_nav_centre_link').divtransition('slideleft');
-    // linkify links on details/trainingimages page
-    $('.back_to_results').divtransition('slideright', {doneFunction: resizeResultBoxes});
 });

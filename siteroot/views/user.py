@@ -727,14 +727,6 @@ class UserPages:
         if 'HTTP_X_FORWARDED_HOST' in request.META:
             home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
-        # setup target for 'Back to results' link
-        if viewmode == 'grid':
-            backpage = home_location + 'searchreslist'
-        elif viewmode == 'rois':
-            backpage = home_location + 'searchresroislist'
-        else:
-            backpage = home_location + 'searchreslist'
-
         # prepare the details of every image in the list, for rendering the page
         if trainimgs:
             for image in trainimgs:
@@ -781,7 +773,6 @@ class UserPages:
         'QUERY_TYPE': query['qtype'],
         'TRAINIMGS' : trainimgs,
         'PAGE': page,
-        'BACKPAGE': backpage,
         'SA_THUMBS' : sa_thumbs,
         'ENGINE': request.session['engine']
         }
@@ -860,14 +851,6 @@ class UserPages:
         if 'HTTP_X_FORWARDED_HOST' in request.META:
             home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
-        # setup target for 'Back to results' link
-        if viewmode == 'grid':
-            backpage = home_location + 'searchreslist'
-        elif viewmode == 'rois':
-            backpage = home_location + 'searchresroislist'
-        else:
-            backpage = home_location + 'searchreslist'
-
         # prepare the details of every item in the list, for rendering the page
         for ritem in rlist:
             ritem['anno'] = '1'
@@ -880,7 +863,6 @@ class UserPages:
         'QUERY_TYPE': query['qtype'],
         'IMAGE_LIST' : rlist,
         'PAGE': page,
-        'BACKPAGE': backpage,
         'SA_THUMBS' : sa_thumbs,
         'ENGINE': request.session['engine']
         }
@@ -923,14 +905,6 @@ class UserPages:
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
             home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
-
-        # setup target for 'Back to results' link
-        if viewmode == 'grid':
-            backpage = home_location + 'searchreslist'
-        elif viewmode == 'rois':
-            backpage = home_location + 'searchresroislist'
-        else:
-            backpage = home_location + 'searchreslist'
 
         # get engines info, for including it in the page
         available_engines = copy.deepcopy(self.visor_controller.opts.engines_dict)
@@ -1013,7 +987,6 @@ class UserPages:
         'QUERY_ID': query_id,
         'DATASET_NAME': dsetname,
         'PAGE': page,
-        'BACKPAGE': backpage,
         'ROI_ENGINE' : roi_engine,
         'AVAILABLE_ENGINES' : available_engines,
         'IMAGE_NAME' : imagename,
