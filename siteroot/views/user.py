@@ -970,7 +970,7 @@ class UserPages:
             # the raw metadata will be rendered
             if isinstance(metadata, list):
                 formatted_metadata = '<ul>'
-                iii_source = None
+                iii_source = ''
                 for item in metadata:
                     if 'IIIF Source' not in item[0]:
                         formatted_metadata += '<li>%s: %s</li>' % (item[0], item[1])
