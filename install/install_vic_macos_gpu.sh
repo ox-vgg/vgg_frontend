@@ -27,10 +27,12 @@ brew install screen
 
 # Caffe dependencies
 brew install -vd snappy leveldb gflags glog szip lmdb
-brew install -vd hdf5 opencv
-brew install -vd protobuf
+brew install -vd hdf5 opencv@3
+brew install -vd protobuf@3.1
 brew install -vd boost@1.57 # the cpp-netlib version used below won't compile with newest boost
 brew link --force boost@1.57
+brew link --force opencv@3
+brew link --force protobuf@3.1
 brew install -vd openblas
 
 # create app folders
@@ -56,7 +58,7 @@ source ./bin/activate
 BREW_NUMPY_VERSION=$(brew info numpy | grep Cellar/numpy | awk -F '[/| |_]' '{print $6}'  )
 
 # register the protobuf installed by homebrew, so that pycaffe can be used in the virtualenv
-PROTOBUF_NUMPY_VERSION=$(brew info protobuf | grep Cellar/protobuf | awk -F '[/| |_]' '{print $6}' )
+PROTOBUF_NUMPY_VERSION=$(brew info protobuf@3.1 | grep Cellar/protobuf | awk -F '[/| |_]' '{print $6}' )
 
 # register the openblas directory for compiling the vgg_classifier
 OPENBLAS_DIR=$(brew --prefix openblas)
@@ -124,6 +126,7 @@ sed -i '.sed' 's/BLAS := atlas/BLAS := open/g' Makefile.config
 sed -i '.sed' 's/# BLAS_INCLUDE := $(/BLAS_INCLUDE := $(/g' Makefile.config
 sed -i '.sed' 's/# BLAS_LIB := $(/BLAS_LIB := $(/g' Makefile.config
 sed -i '.sed' 's/# PYTHON_INCLUDE +=/PYTHON_INCLUDE +=/g' Makefile.config
+sed -i '.sed' 's/# Configure build/CXXFLAGS += -std=c++11/g' Makefile
 make all
 
 # compile cpp-netlib
