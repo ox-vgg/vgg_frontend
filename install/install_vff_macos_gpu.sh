@@ -36,12 +36,13 @@ brew install screen
 
 # caffe dependencies
 brew install -vd snappy leveldb gflags glog szip lmdb
-brew install -vd hdf5 opencv
+brew install -vd hdf5 opencv@3
 brew install -vd tesseract
-brew install -vd protobuf@2.6
+brew install -vd protobuf@3.1
 brew install -vd boost@1.59 boost-python@1.59
 brew install -vd openblas
-brew link --force protobuf@2.6
+brew link --force opencv@3
+brew link --force protobuf@3.1
 brew link --force boost@1.59
 brew link --force boost-python@1.59
 
@@ -51,7 +52,6 @@ chmod 777 $VGG_FACE_INSTALL_FOLDER/visorgen/
 mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/backend_data $VGG_FACE_INSTALL_FOLDER/visorgen/backend_data/faces $VGG_FACE_INSTALL_FOLDER/visorgen/backend_data/faces/features
 mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/datasets  $VGG_FACE_INSTALL_FOLDER/visorgen/datasets/images/  $VGG_FACE_INSTALL_FOLDER/visorgen/datasets/images/mydataset
 mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/datasets/metadata/  $VGG_FACE_INSTALL_FOLDER/visorgen/datasets/metadata/mydataset
-mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/datasets/negatives/  $VGG_FACE_INSTALL_FOLDER/visorgen/datasets/negatives/mydataset
 mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/frontend_data  $VGG_FACE_INSTALL_FOLDER/visorgen/frontend_data/searchdata/ $VGG_FACE_INSTALL_FOLDER/visorgen/frontend_data/curatedtrainimgs
 mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/frontend_data/searchdata/classifiers
 mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/frontend_data/searchdata/postrainanno
@@ -65,9 +65,6 @@ virtualenv .
 source ./bin/activate
 pip install setuptools==39.1.0
 
-# register the numpy version used by opencv, so that python-opencv can be used in the virtualenv
-BREW_NUMPY_VERSION=$(brew info numpy | grep Cellar/numpy | awk -F '[/| |_]' '{print $6}'  )
-
 # register the protobuf installed by homebrew, so that pycaffe can be used in the virtualenv
 PROTOBUF_NUMPY_VERSION=$(brew info protobuf@2.6 | grep Cellar/protobuf@2.6 | awk -F '[/| |_]' '{print $6}' )
 
@@ -80,7 +77,7 @@ pip install python-memcached
 # frontend dependencies
 pip install Pillow==2.3.0
 pip install protobuf==$PROTOBUF_NUMPY_VERSION
-pip install numpy==$BREW_NUMPY_VERSION
+pip install numpy==1.16.2
 pip install Whoosh==2.7.4
 
 # vgg_img_downloader dependencies
@@ -168,8 +165,8 @@ cmake -DBOOST_ROOT=$BREW_BOOST_ROOT ../
 make
 
 # Make cv2 available in the virtualenv
-CV2_LOCATION=$(brew info opencv | grep /usr/local/Cellar | cut -d' ' -f1)
-ln -s $CV2_LOCATION/lib/python2.7/site-packages/cv2.so $VGG_FACE_INSTALL_FOLDER/visorgen/lib/python2.7/cv2.so
+CV2_LOCATION=$(brew info opencv@3 | grep /usr/local/Cellar | cut -d' ' -f1)
+ln -s $CV2_LOCATION/lib/python2.7/site-packages/cv2/python-2.7/cv2.so $VGG_FACE_INSTALL_FOLDER/visorgen/lib/python2.7/cv2.so
 
 # configure vgg_face_search
 sed -i '.sed' 's|CUDA_ENABLED = False|CUDA_ENABLED = True|g' $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_face_search/service/settings.py
