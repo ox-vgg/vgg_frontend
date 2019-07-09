@@ -235,7 +235,7 @@ class UserPages:
         if ((query_type == retengine.models.opts.Qtypes.text) and
             (query_string != 'keywords:%s' % settings.KEYWORDS_WILDCARD) and
             (not re.match("^[#$]?[a-zA-Z0-9_\-\ +,:;.!\?()\[\]]*$", query_string))):
-            message = 'Your text query contains invalid characters. Please use only letters, numbers, spaces or common word dividers'
+            message = 'Your text query contains invalid characters. Please use only letters, numbers, spaces or common word dividers. Also avoid using the keyword-wildcard (%s) along other keywords.' % settings.KEYWORDS_WILDCARD
             redirect_to = settings.SITE_PREFIX
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
@@ -258,6 +258,8 @@ class UserPages:
                 new_query_string = None
                 try:
                     keyword_list = self.visor_controller.metadata_handler.get_search_suggestions(query_string)
+                    if settings.KEYWORDS_WILDCARD in keyword_list: # remove the wildcard, to avoid returning everything
+                        keyword_list.remove(settings.KEYWORDS_WILDCARD)
                     new_query_string = 'keywords:'
                     for idx in range(len(keyword_list)):
                         if idx > 0:
