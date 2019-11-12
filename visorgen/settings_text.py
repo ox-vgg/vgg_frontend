@@ -260,7 +260,7 @@ IMSEARCHTOOLS = {
     'query_timeout' : -1.0,
     'improc_timeout' : 8,
     'per_image_timeout' : 3.0,
-    'num_pos_train' : 100,
+    'num_pos_train' : 20,
 }
 
 # Base folder of scripts to manage the service
