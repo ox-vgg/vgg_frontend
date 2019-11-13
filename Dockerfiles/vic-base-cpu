@@ -1,7 +1,7 @@
 # Dockerfile for the VIC application. See http://www.robots.ox.ac.uk/~vgg/software/vic/
 
-# Start from a clean Ubuntu Trusty machine
-FROM ubuntu:trusty
+# Start from a clean Ubuntu Xenial machine
+FROM ubuntu:xenial
 
 # Update repositories and install all apt-get dependencies
 RUN apt-get update && apt-get install -y \
@@ -34,6 +34,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create requirements files for pip, install all pip requirements, create main folders and secret key file
+# For the "PROTOCOL_SSLv3" change, see https://github.com/mistio/mist-ce/issues/434#issuecomment-86484952
 RUN printf "setuptools==39.1.0\ndjango==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==2.2.1\ngevent-zeromq==0.2.5\nWhoosh==2.7.4" > /tmp/requirements.txt \
     && pip install -r /tmp/requirements.txt \
     && printf "pyopenssl==17.5.0\npyasn1\nndg-httpsclient" > /tmp/requirements-2.txt \
@@ -41,6 +42,8 @@ RUN printf "setuptools==39.1.0\ndjango==1.10\npython-memcached\nprotobuf==3.0.0\
     && rm  /tmp/requirements*.txt \
     && mkdir /webapps/  \
     && chmod 777 /webapps/ \
+    && sed -i 's|PROTOCOL_SSLv3|PROTOCOL_SSLv23|g' /usr/local/lib/python2.7/dist-packages/gevent/ssl.py \
+    && sed -i 's|ssl.PROTOCOL_SSLv3|#ssl.PROTOCOL_SSLv3|g' /usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/contrib/pyopenssl.py \
     && mkdir /webapps/visorgen /webapps/visorgen/backend_dependencies  /webapps/visorgen/backend_data \
           /webapps/visorgen/datasets  /webapps/visorgen/datasets/images/  /webapps/visorgen/datasets/images/mydataset \
           /webapps/visorgen/datasets/metadata/  /webapps/visorgen/datasets/metadata/mydataset \
@@ -53,8 +56,9 @@ RUN printf "setuptools==39.1.0\ndjango==1.10\npython-memcached\nprotobuf==3.0.0\
     && echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
 
 # Download caffe, cpp-netlib and liblinear
-RUN wget https://github.com/BVLC/caffe/archive/rc3.zip -P /tmp \
-    && unzip /tmp/rc3.zip -d /webapps/visorgen/backend_dependencies/ \
+RUN wget https://github.com/BVLC/caffe/archive/1.0.zip -O /tmp/1.0.zip \
+    && unzip /tmp/1.0.zip -d /webapps/visorgen/backend_dependencies/ \
+    && mv /webapps/visorgen/backend_dependencies/caffe* /webapps/visorgen/backend_dependencies/caffe \
     && wget https://github.com/kencoken/cpp-netlib/archive/0.11-devel.zip -P /tmp \
     && unzip /tmp/0.11-devel.zip -d /webapps/visorgen/backend_dependencies/ \
     && wget https://github.com/cjlin1/liblinear/archive/v210.zip -P /tmp \
@@ -74,10 +78,13 @@ RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-maste
     && sed -i 's/"\/vgg_frontend"/"\/vic"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py
 
 # Compile caffe
-RUN cd /webapps/visorgen/backend_dependencies/caffe-rc3/ \
+RUN cd /webapps/visorgen/backend_dependencies/caffe/ \
     && cp Makefile.config.example Makefile.config \
     && sed -i 's/# CPU_ONLY/CPU_ONLY/g' Makefile.config \
     && sed -i 's/\/usr\/include\/python2.7/\/usr\/include\/python2.7 \/usr\/local\/lib\/python2.7\/dist-packages\/numpy\/core\/include/g' Makefile.config \
+    && sed -i 's/INCLUDE_DIRS :=/INCLUDE_DIRS := \/usr\/include\/hdf5\/serial\/ /g' Makefile.config \
+    && sed -i 's/LIBRARY_DIRS :=/LIBRARY_DIRS := \/usr\/lib\/x86_64-linux-gnu\/hdf5\/serial\/ /g' Makefile.config \
+    && sed -i 's/# Configure build/CXXFLAGS += -std=c++11/g' Makefile \
     && make all
 
 # Compile liblinear
@@ -94,7 +101,7 @@ RUN cd /webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/ \
     && cd /webapps/visorgen/vgg_classifier \
     && mkdir build \
     && cd build \
-    && cmake -DCaffe_DIR=/webapps/visorgen/backend_dependencies/caffe-rc3/ -DCaffe_INCLUDE_DIR="/webapps/visorgen/backend_dependencies/caffe-rc3/include;/webapps/visorgen/backend_dependencies/caffe-rc3/build/src" -DLiblinear_DIR=/webapps/visorgen/backend_dependencies/liblinear-210/ -Dcppnetlib_DIR=/webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/build/ ../ \
+    && cmake -DCMAKE_CXX_STANDARD=11 -DCaffe_DIR=/webapps/visorgen/backend_dependencies/caffe/ -DCaffe_INCLUDE_DIR="/webapps/visorgen/backend_dependencies/caffe/include;/webapps/visorgen/backend_dependencies/caffe/build/src" -DLiblinear_DIR=/webapps/visorgen/backend_dependencies/liblinear-210/ -Dcppnetlib_DIR=/webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/build/ ../ \
     && make \
     && make install \
     && rm -rf /webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/build \
