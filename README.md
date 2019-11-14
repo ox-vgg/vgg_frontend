@@ -12,7 +12,7 @@ License: BSD (see LICENSE.md)
 It consists of two main components:
 
  + An image downloading service, included in this repository in the `vgg_img_downloader` folder: It corresponds to a reduced version of the [imsearch-tools](https://github.com/kencoken/imsearch-tools). The version provided in this repository includes only the `google_web` image downloading engine, which does not require any specific configuration and hence can be used by anyone. Should you need more image downloading engines (e.g. downloading from Bing or Flick), please use the original version and supply your own API keys, depending on which image provider you wish to use.
- + The web frontend, also included in this repository: It has been developed using **Django version 1.10**, under **Ubuntu 14.04.5 LTS**. The provided version runs in `DEBUG` mode. Should you wish to deploy it to a production environment, please refer to [Django's documentation](https://docs.djangoproject.com/en/1.10/howto/deployment/).
+ + The web frontend, also included in this repository: It has been developed using **Django version 1.10**, under **Ubuntu 14.04.5 LTS**. Although it has been recently updated to **Ubuntu 16.04.6 LTS**. The provided version runs in `DEBUG` mode. Should you wish to deploy it to a production environment, please refer to [Django's documentation](https://docs.djangoproject.com/en/1.10/howto/deployment/).
 
 Now, `vgg_frontend` can be used for **just displaying a list of images** or it can be attached to **at least ONE image backend engine**. In this last case, it is the backend engine who actually processes the images in the user's dataset, so `vgg_frontend` just serves as the web user interface for the backend engine.
 

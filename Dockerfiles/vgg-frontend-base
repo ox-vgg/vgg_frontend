@@ -1,8 +1,8 @@
 # Dockerfile for the VGG-FRONTEND application. It can only be used for displaying pre-computed list of images.
 # The admintools are not accesible.
 
-# Start from a clean Ubuntu Trusty machine
-FROM ubuntu:trusty
+# Start from a clean Ubuntu Xenial machine
+FROM ubuntu:xenial
 
 # Update repositories and install all apt-get dependencies
 RUN apt-get update && apt-get install -y \
