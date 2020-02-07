@@ -73,25 +73,25 @@ case "${1}" in
         fi
         pkill -9 -f 'python backend.py'
 
-        # stop image downloader tool
-        GREP=$(ps -fe | grep "[a]pi_v2")
-        if [ "$GREP" ]; then
-            echo "instances engine still running, cannot stop image downloader"
-        else
-            GREP=$(ps -fe | grep "[c]puvisor_service")
-            if [ "$GREP" ]; then
-                echo "cpuvisor-srv engine still running, cannot stop image downloader"
-            else
-                GREP=$(ps -fe | grep ".*[v]isorgen-img_downloader")
-                if [ "$GREP" ]; then
-                    SESSION=$(screen -ls | grep -o ".*.visorgen-img_downloader")
-                    if [ "$SESSION" ]; then
-                        screen -X -S $SESSION quit
-                    fi
-                fi
-                pkill -9 -f 'imsearch_http_service.py'
-            fi
-        fi
+        # stop image downloader tool (no longer used)
+        #GREP=$(ps -fe | grep "[a]pi_v2")
+        #if [ "$GREP" ]; then
+            #echo "instances engine still running, cannot stop image downloader"
+        #else
+            #GREP=$(ps -fe | grep "[c]puvisor_service")
+            #if [ "$GREP" ]; then
+                #echo "cpuvisor-srv engine still running, cannot stop image downloader"
+            #else
+                #GREP=$(ps -fe | grep ".*[v]isorgen-img_downloader")
+                #if [ "$GREP" ]; then
+                    #SESSION=$(screen -ls | grep -o ".*.visorgen-img_downloader")
+                    #if [ "$SESSION" ]; then
+                        #screen -X -S $SESSION quit
+                    #fi
+                #fi
+                #pkill -9 -f 'imsearch_http_service.py'
+            #fi
+        #fi
     ;;
     instances)
         ## Stop the instances engine ##
