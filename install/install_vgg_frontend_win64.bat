@@ -45,16 +45,15 @@ pip install protobuf==3.0.0
 pip install Pillow==2.3.0
 
 REM Install vgg_img_downloader additional dependencies
-pip install greenlet==0.4.10
+pip install greenlet==0.4.15
 pip install gevent==0.13.8
 pip install Flask==0.10.1
 
 REM Install vgg_frontend controller additional dependencies
 pip install validictory==0.9.1
 pip install msgpack-python==0.3.0
-pip install requests==1.1.0
-easy_install https://pypi.python.org/packages/02/91/553f174f52190474cb10061d7a451fb274fac78f1ff52ad5f64731206ce7/pyzmq-2.2.0-py2.7-win-amd64.egg
-pip install gevent-zeromq==0.2.5
+pip install requests==2.2.1
+pip install pyzmq==17.1.2
 pip install Whoosh==2.7.4
 
 REM delete all zips

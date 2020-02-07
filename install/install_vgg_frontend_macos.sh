@@ -31,15 +31,15 @@ pip install python-memcached
 
 # frontend dependencies
 pip install Pillow==2.3.0
-pip install protobuf==2.6.1
+pip install protobuf==3.0.0
 pip install Whoosh==2.7.4
 
 # controller dependencies
 brew install zeromq
-pip install requests==1.1.0
+pip install requests==2.2.1
 pip install validictory==0.9.1
 pip install msgpack-python==0.3.0
-pip install gevent-zeromq
+pip install pyzmq==17.1.2
 
 # download and setup vgg_frontend for JUST displaying results
 wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O /tmp/vgg_frontend.zip
