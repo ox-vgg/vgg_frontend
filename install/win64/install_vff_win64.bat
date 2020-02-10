@@ -98,7 +98,7 @@ pip install gevent-zeromq==0.2.5
 pip install Whoosh==2.7.4
 
 REM Download static caffe for windows (Release version, CPU only, Python 2.7) from https://github.com/BVLC/caffe/tree/windows
-wget "https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%%3A%%20MSVC_VERSION%%3D14%%2C%%20WITH_NINJA%%3D0%%2C%%20CMAKE_CONFIG%%3DRelease%%2C%%20CMAKE_BUILD_SHARED_LIBS%%3D0%%2C%%20PYTHON_VERSION%%3D2%%2C%%20WITH_CUDA%%3D0" -O caffe.zip
+wget "https://github.com/Coderx7/Caffe_1.0_Windows/releases/download/caffe_1.0_windows/caffe_cpu_x64_MSVC14_Py27_release.zip" -O caffe.zip
 powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('caffe.zip', 'backend_dependencies\caffe'); }"
 
 REM delete all zips
