@@ -2,7 +2,6 @@
 
 # - This script has been tested in a clean macOS High Sierra 10.13.3
 # - It assumes Homebrew is available in the system (https://brew.sh/).
-# - If used to install pip and virtualenv, it will require a sudoer user.
 # - Everything is installed in $HOME/visorgen/, to keep it isolated.
 # - See also the last part of the script where $HOME/.profile is modified.
 
@@ -18,16 +17,15 @@ brew install screen
 # install pip and virtualenv, which requires sudo access
 #wget https://bootstrap.pypa.io/get-pip.py -P /tmp
 #sudo python /tmp/get-pip.py
-#sudo pip install virtualenv
 
 # Caffe dependencies
 brew install -vd snappy leveldb gflags glog szip lmdb
 brew install -vd hdf5 opencv@3
-brew install -vd protobuf@3.1
+brew install -vd protobuf@3.11
 brew install -vd boost@1.57 # the cpp-netlib version used below won't compile with newest boost
 brew link --force boost@1.57
 brew link --force opencv@3
-brew link --force protobuf@3.1
+brew link --force protobuf@3.11
 brew install -vd openblas
 
 # create app folders
@@ -46,14 +44,12 @@ mkdir $HOME/visorgen/frontend_data/searchdata/rankinglists
 mkdir $HOME/visorgen/frontend_data/searchdata/uploadedimgs
 mkdir $HOME/visorgen/backend_dependencies
 cd $HOME/visorgen/
-virtualenv .
-source ./bin/activate
 
 # register the numpy version used by opencv, so that python-opencv can be used in the virtualenv
 BREW_NUMPY_VERSION=$(brew info numpy | grep Cellar/numpy | awk -F '[/| |_]' '{print $6}'  )
 
 # register the protobuf installed by homebrew, so that pycaffe can be used in the virtualenv
-PROTOBUF_NUMPY_VERSION=$(brew info protobuf@3.1 | grep Cellar/protobuf | awk -F '[/| |_]' '{print $6}' )
+PROTOBUF_NUMPY_VERSION=$(brew info protobuf@3.11 | grep Cellar/protobuf | awk -F '[/| |_]' '{print $6}' )
 
 # register the openblas directory for compiling the vgg_classifier
 OPENBLAS_DIR=$(brew --prefix openblas)
@@ -74,15 +70,15 @@ pip install numpy==$BREW_NUMPY_VERSION
 pip install Whoosh==2.7.4
 
 # imsearch-tools dependencies
-pip install gevent
+pip install gevent==1.1.0 greenlet==0.4.15
 pip install Flask==0.10.1
 
 # controller dependencies
 brew install -vd zeromq
-pip install requests==1.1.0
+pip install requests==2.2.1
 pip install validictory==0.9.1
 pip install msgpack-python==0.3.0
-pip install gevent-zeromq
+pip install pyzmq==17.1.2
 
 # vgg_img_downloader additional dependencies
 pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient

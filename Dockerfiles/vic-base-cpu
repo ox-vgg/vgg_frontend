@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y \
 
 # Create requirements files for pip, install all pip requirements, create main folders and secret key file
 # For the "PROTOCOL_SSLv3" change, see https://github.com/mistio/mist-ce/issues/434#issuecomment-86484952
-RUN printf "setuptools==39.1.0\ndjango==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==2.2.1\ngevent-zeromq==0.2.5\nWhoosh==2.7.4" > /tmp/requirements.txt \
+RUN printf "setuptools==39.1.0\ndjango==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==2.3.0\ngreenlet==0.4.15\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==2.2.1\npyzmq==17.1.2\nWhoosh==2.7.4" > /tmp/requirements.txt \
     && pip install -r /tmp/requirements.txt \
     && printf "pyopenssl==17.5.0\npyasn1\nndg-httpsclient" > /tmp/requirements-2.txt \
     && pip install -r /tmp/requirements-2.txt \
