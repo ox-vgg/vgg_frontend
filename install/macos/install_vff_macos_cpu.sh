@@ -2,8 +2,7 @@
 
 # - This script has been tested in a clean macOS High Sierra 10.13.3
 # - It assumes Homebrew is available in the system (https://brew.sh/).
-# - If used to install pip and virtualenv, it will require a sudoer user.
-# - All python dependencies are installed in a python virtual environment to avoid conflicts with pre-installed python packages
+# - If used to install pip and/or protobuf, it will require a sudoer user.
 # - VGG_FACE_INSTALL_FOLDER/visorgen should not exist
 # - It creates one user for the Admin Tools: login/passwd --> admin/vggadmin
 # - Caffe is compiled for CPU use only.
@@ -22,19 +21,16 @@ brew install screen
 # install pip and virtualenv, which requires sudo access
 #wget https://bootstrap.pypa.io/get-pip.py -P /tmp
 #sudo python /tmp/get-pip.py
-#sudo pip install virtualenv
 
 # caffe dependencies
 brew install -vd snappy leveldb gflags glog szip lmdb
-brew install -vd hdf5 opencv@3
+brew install -vd boost@1.59 boost-python
+brew install -vd hdf5
+brew install -vd opencv@2
 brew install -vd tesseract
-brew install -vd protobuf@3.1
-brew install -vd boost@1.59 boost-python@1.59
 brew install -vd openblas
-brew link --force opencv@3
-brew link --force protobuf@3.1
-brew link --force boost@1.59
-brew link --force boost-python@1.59
+brew link --force opencv@2
+brew link --overwrite --force boost@1.59
 
 # create app folders
 mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/
@@ -50,37 +46,39 @@ mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/frontend_data/searchdata/postrainimgs
 mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/frontend_data/searchdata/rankinglists
 mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/frontend_data/searchdata/uploadedimgs
 mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies
-cd $VGG_FACE_INSTALL_FOLDER/visorgen/
-virtualenv .
-source ./bin/activate
-pip install setuptools==39.1.0
 
-# register the protobuf installed by homebrew, so that pycaffe can be used in the virtualenv
-PROTOBUF_NUMPY_VERSION=$(brew info protobuf | grep Cellar/protobuf | awk -F '[/| |_]' '{print $6}' )
+# download, compile and install protobuf-3.1.0, newer versions of protobuf won't work
+wget https://github.com/protocolbuffers/protobuf/releases/download/v3.1.0/protobuf-cpp-3.1.0.zip -O /tmp/protobuf-cpp-3.1.0.zip
+unzip /tmp/protobuf-cpp-3.1.0.zip -d $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/
+cd $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/protobuf-3.1.0/
+./configure CC=clang CXX=clang++ CXXFLAGS='-std=c++11 -stdlib=libc++ -O3 -g' LDFLAGS='-stdlib=libc++' LIBS="-lc++ -lc++abi"
+make -j 4
+sudo make install
 
 # install django dependencies
+pip install setuptools==39.1.0
 pip install django==1.10
 brew install -vd libevent
 brew install memcached
 pip install python-memcached
 
 # frontend dependencies
-pip install Pillow==2.3.0
-pip install protobuf==$PROTOBUF_NUMPY_VERSION
+pip install Pillow==6.1.0
+pip install protobuf==3.1.0
 pip install numpy==1.16.2
 pip install Whoosh==2.7.4
 
 # vgg_img_downloader dependencies
-pip install gevent
+pip install gevent==1.1.0 greenlet==0.4.15
 pip install Flask==0.10.1
 pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
 
 # controller dependencies
 brew install -vd zeromq
-pip install requests==1.1.0
+pip install requests==2.2.1
 pip install validictory==0.9.1
 pip install msgpack-python==0.3.0
-pip install gevent-zeromq
+pip install pyzmq==17.1.2
 
 # backend dependencies
 pip install simplejson==3.8.2
@@ -136,12 +134,12 @@ rm -rf /tmp/*.zip
 cd $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/caffe
 cp Makefile.config.example Makefile.config
 sed -i '.sed' 's/# CPU_ONLY/CPU_ONLY/g' Makefile.config
-sed -i '.sed' 's/# OPENCV_VERSION := 3/OPENCV_VERSION := 3/g' Makefile.config # homebrew will install opencv3
 sed -i '.sed' 's/BLAS := atlas/BLAS := open/g' Makefile.config
 sed -i '.sed' 's/# BLAS_INCLUDE := $(/BLAS_INCLUDE := $(/g' Makefile.config
 sed -i '.sed' 's/# BLAS_LIB := $(/BLAS_LIB := $(/g' Makefile.config
 sed -i '.sed' 's/# PYTHON_INCLUDE +=/PYTHON_INCLUDE +=/g' Makefile.config
 sed -i '.sed' 's/# Configure build/CXXFLAGS += -std=c++11/g' Makefile
+sed -i '.sed' 's/boost_python/boost_python27/g' Makefile
 make all
 make pycaffe
 
@@ -153,9 +151,9 @@ cd build
 cmake -DBOOST_ROOT=$BREW_BOOST_ROOT ../
 make
 
-# Make cv2 available in the virtualenv
-CV2_LOCATION=$(brew info opencv@3 | grep /usr/local/Cellar | cut -d' ' -f1)
-ln -s $CV2_LOCATION/lib/python2.7/site-packages/cv2/python-2.7/cv2.so $VGG_FACE_INSTALL_FOLDER/visorgen/lib/python2.7/cv2.so
+# Make cv2 available locally
+CV2_LOCATION=$(brew info opencv@2 | grep /usr/local/Cellar | cut -d' ' -f1)
+cp $CV2_LOCATION/lib/python2.7/site-packages/cv2.so $HOME/Library/Python/2.7/lib/python/site-packages/
 
 # configure vgg_face_search
 sed -i '.sed' "s|DATASET_FEATS_FILE|DATASET_FEATS_FILE='${VGG_FACE_INSTALL_FOLDER}/visorgen/backend_data/faces/features/database.pkl'#|g" $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_face_search/service/settings.py

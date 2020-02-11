@@ -14,8 +14,9 @@ exit /B
     exit /B
 :CASE_faces
     cd %~dp0
-    cd ..\vgg_img_downloader
-    START "vgg_img_downloader" /MIN start_service.bat
+    REM image downloader no longer used
+    REM cd ..\vgg_img_downloader
+    REM START "vgg_img_downloader" /MIN start_service.bat
     cd ..\..\vgg_face_search\service
     START "vgg_face_search_service" /MIN start_backend_service.bat
     exit /B

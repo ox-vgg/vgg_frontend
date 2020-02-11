@@ -68,7 +68,7 @@ call Scripts\activate
 REM Install vgg_face_search dependencies
 pip install setuptools==39.1.0
 pip install simplejson==3.8.2
-pip install Pillow==2.3.0
+pip install Pillow==6.1.0
 pip install numpy==1.14.0
 pip install Cython==0.27.3
 pip install matplotlib==2.1.0
@@ -84,21 +84,20 @@ REM Install vgg_frontend additional dependencies
 pip install django==1.10
 
 REM Install vgg_img_downloader additional dependencies
-pip install greenlet==0.4.10
-pip install gevent==0.13.8
+pip install greenlet==0.4.15
+pip install gevent==1.1.0
 pip install Flask==0.10.1
 pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
 
 REM Install vgg_frontend controller additional dependencies
 pip install validictory==0.9.1
 pip install msgpack-python==0.3.0
-pip install requests==1.1.0
-easy_install https://pypi.python.org/packages/02/91/553f174f52190474cb10061d7a451fb274fac78f1ff52ad5f64731206ce7/pyzmq-2.2.0-py2.7-win-amd64.egg
-pip install gevent-zeromq==0.2.5
+pip install requests==2.2.1
+easy_install https://files.pythonhosted.org/packages/ea/78/79c8efb5de3c648b6c945f21c4ac291bb405b81b8cf6bb906eeb2d816187/pyzmq-17.1.2-cp27-cp27m-win_amd64.whl
 pip install Whoosh==2.7.4
 
 REM Download static caffe for windows (Release version, CPU only, Python 2.7) from https://github.com/BVLC/caffe/tree/windows
-wget "https://ci.appveyor.com/api/projects/BVLC/caffe/artifacts/build/caffe.zip?branch=windows&job=Environment%%3A%%20MSVC_VERSION%%3D14%%2C%%20WITH_NINJA%%3D0%%2C%%20CMAKE_CONFIG%%3DRelease%%2C%%20CMAKE_BUILD_SHARED_LIBS%%3D0%%2C%%20PYTHON_VERSION%%3D2%%2C%%20WITH_CUDA%%3D0" -O caffe.zip
+wget "https://github.com/Coderx7/Caffe_1.0_Windows/releases/download/caffe_1.0_windows/caffe_cpu_x64_MSVC14_Py27_release.zip" -O caffe.zip
 powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('caffe.zip', 'backend_dependencies\caffe'); }"
 
 REM delete all zips

@@ -18,7 +18,7 @@ Applications
 
 `VIC` is an application that serves as a web engine to perform image classification queries over an user-defined image dataset. More detailed information can be found at <http://www.robots.ox.ac.uk/~vgg/software/vic/>.
 
-Deployment scripts are provided for macOS High Sierra 10.13.3 and Ubuntu 14.04, with or without GPU support. For instructions on how to deploy the application on Ubuntu 16.04.6 LTS, see the corresponding dockerfile.
+Deployment scripts are provided for macOS High Sierra 10.13.3 and Ubuntu 16, with or without GPU support.
 
 #### *VGG Face Finder (VFF) engine*
 
@@ -26,7 +26,7 @@ Deployment scripts are provided for macOS High Sierra 10.13.3 and Ubuntu 14.04, 
 
 `VFF` is an application that serves as a web engine to perform queries over an user-defined image dataset with faces. More detailed information can be found at <http://www.robots.ox.ac.uk/~vgg/software/vff/>.
 
-Deployment scripts are provided for macOS High Sierra 10.13.3, Ubuntu 14.04 and Windows10 x64; with or without GPU support. For instructions on how to deploy the application on Ubuntu 16.04.6 LTS, see the corresponding dockerfile.
+Deployment scripts are provided for macOS High Sierra 10.13.3, Ubuntu 16 and Windows10 x64; with or without GPU support.
 
 The GPU version uses [face-py-faster-rcnn](https://github.com/playerkk/face-py-faster-rcnn/) for the face detection, while the CPU-only version uses [facenet](https://github.com/davidsandberg/facenet/).
 
@@ -37,7 +37,7 @@ For Windows, none of these detectors are supported and instead the standard fron
 
 The scripts will deploy the code in this repository without any backend engine. It can be used to retrieve a pre-defined list of images associated with a text string.
 
-Deployment scripts are provided for macOS High Sierra 10.13.3, Ubuntu 14.04 and Windows10 x64. For instructions on how to deploy the application on Ubuntu 16.04.6 LTS, see the corresponding dockerfile.
+Deployment scripts are provided for macOS High Sierra 10.13.3, Ubuntu 16 and Windows10 x64.
 
 Configuration
 -------------

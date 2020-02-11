@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# - This script is to be run in a clean Ubuntu 14.04 LTS machine, by a sudoer user.
+# - This script is to be run in a clean Ubuntu 16 LTS machine, by a sudoer user.
 # - VGG_FACE_INSTALL_FOLDER/visorgen should not exist
 # - Caffe is compiled for CPU use only.
 # - It creates one user for the Admin Tools: login/passwd --> admin/vggadmin
@@ -35,7 +35,7 @@ sudo apt-get install -y wget unzip
 sudo apt-get install -y gfortran
 sudo apt-get install -y libz-dev libjpeg-dev libfreetype6-dev
 sudo apt-get install -y libxml2-dev libxslt1-dev
-sudo apt-get install -y python-opencv
+sudo apt-get install -y python-opencv python-tk
 
 # create main folders and virtual environment
 mkdir $VGG_FACE_INSTALL_FOLDER/visorgen/
@@ -61,7 +61,7 @@ source ./bin/activate
 pip install --upgrade pip
 pip install setuptools==39.1.0
 pip install simplejson==3.8.2
-pip install Pillow==2.3.0
+pip install Pillow==6.1.0
 pip install numpy==1.13.3
 pip install lxml==4.1.1
 pip install scipy==0.18.1
@@ -79,7 +79,7 @@ pip install Whoosh==2.7.4
 
 # vgg_img_downloader dependencies
 sudo apt-get install -y libevent-dev
-pip install greenlet==0.4.10
+pip install greenlet==0.4.15
 pip install gevent==0.13.8
 pip install Flask==0.10.1
 pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
@@ -88,14 +88,18 @@ pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
 sudo apt-get install -y libzmq-dev
 pip install validictory==0.9.1
 pip install msgpack-python==0.3.0
-pip install requests==1.1.0
-pip install gevent-zeromq==0.2.5
+pip install requests==2.2.1
+pip install pyzmq==17.1.2
 
 # make cv2 available in the virtualenv
-ln -s /usr/lib/python2.7/dist-packages/cv2.so $VGG_FACE_INSTALL_FOLDER/visorgen/lib/python2.7/cv2.so
+cp /usr/lib/python2.7/dist-packages/cv2*.so $VGG_FACE_INSTALL_FOLDER/visorgen/lib/python2.7/cv2.so
 
 # dependencies for start/stop scripts
 sudo apt-get install -y screen
+
+# For the "PROTOCOL_SSLv3" change, see https://github.com/mistio/mist-ce/issues/434#issuecomment-86484952
+sed -i 's|PROTOCOL_SSLv3|PROTOCOL_SSLv23|g' $VGG_FACE_INSTALL_FOLDER/visorgen/lib/python2.7/site-packages/gevent/ssl.py
+sed -i 's|ssl.PROTOCOL_SSLv3|#ssl.PROTOCOL_SSLv3|g' $VGG_FACE_INSTALL_FOLDER/visorgen/lib/python2.7/site-packages/requests/packages/urllib3/contrib/pyopenssl.py
 
 # download caffe
 wget https://github.com/BVLC/caffe/archive/1.0.zip -P /tmp
@@ -125,8 +129,8 @@ cd $VGG_FACE_INSTALL_FOLDER/visorgen/backend_data/faces
 wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/senet50_256.caffemodel
 wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/senet50_256.prototxt
 
-# download vgg_frontend repo (REMOVE - DEVELOP) !!!
-wget https://gitlab.com/vgg/vgg_frontend/-/archive/develop/vgg_frontend-develop.zip -O /tmp/vgg_frontend.zip
+# download vgg_frontend repo
+wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O /tmp/vgg_frontend.zip
 unzip /tmp/vgg_frontend.zip -d $VGG_FACE_INSTALL_FOLDER/visorgen/
 mv $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_frontend*  $VGG_FACE_INSTALL_FOLDER/visorgen/vgg_frontend
 
@@ -145,6 +149,9 @@ cd $VGG_FACE_INSTALL_FOLDER/visorgen/backend_dependencies/caffe
 cp Makefile.config.example Makefile.config
 sed -i 's/# CPU_ONLY/CPU_ONLY/g' Makefile.config
 sed -i 's/\/usr\/include\/python2.7/\/usr\/include\/python2.7 \/usr\/local\/lib\/python2.7\/dist-packages\/numpy\/core\/include/g' Makefile.config
+sed -i 's/INCLUDE_DIRS :=/INCLUDE_DIRS := \/usr\/include\/hdf5\/serial\/ /g' Makefile.config
+sed -i 's/LIBRARY_DIRS :=/LIBRARY_DIRS := \/usr\/lib\/x86_64-linux-gnu\/hdf5\/serial\/ /g' Makefile.config
+sed -i 's/# Configure build/CXXFLAGS += -std=c++11/g' Makefile
 make all
 make pycaffe
 

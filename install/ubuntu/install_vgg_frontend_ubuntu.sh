@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# - This script is to be run in a clean Ubuntu 14.04 LTS machine, by a sudoer user.
+# - This script is to be run in a clean Ubuntu 16 LTS machine, by a sudoer user.
 # - The directory /webapps/ should not exist
 
 # update repositories
@@ -30,22 +30,16 @@ sudo pip install python-memcached
 
 # frontend dependencies
 sudo apt-get install -y libz-dev libjpeg-dev libfreetype6-dev
-sudo pip install protobuf==2.6.1
+sudo pip install protobuf==3.0.0
 sudo pip install Pillow==2.3.0
 sudo pip install Whoosh==2.7.4
-
-# imsearch-tools dependencies
-sudo apt-get install -y libevent-dev
-sudo pip install greenlet==0.4.10
-sudo pip install gevent==0.13.8
-sudo pip install Flask==0.10.1
 
 # controller dependencies
 sudo apt-get install -y libzmq-dev
 sudo pip install validictory==0.9.1
 sudo pip install msgpack-python==0.3.0
-sudo pip install requests==1.1.0
-sudo pip install gevent-zeromq==0.2.5
+sudo pip install requests==2.2.1
+sudo pip install pyzmq==17.1.2
 
 # download and setup vgg_frontend for JUST displaying results
 wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O /tmp/vgg_frontend.zip
@@ -54,7 +48,6 @@ rm -rf /tmp/vgg_frontend.zip
 mv /webapps/visorgen/vgg_frontend-* /webapps/visorgen/vgg_frontend/
 echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
 cp /webapps/visorgen/vgg_frontend/visorgen/settings_display.py /webapps/visorgen/vgg_frontend/visorgen/settings.py
-sed -i '.sed' "s|/webapps|${HOME}|g" /webapps/visorgen/vgg_frontend/visorgen/settings.py
 cd /webapps/visorgen/vgg_frontend
 python manage.py migrate
 

@@ -47,7 +47,7 @@ RUN apt-get update && apt-get install -y \
 # For the "PROTOCOL_SSLv3" change, see https://github.com/mistio/mist-ce/issues/434#issuecomment-86484952
 RUN wget https://bootstrap.pypa.io/get-pip.py -P /tmp \
     && python /tmp/get-pip.py pip==19.1.1 && rm /tmp/get-pip.py \
-    && printf "setuptools==40.4.3\ndjango==1.10\npython-memcached\ngevent==0.13.8\nrequests==2.2.1\nFlask==0.10.1\nPillow==2.3.0\ngreenlet==0.4.10\nvalidictory==0.9.1\nmsgpack-python==0.3.0\ngevent-zeromq==0.2.5\nnumpy==1.15.2\nPyWavelets==1.0.1\nnetworkx==2.2" > /tmp/requirements-1.txt \
+    && printf "setuptools==40.4.3\ndjango==1.10\npython-memcached\ngevent==0.13.8\nrequests==2.2.1\nFlask==0.10.1\nPillow==6.1.0\ngreenlet==0.4.15\nvalidictory==0.9.1\nmsgpack-python==0.3.0\npyzmq==17.1.2\nnumpy==1.15.2\nPyWavelets==1.0.1\nnetworkx==2.2" > /tmp/requirements-1.txt \
     && pip install -r /tmp/requirements-1.txt \
     && pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.4.0-cp27-none-linux_x86_64.whl \
     && printf "simplejson==3.8.2\nmatplotlib==2.1.0\nlxml==4.1.1\nscipy==0.18.1\nscikit-image==0.13.1\nscikit-learn==0.19.1\nWhoosh==2.7.4\npyopenssl==17.5.0\npyasn1\nndg-httpsclient" > /tmp/requirements-2.txt \

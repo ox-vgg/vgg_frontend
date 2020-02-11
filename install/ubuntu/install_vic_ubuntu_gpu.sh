@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# - This script is to be run in a clean Ubuntu 14.04 LTS machine, by a sudoer user.
+# - This script is to be run in a clean Ubuntu 16 LTS machine, by a sudoer user.
 # - The directory /webapps/ should not exist
 # - It creates one user for the Admin Tools: login/passwd --> admin/vggadmin
 # - It assumes the CUDA Toolkit and drivers are installed in your PC. Make sure you can compile and run the CUDA Toolkit Samples.
@@ -47,8 +47,11 @@ sudo apt-get install -y libssl-dev
 # frontend dependencies
 sudo apt-get install -y libz-dev libjpeg-dev libfreetype6-dev
 
-# vgg_img_downloader dependencies
+# vgg_classifier dependencies
 sudo apt-get install -y libevent-dev
+sudo pip install numpy==1.11.1
+sudo pip install Pillow==2.3.0
+sudo pip install matplotlib==1.5.3
 
 # Django dependencies
 sudo apt-get install -y memcached
@@ -62,11 +65,10 @@ sudo pip install python-memcached
 
 # frontend python dependencies
 sudo pip install protobuf==3.0.0
-sudo pip install Pillow==2.3.0
 sudo pip install Whoosh==2.7.4
 
 # vgg_img_downloader python dependencies
-sudo pip install greenlet==0.4.10
+sudo pip install greenlet==0.4.15
 sudo pip install gevent==0.13.8
 sudo pip install Flask==0.10.1
 sudo pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
@@ -74,8 +76,8 @@ sudo pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
 # controller python dependencies
 sudo pip install validictory==0.9.1
 sudo pip install msgpack-python==0.3.0
-sudo pip install requests==1.1.0
-sudo pip install gevent-zeromq==0.2.5
+sudo pip install requests==2.2.1
+sudo pip install pyzmq==17.1.2
 
 # create main folders
 sudo mkdir /webapps/
@@ -95,6 +97,10 @@ mkdir /webapps/visorgen/frontend_data/searchdata/postrainimgs
 mkdir /webapps/visorgen/frontend_data/searchdata/rankinglists
 mkdir /webapps/visorgen/frontend_data/searchdata/uploadedimgs
 mkdir /webapps/visorgen/backend_dependencies
+
+# For the changes below, see https://github.com/mistio/mist-ce/issues/434#issuecomment-86484952
+sudo sed -i 's|PROTOCOL_SSLv3|PROTOCOL_SSLv23|g' /usr/local/lib/python2.7/dist-packages/gevent/ssl.py
+sudo sed -i 's|ssl.PROTOCOL_SSLv3|#ssl.PROTOCOL_SSLv3|g' /usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/contrib/pyopenssl.py
 
 # download caffe
 sudo apt-get install -y unzip
@@ -127,6 +133,9 @@ rm -rf /tmp/*.zip
 cd /webapps/visorgen/backend_dependencies/caffe/
 cp Makefile.config.example Makefile.config
 sed -i 's/\/usr\/include\/python2.7/\/usr\/include\/python2.7 \/usr\/local\/lib\/python2.7\/dist-packages\/numpy\/core\/include/g' Makefile.config
+sed -i 's/INCLUDE_DIRS :=/INCLUDE_DIRS := \/usr\/include\/hdf5\/serial\/ /g' Makefile.config
+sed -i 's/LIBRARY_DIRS :=/LIBRARY_DIRS := \/usr\/lib\/x86_64-linux-gnu\/hdf5\/serial\/ /g' Makefile.config
+sed -i 's/# Configure build/CXXFLAGS += -std=c++11/g' Makefile
 make all
 
 # compile cpp-netlib
@@ -145,7 +154,7 @@ ln -s liblinear.so.3 liblinear.so
 cd /webapps/visorgen/vgg_classifier
 mkdir build
 cd build
-cmake -DCaffe_DIR=/webapps/visorgen/backend_dependencies/caffe/ -DCaffe_INCLUDE_DIR="/webapps/visorgen/backend_dependencies/caffe/include;/webapps/visorgen/backend_dependencies/caffe/build/src" -DLiblinear_DIR=/webapps/visorgen/backend_dependencies/liblinear-210/ -Dcppnetlib_DIR=/webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/build/ ../
+cmake -DCMAKE_CXX_STANDARD=11 -DCaffe_DIR=/webapps/visorgen/backend_dependencies/caffe/ -DCaffe_INCLUDE_DIR="/webapps/visorgen/backend_dependencies/caffe/include;/webapps/visorgen/backend_dependencies/caffe/build/src" -DLiblinear_DIR=/webapps/visorgen/backend_dependencies/liblinear-210/ -Dcppnetlib_DIR=/webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/build/ ../
 make
 make install
 
