@@ -3,7 +3,7 @@
 from hashlib import md5
 from time import time as unix_time
 
-import base_caches
+from retengine.managers.base_caches import session_cache
 
 #
 # Cache Inheritance Hierarchy:
@@ -30,7 +30,7 @@ class QueryKeyCache(object):
                 session_lifetime: number of seconds before a cache entry
                                   expires. The default is 15 minutes.
         """
-        self._session_cache = base_caches.SessionCache(session_lifetime)
+        self._session_cache = session_cache.SessionCache(session_lifetime)
 
 
     def delete_text_query_unknown_session(self, query_text):
@@ -52,11 +52,11 @@ class QueryKeyCache(object):
             Returns:
                 The generated ID.
         """
-        query_ses_id = md5(str(unix_time())).hexdigest()
+        query_ses_id = md5( str(unix_time()).encode('utf-8') ).hexdigest()
 
         self._session_cache.add_data(query, query_ses_id, "query")
         self._session_cache.add_data(None, query_ses_id, "backend_qid")
-        #print 'Generated qsid: %s with query: %s' % (query_ses_id, query['qdef'])
+        #print ('Generated qsid: %s with query: %s' % (query_ses_id, query['qdef']))
         return query_ses_id
 
 
@@ -69,9 +69,9 @@ class QueryKeyCache(object):
         """
         self._session_cache.add_data(qid, query_ses_id, "backend_qid")
         #if qid is not None:
-            #print 'Set qid of qsid: %s to: %d' % (query_ses_id, qid)
+            #print ('Set qid of qsid: %s to: %d' % (query_ses_id, qid))
         #else:
-            #print 'Set qid of qsid: %s to: None' % query_ses_id
+            #print ('Set qid of qsid: %s to: None' % query_ses_id)
 
 
     def get_query_details_and_qid(self, query_ses_id):
@@ -87,7 +87,7 @@ class QueryKeyCache(object):
         """
         query = self._session_cache.get_data(query_ses_id, "query")
         qid = self._session_cache.get_data(query_ses_id, "backend_qid")
-        #print 'Lookup of qsid: %s gave query: %s' % (query_ses_id, query)
+        #print ('Lookup of qsid: %s gave query: %s' % (query_ses_id, query))
         return (query, qid)
 
 
@@ -109,7 +109,7 @@ class QueryKeyCache(object):
                 query_ses_id: ID associated to the query in this cache.
         """
         self._session_cache.delete_session(query_ses_id)
-        #print 'Deleted qsid data: %s' % query_ses_id
+        #print ('Deleted qsid data: %s' % query_ses_id)
 
 
     def clear_all_sessions(self):

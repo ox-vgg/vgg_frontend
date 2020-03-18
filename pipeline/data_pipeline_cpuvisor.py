@@ -43,6 +43,8 @@ def preproc_chunk_thread(start_index, end_index, lock, feat_type, CONFIG_PROTO_P
         fout.write(('DATA-PIPELINE [%s]: EXECUTING %s\n') % (time.strftime("%H:%M:%S"), str(popen_cmd)))
         popen_obj = Popen(popen_cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = popen_obj.communicate()
+        output = output.decode()
+        err = err.decode()
         #fout.write(err)
         # extract filename from cpuvisor_preproc output
         # NB: We use STDERR for the code below because google::InitGoogleLogging is
@@ -65,12 +67,14 @@ def preproc_chunk_thread(start_index, end_index, lock, feat_type, CONFIG_PROTO_P
             fout.write(('DATA-PIPELINE [%s]: EXECUTING %s\n') % (time.strftime("%H:%M:%S"), str(popen_cmd)))
             popen_obj = Popen(popen_cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             output, err = popen_obj.communicate()
+            output = output.decode()
+            err = err.decode()
             #fout.write(err)
 
     except Exception as e:
         # log the exception and leave
         if fout:
-            fout.write(('DATA-PIPELINE [%s]: EXCEPTION %s\n') % (time.strftime("%H:%M:%S"), e.message))
+            fout.write(('DATA-PIPELINE [%s]: EXCEPTION %s\n') % (time.strftime("%H:%M:%S"), str(e)))
         pass
 
     # release lock to give the chance to another thread
@@ -122,14 +126,17 @@ def data_processing_pipeline_cpuvisor(input_list_of_frames, index, lock, feat_ty
         try:
             # Create/modify frame list file (a.k.a. DATASET_IM_PATHS)
             fout.write(('DATA-PIPELINE [%s]: INSERTING FRAME LIST INTO: %s\n') % (time.strftime("%H:%M:%S"), DATASET_IM_PATHS))
+            current_line_count = 0
+            if os.path.exists(DATASET_IM_PATHS):
+                with open(DATASET_IM_PATHS, "r") as dataset_imgs_file:
+                    for counter, line in enumerate(dataset_imgs_file):
+                        current_line_count = current_line_count + 1
+            fout.write(('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN CURRENT FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), current_line_count))
             with open(DATASET_IM_PATHS, "a+") as dataset_imgs_file:
-                for counter, line in enumerate(dataset_imgs_file):
-                    current_line_count = current_line_count + 1
-                fout.write(('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN CURRENT FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), current_line_count))
                 new_line_count = current_line_count
                 for i in range(0, len(frame_list)):
                     new_line_count = new_line_count + 1
-                    encode_frame_name = frame_list[i].encode("utf-8")
+                    encode_frame_name = frame_list[i]
                     dataset_imgs_file.write(encode_frame_name)
                     dataset_imgs_file.write('\n')
             fout.write(('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN NEW FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), new_line_count))

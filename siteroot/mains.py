@@ -14,8 +14,7 @@ from views.api import APIFunctions
 sys.path.append(os.path.join(settings.BASE_DIR, 'visor', 'controllers'))
 
 # imports from 'controllers'
-import controller
-import retengine.engine
+from controller import VisorController
 
 # Global variables to access API and views
 api_functions = None
@@ -31,12 +30,12 @@ def visor_static_init():
     global user_pages
     global admin_pages
     if api_functions == None:
-        visor_controller = controller.VisorController(retengine.engine.VisorEngine)
-        print 'Creating base controller ', visor_controller
+        visor_controller = VisorController()
+        print ('Creating base controller ', visor_controller)
         api_functions = APIFunctions(visor_controller)
         user_pages = UserPages(visor_controller)
         admin_pages = AdminPages(visor_controller)
-    visor_static_init.func_code = (lambda: None).func_code
+    visor_static_init.__code__ = (lambda: None).__code__
 
 # Initialize, just once
 visor_static_init()

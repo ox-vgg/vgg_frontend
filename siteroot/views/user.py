@@ -11,7 +11,7 @@ from django.contrib.auth.views import logout as auth_views_logout
 import json
 import sys
 import os
-import urllib
+import urllib.parse
 from PIL import Image
 import copy
 import requests
@@ -22,8 +22,9 @@ import re
 sys.path.append(os.path.join(settings.BASE_DIR, 'siteroot', 'controllers'))
 
 # imports from the controller
-import retengine.engine
-import retengine.query_translations
+from retengine.engine import backend_client
+from retengine import query_translations
+from retengine.models import opts
 
 class UserPages:
     """
@@ -114,7 +115,7 @@ class UserPages:
         """
         # Check if there is a session already created. Create one if necessary.
         if request.session.session_key == None:
-            print 'Creating user session ...'
+            print ('Creating user session ...')
             request.session.create()
 
         # check if the backend is reachable or not
@@ -128,7 +129,7 @@ class UserPages:
         engine = request.GET.get('engine', None)
         if engine not in available_engines.keys():
             # use the first engine by default
-            engine = self.visor_controller.opts.engines_dict.keys()[0]
+            engine = list(self.visor_controller.opts.engines_dict)[0]
 
         # compute home location taking into account any possible redirections
         home_location = settings.SITE_PREFIX + '/'
@@ -232,7 +233,7 @@ class UserPages:
                 return redirect(home_location + '?engine=' + engine)
 
         # Only accept text queries with acceptable characters
-        if ((query_type == retengine.models.opts.Qtypes.text) and
+        if ((query_type == opts.Qtypes.text) and
             (query_string != 'keywords:%s' % settings.KEYWORDS_WILDCARD) and
             (not re.match("^[#$]?[a-zA-Z0-9_\-\ +,:;.!\?()\[\]]*$", query_string))):
             message = 'Your text query contains invalid characters. Please use only letters, numbers, spaces or common word dividers. Also avoid using the keyword-wildcard (%s) along other keywords.' % settings.KEYWORDS_WILDCARD
@@ -245,7 +246,7 @@ class UserPages:
             # In case of an image query, check if the engine support images as input.
             # Although in general this kind of query should not reach this point.
             engine_has_img_postproc_module = self.visor_controller.opts.engines_dict[engine].get('imgtools_postproc_module', None) != None
-            if query_type == retengine.models.opts.Qtypes.image and not engine_has_img_postproc_module:
+            if query_type == opts.Qtypes.image and not engine_has_img_postproc_module:
                 message = 'The selected engine does not support image queries. Please correct your search or select a different engine.'
                 redirect_to = settings.SITE_PREFIX
                 return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
@@ -253,7 +254,7 @@ class UserPages:
             # In case of a (non-curated) text query, with the image postprocessing module set to 'download_disabled',
             # try to transform the text query into a keyword query. If it is not possible, report an error.
             img_postproc_module_is_download_disabled = self.visor_controller.opts.engines_dict[engine].get('imgtools_postproc_module', None) == 'download_disabled'
-            if (query_type == retengine.models.opts.Qtypes.text and img_postproc_module_is_download_disabled and
+            if (query_type == opts.Qtypes.text and img_postproc_module_is_download_disabled and
                 not query_string.startswith('keywords:') and query_string[0] != '#' and query_string[0] != '$' ):
                 new_query_string = None
                 try:
@@ -266,7 +267,7 @@ class UserPages:
                             new_query_string = new_query_string + ','
                         new_query_string = new_query_string + keyword_list[idx]
                 except Exception as e:
-                    print e
+                    print (e)
                     new_query_string = None
                     pass
                 if new_query_string is None or new_query_string=='keywords:':
@@ -275,10 +276,10 @@ class UserPages:
                     return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
                 else:
                     try:
-                        new_query_string = urllib.quote(new_query_string)
+                        new_query_string = urllib.parse.quote(new_query_string)
                         return redirect(settings.SITE_PREFIX + '/searchproc_qstr?q=%s&qtype=%s&dsetname=%s&engine=%s' % (new_query_string, query_type, dataset_name, engine))
                     except Exception as e:
-                        print e
+                        print (e)
                         pass
 
             # save main details in session
@@ -288,7 +289,7 @@ class UserPages:
             request.session['engine'] = engine
 
             # generate session and query id
-            query = retengine.query_translations.querystr_tuple_to_query(query_string, query_type, dataset_name, engine, prev_qsid)
+            query = query_translations.querystr_tuple_to_query(query_string, query_type, dataset_name, engine, prev_qsid)
             query_ses_info = {}
             query_ses_info['query_ses_id'] = self.visor_controller.query_key_cache.gen_query_session_id(query)
 
@@ -301,16 +302,17 @@ class UserPages:
                 # but use a lock to guarantee this thread's exclusive access
                 self.visor_controller.query_available_lock.acquire()
                 # check if query in cache
+
                 query_ses_info['cached'] = self.visor_controller.check_query_in_cache_no_locking(query, request.session.session_key)
                 if not query_ses_info['cached']:
                     # if it is not cached, check the status of the query, in case another thread is running it
                     status = self.visor_controller.interface.query_manager.get_query_status_from_definition(query)
-                    if status != None and status.state < retengine.models.opts.States.results_ready:
+                    if status != None and status.state < opts.States.results_ready:
                         # if another thread is running it and it is not done, redirect to the 'wait for it' page,
                         # which will automatically redirect to this page to retry the search
                         if query_string[0] == '#':
                             query_string = query_string.replace('#', '%23') #  html-encode curated search character
-                            query_type = retengine.models.opts.Qtypes.text # every curated query is a text query
+                            query_type = opts.Qtypes.text # every curated query is a text query
                         return redirect(settings.SITE_PREFIX + '/waitforit?q=%s&qtype=%s&dsetname=%s&engine=%s' % (query_string, query_type, dataset_name, engine))
             finally:
                 # release access
@@ -352,10 +354,10 @@ class UserPages:
                             result = requests.get(home_location + 'execquery?qsid=' + query_ses_info['query_ses_id'])
                             response = result.json()
                             # Check response
-                            if response['state'] >= retengine.models.opts.States.fatal_error_or_socket_timeout:
+                            if response['state'] >= opts.States.fatal_error_or_socket_timeout:
                                 # if something went wrong, get brutally out of the try
                                 raise Exception(response['err_msg'])
-                            if response['state'] < retengine.models.opts.States.results_ready:
+                            if response['state'] < opts.States.results_ready:
                                 # if not ready, sleep a bit
                                 time.sleep(seconds_between_requests)
                             else:
@@ -364,7 +366,7 @@ class UserPages:
                     except Exception as e:
                         # display error message and go back home
                         redirect_to = settings.SITE_PREFIX
-                        msg = str(e.message)
+                        msg = str(e)
                         msg = msg.replace('\'', '')
                         return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': msg})
 
@@ -440,15 +442,15 @@ class UserPages:
         # if there is no query_data, ...
         if not query_data.rlist:
             # ... if the query is done, then it must have returned no results. Show message and redirect to home page
-            if query_data.status.state == retengine.models.opts.States.results_ready:
+            if query_data.status.state == opts.States.results_ready:
                 message = 'This query did not return any results. Please enter a diferent query in the home page.'
                 redirect_to = settings.SITE_PREFIX
                 return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
             else:  # ... otherwise redirect to searchproc_qstr to continue the query
-                (qtext, qtype, dsetname, engine) = retengine.query_translations.query_to_querystr_tuple(query)
+                (qtext, qtype, dsetname, engine) = query_translations.query_to_querystr_tuple(query)
                 if qtext[0] == '#':
                     qtext = qtext.replace('#', '%23') #  html-encode curated search character
-                    qtype = retengine.models.opts.Qtypes.text # every curated query is a text query
+                    qtype = opts.Qtypes.text # every curated query is a text query
                 return redirect(settings.SITE_PREFIX + '/searchproc_qstr?q=%s&qtype=%s&dsetname=%s&engine=%s' % (qtext, qtype, dsetname, engine))
 
         # compute home location taking into account any possible redirections
@@ -457,7 +459,7 @@ class UserPages:
             home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
         # extract query string, specially needed when the query type is not 'text'
-        query_string = retengine.query_translations.query_to_querystr(query)
+        query_string = query_translations.query_to_querystr(query)
 
         # get engines info, for including it in the page
         available_engines = self.visor_controller.opts.engines_dict
@@ -564,7 +566,7 @@ class UserPages:
         query_data = self.visor_controller.get_query_result(query, request.session.session_key, query_ses_id=query_id)
 
         # For the instances engine, if the query included a ROI, remove results without ROI
-        query_string = retengine.query_translations.query_to_querystr(query)
+        query_string = query_translations.query_to_querystr(query)
         if 'roi' in query_string and engine == 'instances':
             rlist = []
             for ritem in query_data.rlist:
@@ -576,15 +578,15 @@ class UserPages:
         # if there is no query_data, ...
         if not rlist:
             # ... if the query is done, then it must have returned no results. Show message and redirect to home page
-            if query_data.status.state == retengine.models.opts.States.results_ready:
+            if query_data.status.state == opts.States.results_ready:
                 message = 'This query did not return any results. Please enter a diferent query in the home page.'
                 redirect_to = settings.SITE_PREFIX
                 return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
             else:  # ... otherwise redirect to searchproc_qstr to continue the query
-                (qtext, qtype, dsetname, engine) = retengine.query_translations.query_to_querystr_tuple(query)
+                (qtext, qtype, dsetname, engine) = query_translations.query_to_querystr_tuple(query)
                 if qtext[0] == '#':
                     qtext = qtext.replace('#', '%23') #  html-encode curated search character
-                    qtype = retengine.models.opts.Qtypes.text # every curated query is a text query
+                    qtype = opts.Qtypes.text # every curated query is a text query
                 return redirect(settings.SITE_PREFIX + '/searchproc_qstr?q=%s&qtype=%s&dsetname=%s&engine=%s' % (qtext, qtype, dsetname, engine))
 
         # Get the image count here, but watch out for modifications afterwards.
@@ -632,7 +634,7 @@ class UserPages:
                 # from the backend
                 query = self.visor_controller.query_key_cache.get_query_details(query_id)
                 backend_port = self.visor_controller.opts.engines_dict[engine]['backend_port']
-                ses = retengine.engine.backend_client.Session(backend_port)
+                ses = backend_client.Session(backend_port)
                 func_in = {}
                 func_in['func'] = 'getRoi'
                 func_in['frame_path'] = ritem['path']
@@ -711,13 +713,13 @@ class UserPages:
 
         # dsetname and page variables used to allow the user to return
         # to calling results page
-        if query['qtype'] == retengine.models.opts.Qtypes.dsetimage:
+        if query['qtype'] == opts.Qtypes.dsetimage:
             sa_thumbs = 'thumbnails/%s/' % query['dsetname']
-        elif query['qtype'] == retengine.models.opts.Qtypes.refine:
+        elif query['qtype'] == opts.Qtypes.refine:
             sa_thumbs = 'postrainimgs/'
-        elif query['qtype'] == retengine.models.opts.Qtypes.text:
+        elif query['qtype'] == opts.Qtypes.text:
             sa_thumbs = 'postrainimgs/'
-        elif query['qtype'] == retengine.models.opts.Qtypes.image:
+        elif query['qtype'] == opts.Qtypes.image:
             sa_thumbs = 'uploadedimgs/'
 
         # No matter the query type, check if it is a curated query
@@ -748,8 +750,8 @@ class UserPages:
                 # thumbs suffix, so that a thumbnail image is correctly downloaded
                 # if a search is launched from this page
                 image_path = image_path.replace('#', '%23') #  html-encode curated search character
-                if  (query['qtype'] == retengine.models.opts.Qtypes.refine or
-                     query['qtype'] == retengine.models.opts.Qtypes.text):
+                if  (query['qtype'] == opts.Qtypes.refine or
+                     query['qtype'] == opts.Qtypes.text):
                     img_id = sa_thumbs + image_path
                 else:
                     img_id = image_path
@@ -765,7 +767,7 @@ class UserPages:
                             img_id = img_id + '_%0.2f' % (coord)
                         idx = idx + 1
                 image['img_id'] = img_id
-                image['image'] = urllib.quote(image['image'])
+                image['image'] = urllib.parse.quote(image['image'])
 
 
         # set up rendering context and render the page
@@ -816,7 +818,7 @@ class UserPages:
         query_data = self.visor_controller.get_query_result(query, request.session.session_key, query_ses_id=query_id)
 
         # For the instances engine, if the query included a ROI, remove results without ROI
-        query_string = retengine.query_translations.query_to_querystr(query)
+        query_string = query_translations.query_to_querystr(query)
         if 'roi' in query_string and engine == 'instances':
             rlist = []
             for ritem in query_data.rlist:
@@ -828,15 +830,15 @@ class UserPages:
         # if there is no query_data, ...
         if not rlist:
             # ... if the query is done, then it must have returned no results. Show message and redirect to home page
-            if query_data.status.state == retengine.models.opts.States.results_ready:
+            if query_data.status.state == opts.States.results_ready:
                 message = 'This query did not return any results. Please enter a diferent query in the home page.'
                 redirect_to = settings.SITE_PREFIX
                 return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
             else:  # ... otherwise redirect to searchproc_qstr to continue the query
-                (qtext, qtype, dsetname, engine) = retengine.query_translations.query_to_querystr_tuple(query)
+                (qtext, qtype, dsetname, engine) = query_translations.query_to_querystr_tuple(query)
                 if qtext[0] == '#':
                     qtext = qtext.replace('#', '%23') #  html-encode curated search character
-                    qtype = retengine.models.opts.Qtypes.text # every curated query is a text query
+                    qtype = opts.Qtypes.text # every curated query is a text query
                 return redirect(settings.SITE_PREFIX + '/searchproc_qstr?q=%s&qtype=%s&dsetname=%s&engine=%s' % (qtext, qtype, dsetname, engine))
 
         # extract pages
@@ -940,7 +942,7 @@ class UserPages:
             query = self.visor_controller.query_key_cache.get_query_details(query_id)
             if query:
                 backend_port = self.visor_controller.opts.engines_dict[engine]['backend_port']
-                ses = retengine.engine.backend_client.Session(backend_port)
+                ses = backend_client.Session(backend_port)
                 func_in = {}
                 func_in['func'] = 'getRoi'
                 func_in['frame_path'] = imagename

@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
 import socket
-try:
-    import simplejson as json
-except ImportError:
-    import json  # Python 2.6+ only
-import urllib
+import simplejson as json
+import urllib.parse
 
 TCP_TERMINATOR = "$$$"
 SUCCESS_FIELD = "success"
@@ -62,20 +59,20 @@ class Session(object):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             sock.connect((self.host, self.port))
-        except socket.error, msg:
-            print 'Connect failed', msg
+        except socket.error as msg:
+            print ('Connect failed', msg)
             return self.prepare_success_json_str_(False)
 
         sock.settimeout(TCP_TIMEOUT)
 
-        print 'Request to VISOR backend at port %s: %s' % (str(self.port), request)
+        print ('Request to VISOR backend at port %s: %s' % (str(self.port), request))
 
         if append_end:
             request += TCP_TERMINATOR
 
         total_sent = 0
         while total_sent < len(request):
-            sent = sock.send(request[total_sent:])
+            sent = sock.send(request[total_sent:].encode())
             if sent == 0:
                 raise RuntimeError("Socket connection broken at port " + str(self.port))
             total_sent = total_sent + sent
@@ -85,15 +82,16 @@ class Session(object):
         while term_idx < 0:
             try:
                 rep_chunk = sock.recv(1024)
+                rep_chunk = rep_chunk.decode()
                 if not rep_chunk:
-                    print 'Connection closed! at port ' + str(self.port)
+                    print ('Connection closed! at port ' + str(self.port))
                     sock.close()
                     return self.prepare_success_json_str_(False)
 
                 response = response + rep_chunk
                 term_idx = response.find(TCP_TERMINATOR)
             except socket.timeout:
-                print 'Socket timeout at port ' + str(self.port)
+                print ('Socket timeout at port ' + str(self.port))
                 sock.close()
                 return self.prepare_success_json_str_(False)
 
@@ -196,7 +194,7 @@ class Session(object):
         else:
             func_in["func"] = "addPosTrs"
         func_in["query_id"] = query_id
-        func_in["impath"] = urllib.unquote(urllib.unquote(impath)) # decode possibly url-encoded image names
+        func_in["impath"] = urllib.parse.unquote(urllib.parse.unquote(impath)) # decode possibly url-encoded image names
         func_in["featpath"] = featpath
         func_in["from_dataset"] = (1 if from_dataset else 0)
 
@@ -536,8 +534,8 @@ class Session(object):
 
         response = self.custom_request(request)
 
-        print "done testing"
-        print response
+        print ("done testing")
+        print (response)
 
 
 if __name__ == "__main__":

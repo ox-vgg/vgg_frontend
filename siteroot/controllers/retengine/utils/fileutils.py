@@ -23,7 +23,7 @@ def delete_directory_subdirectories(path, name_filter=None):
         """
         return os.stat(file1) == os.stat(file2)
 
-    print 'Removing subdirectories of path: ' + path
+    print ('Removing subdirectories of path: ' + path)
     for root, dirnames, filenames in os.walk(path):
         for subdir in dirnames:
             if name_filter:
@@ -31,23 +31,23 @@ def delete_directory_subdirectories(path, name_filter=None):
                     subdir_path = os.path.join(root, subdir)
                     if 'Windows' not in platform.system():
                         if not os.path.samefile(path, subdir_path):
-                            print 'Removing directory: ' + subdir_path
+                            print ('Removing directory: ' + subdir_path)
                             shutil.rmtree(subdir_path)
                     else:
                         # os.path.samefile not available in Windows
                         if not samefile(path, subdir_path):
-                            print 'Removing directory: ' + subdir_path
+                            print ('Removing directory: ' + subdir_path)
                             shutil.rmtree(subdir_path)
             else:
                 subdir_path = os.path.join(root, subdir)
                 if 'Windows' not in platform.system():
                     if not os.path.samefile(path, subdir_path):
-                        print 'Removing directory: ' + subdir_path
+                        print ('Removing directory: ' + subdir_path)
                         shutil.rmtree(subdir_path)
                 else:
                     # os.path.samefile not available in Windows
                     if not samefile(path, subdir_path):
-                        print 'Removing directory: ' + subdir_path
+                        print ('Removing directory: ' + subdir_path)
                         shutil.rmtree(subdir_path)
 
 
@@ -62,7 +62,7 @@ def delete_directory_contents(path, name_filter=None):
                         contained in a filename in order to delete it.
     """
     empty_dirs = []
-    print 'Removing directory contents of path: ' + path
+    print ('Removing directory contents of path: ' + path)
 
     def delete_files(dir_list, dir_path, name_filter=None):
         """
@@ -78,11 +78,11 @@ def delete_directory_contents(path, name_filter=None):
         for afile in dir_list:
             if name_filter:
                 if name_filter in afile:
-                    print 'Removing file: ' + os.path.join(dir_path, afile)
+                    print ('Removing file: ' + os.path.join(dir_path, afile))
                     os.remove(os.path.join(dir_path, afile))
                     deleted_file_counter = deleted_file_counter + 1
             else:
-                print 'Removing file: ' + os.path.join(dir_path, afile)
+                print ('Removing file: ' + os.path.join(dir_path, afile))
                 os.remove(os.path.join(dir_path, afile))
                 deleted_file_counter = deleted_file_counter + 1
 
@@ -118,11 +118,11 @@ def delete_directory_contents(path, name_filter=None):
     if 'Windows' not in platform.system():
         for adir in empty_dirs:
             if not os.path.samefile(path, adir):
-                print 'Removing directory: ' + adir
+                print ('Removing directory: ' + adir)
                 os.rmdir(adir)
     else:
         # os.path.samefile not available in Windows
         for adir in empty_dirs:
             if not samefile(path, adir):
-                print 'Removing directory: ' + adir
+                print ('Removing directory: ' + adir)
                 os.rmdir(adir)

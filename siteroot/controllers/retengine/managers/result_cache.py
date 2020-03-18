@@ -4,9 +4,12 @@ import os
 import string
 import msgpack
 
-from retengine import utils
-from retengine import models
-import base_caches
+from retengine.utils import tag_utils
+from retengine.models import errors
+from retengine.utils import fileutils
+from retengine.managers.base_caches import (session_cache_specializations,
+                                           max_size_cache_specializations,
+                                           max_size_cache)
 
 #
 # Cache Inheritance Hierarchy:
@@ -37,7 +40,7 @@ import base_caches
 # can contain query_strid
 PATTERN_FNAME_RESULTS = '${dsetname}___${query_strid}.msgpack'
 
-class ResultCache(base_caches.SessionExcludeListCache):
+class ResultCache(session_cache_specializations.SessionExcludeListCache):
     """
         Cache for results in VISOR frontend (interfaces to both memory and disk cache)
 
@@ -101,11 +104,11 @@ class ResultCache(base_caches.SessionExcludeListCache):
         self.enabled_caches = enabled_caches
         self.enabled_excl_caches = enabled_excl_caches
 
-        self._mem_cache = base_caches.MaxSizeResultCache(entry_limit=5)
-        self._query_ses_cache = base_caches.SessionResultCache()
+        self._mem_cache = max_size_cache_specializations.MaxSizeResultCache(entry_limit=5)
+        self._query_ses_cache = session_cache_specializations.SessionResultCache()
 
         # following cache used to store query_ses_id -> query obj lookup
-        self._query_ses_id_cache = base_caches.MaxSizeCache()
+        self._query_ses_id_cache = max_size_cache.MaxSizeCache()
 
         self._bg_worker = None
 
@@ -154,11 +157,11 @@ class ResultCache(base_caches.SessionExcludeListCache):
                     try:
                         rankfile, rankfileext = os.path.splitext(rankfile)
                         dsetname, strid = rankfile.split('___', 2)
-                        querystr, qtype = utils.tag_utils.decode_query_strid(strid)
-                    except models.errors.StrIdDecodeError:
+                        querystr, qtype = tag_utils.decode_query_strid(strid)
+                    except errors.StrIdDecodeError:
                         continue
                     except ValueError:
-                        print 'Invalid filename for cached text query: %s' % rankfile
+                        print ('Invalid filename for cached text query: %s' % rankfile)
                         continue
 
                     querystrs.append(querystr)
@@ -181,26 +184,26 @@ class ResultCache(base_caches.SessionExcludeListCache):
         excl_query = self.query_in_exclude_list(query, ses_id=user_ses_id)
 
         rlist = None
-        # print '-------------------------------'
-        # print 'query_ses_id: %s' % query_ses_id
-        # print 'user_ses_id: %s' % user_ses_id
-        # print 'query: %s (%s)' % (query['qdef'], query['dsetname'])
-        # print 'enabled caches: %s' % ctxt_enabled_caches
-        # print 'query on exclude list: %s' % excl_query
-        # print '-------------------------------'
+        # print ('-------------------------------')
+        # print ('query_ses_id: %s' % query_ses_id)
+        # print ('user_ses_id: %s' % user_ses_id)
+        # print ('query: %s (%s)' % (query['qdef'], query['dsetname']))
+        # print ('enabled caches: %s' % ctxt_enabled_caches)
+        # print ('query on exclude list: %s' % excl_query)
+        # print ('-------------------------------')
 
         # read from cache if possible ----------
         ctxt_enabled_caches = self.enabled_caches if not excl_query else self.enabled_excl_caches
         if self.Caches.mem in ctxt_enabled_caches:
             # check memory cache first
-            # print 'Memory cache enabled - checking for results...'
+            # print ('Memory cache enabled - checking for results...')
             rlist = self._mem_cache.get_results(query)
-            # print 'Retrieved from memory cache: %s' % (rlist is not None)
+            # print ('Retrieved from memory cache: %s' % (rlist is not None))
         if not rlist and self.Caches.disk in ctxt_enabled_caches:
             # otherwise try loading from disk
-            # print ''Disk cache enabled - checking for results...'
+            # print ('Disk cache enabled - checking for results...')
             rlist = self._load_results_from_disk(query)
-            # print 'Retrieved from disk cache: %s' % (rlist is not None)
+            # print ('Retrieved from disk cache: %s' % (rlist is not None))
             # ...and add to memory cache while we're at it
             if self.Caches.mem in ctxt_enabled_caches and rlist:
                 self._mem_cache.add_results(rlist, query)
@@ -208,15 +211,15 @@ class ResultCache(base_caches.SessionExcludeListCache):
             if self.Caches.query_ses in ctxt_enabled_caches and rlist:
                 self._query_ses_cache.add_results(rlist, query_ses_id, query)
         elif self.Caches.query_ses in ctxt_enabled_caches and query_ses_id:
-            # print 'Query session cache enabled - checking for results...'
+            # print ('Query session cache enabled - checking for results...')
             rlist = self._query_ses_cache.get_results(query_ses_id, query)
-            # print 'Retrieved from query session cache: %s' % (rlist is not None)
+            # print ('Retrieved from query session cache: %s' % (rlist is not None))
 
         # finally, add query object to query session id cache
         # if it is not there already
         if query_ses_id:
             if not self._query_ses_id_cache.get_data(query_ses_id):
-                # print 'Added query_ses_id lookup: %s' % query_ses_id
+                # print ('Added query_ses_id lookup: %s' % query_ses_id)
                 self._query_ses_id_cache.add_data(query, query_ses_id)
 
         return rlist
@@ -236,12 +239,12 @@ class ResultCache(base_caches.SessionExcludeListCache):
                 disabled or the query_ses_id does not exist.
         """
         ctxt_enabled_caches = self.enabled_caches
-        # print 'Checking for results by query_ses_id: %s...' % query_ses_id
+        # print ('Checking for results by query_ses_id: %s...' % query_ses_id)
 
         # try to get query object from query_ses_id
         query = self._query_ses_id_cache.get_data(query_ses_id)
         if not query:
-            print 'Failed to find result using query_ses_id: %s - returning None' % query_ses_id
+            print ('Failed to find result using query_ses_id: %s - returning None' % query_ses_id)
             return None
 
         return self.get_results(query, query_ses_id, user_ses_id)
@@ -276,7 +279,7 @@ class ResultCache(base_caches.SessionExcludeListCache):
 
         # finally, add query object to query session id cache
         if query_ses_id:
-            # print 'Added query_ses_id lookup: %s' % query_ses_id
+            # print ('Added query_ses_id lookup: %s' % query_ses_id)
             self._query_ses_id_cache.add_data(query, query_ses_id)
 
 
@@ -312,11 +315,11 @@ class ResultCache(base_caches.SessionExcludeListCache):
                 for fname in fnames:
                     if os.path.isfile(fname):
                         os.remove(fname)
-                        print 'REMOVED FILE: ' + fname
+                        print ('REMOVED FILE: ' + fname)
             else:
                 fname = self._get_disk_fname(query)
                 if os.path.isfile(fname):
-                    # print 'Removed ranking file from disk: %s' % fname
+                    # print ('Removed ranking file from disk: %s' % fname)
                     os.remove(fname)
 
         # remove from query session cache
@@ -340,7 +343,7 @@ class ResultCache(base_caches.SessionExcludeListCache):
         self.clear_all_sessions()
         self._query_ses_cache.clear_all_sessions()
         # clear disk cache
-        utils.fileutils.delete_directory_contents(self.ranklistpath, name_filter)
+        fileutils.delete_directory_contents(self.ranklistpath, name_filter)
 
     # ----------------------------------
     ## Get paths and disk filenames
@@ -355,7 +358,7 @@ class ResultCache(base_caches.SessionExcludeListCache):
             Returns:
                 A file path where the file name follows PATTERN_FNAME_RESULTS.
         """
-        query_strid = utils.tag_utils.get_query_strid(query)
+        query_strid = tag_utils.get_query_strid(query)
         fname_template = string.Template(PATTERN_FNAME_RESULTS)
         fname = fname_template.substitute(query_strid=query_strid,
                                           dsetname=query['dsetname'])
@@ -384,19 +387,19 @@ class ResultCache(base_caches.SessionExcludeListCache):
         if os.path.isfile(predefined_fname): # give priority to the predefined list
             try:
                 with open(predefined_fname, 'rb') as rfile:
-                    rlist = msgpack.load(rfile)
+                    rlist = msgpack.load(rfile, encoding='utf-8')
             except Exception as e:
                 rlist = None
-                print e
+                print (e)
 
         if rlist == None:
             if os.path.isfile(fname):
                 try:
                     with open(fname, 'rb') as rfile:
-                        rlist = msgpack.load(rfile)
+                        rlist = msgpack.load(rfile, encoding='utf-8')
                 except Exception as e:
                     rlist = None
-                    print e
+                    print (e)
 
         return rlist
 

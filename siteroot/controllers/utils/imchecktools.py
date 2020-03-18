@@ -51,7 +51,7 @@ def verify_image(filename, maxwidth=None, maxheight=None):
             im = Image.open(filename)
             im.save(filename, format=imformat)
     except Exception as e:
-        print 'Exception while verifying image', str(e)
+        print ('Exception while verifying image', e)
         raise IOError
 
     # now see if a valid extension has been specified (required)

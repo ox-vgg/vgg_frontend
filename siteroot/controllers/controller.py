@@ -1,26 +1,26 @@
 import json
 import traceback
 import sys
-import urllib
+import urllib.parse
 from threading import Lock
 import time
 from PIL import Image
 from PIL import ImageDraw
 
 import retengine
-import meta
-import utils
+from retengine.models import param_sets
+from retengine.managers import query_key_cache
+from retengine import interface
+from meta import metadata_handler
+from utils import cp_work_pools, pagination, imuptools
 from visorgen import settings
 
 class VisorController:
     """ Base class for the VISOR frontend controller """
 
-    def __init__(self, engine_class):
+    def __init__(self):
         """
             Initializes the controller.
-            Arguments:
-                engine_class: instance of VisorEngine - used
-                              for all interactions with the backend.
         """
         cfg_paths = settings.PATHS
         cfg_metadata = settings.METADATA
@@ -28,15 +28,15 @@ class VisorController:
         cfg_retengine = settings.RETENGINE
         cfg_visor = settings.VISOR
 
-        self.compdata_paths = retengine.models.param_sets.CompDataPaths(**cfg_paths)
-        self.metadata_paths = retengine.models.param_sets.MetaDataPaths(**cfg_metadata)
-        self.proc_opts = retengine.models.param_sets.VisorEngineProcessOpts(**cfg_retengine)
+        self.compdata_paths = param_sets.CompDataPaths(**cfg_paths)
+        self.metadata_paths = param_sets.MetaDataPaths(**cfg_metadata)
+        self.proc_opts = param_sets.VisorEngineProcessOpts(**cfg_retengine)
         self.proc_opts.imsearchtools_opts = cfg_imsearchtools
 
-        self.opts = retengine.models.param_sets.VisorOptions(**cfg_visor)
+        self.opts = param_sets.VisorOptions(**cfg_visor)
 
         # initialize pools
-        self.process_pool = utils.cp_work_pools.CpProcessPool(self.proc_opts.pool_workers)
+        self.process_pool = cp_work_pools.CpProcessPool(self.proc_opts.pool_workers)
         self.process_pool.start()
         # NOTE: so far, there's no need to stop() or terminate() as the
         #       threads (not processes, see comments on CpProcessPool)
@@ -45,17 +45,16 @@ class VisorController:
 
         # initialize query cache for storing ongoing query definition dicts
         # by query session id
-        self.query_key_cache = retengine.managers.QueryKeyCache()
+        self.query_key_cache = query_key_cache.QueryKeyCache()
 
         # initialize class for metadata extraction
-        self.metadata_handler = meta.metadata_handler.MetaDataHandler(self.opts.datasets,
+        self.metadata_handler = metadata_handler.MetaDataHandler(self.opts.datasets,
                                                                       self.metadata_paths.metadata,
                                                                       self.process_pool,
                                                                       settings.KEYWORDS_WILDCARD)
 
         # initialize interface class for all interactions
-        self.interface = retengine.VisorInterface(engine_class,
-                                                  cfg_paths['predefined_rankinglists'],
+        self.interface = interface.VisorInterface(cfg_paths['predefined_rankinglists'],
                                                   cfg_paths['rankinglists'],
                                                   self.compdata_paths,
                                                   self.process_pool,
@@ -64,7 +63,7 @@ class VisorController:
                                                   self.opts)
 
         # initialize classes for pagination
-        self.page_manager = utils.pagination.PageManager(self.opts.results_per_page)
+        self.page_manager = pagination.PageManager(self.opts.results_per_page)
 
     def set_config(self, kwargs, user_session_id):
         """
@@ -157,8 +156,8 @@ class VisorController:
                             query = {'qdef': txt, 'engine' : engine, 'qtype': 'text', 'dsetname': dataset} # This should only work for text queries
                             if (txt in inactive_text_queries[engine]) and (not self.interface.compdata_cache.query_in_exclude_list(query, ses_id=user_session_id)):
                                 self.interface.compdata_cache.cleanup_unused_query_postrainimgs_cache(query)
-                except Exception, e:
-                    print e
+                except Exception as e:
+                    print (e)
                     pass
 
             else:
@@ -267,7 +266,7 @@ class VisorController:
 
         except IOError:
 
-            print 'Exception while reading ' + path
+            print ('Exception while reading ' + path)
             img = Image.new('RGBA', (1, 1), (255, 0, 0, 0))
             return img
 
@@ -385,13 +384,13 @@ class VisorController:
         # get query definition dict from query_ses_id
         (query, qid) = self.query_key_cache.get_query_details_and_qid(qsid)
 
-        print 'IN EXECQUERY WITH QUERY DICT %s' % json.dumps(query)
+        print ('IN EXECQUERY WITH QUERY DICT %s' % json.dumps(query))
 
         if qid is not None:
             # if a backend qid was read from the query key cache, use this to continue
             # an existing query in an efficient manner
 
-            print 'CONTINUING QUERY WITH QID: ' + str(qid)
+            print ('CONTINUING QUERY WITH QID: ' + str(qid))
             query_data = \
                 self.interface.continue_query(qid,
                                               return_rlist_directly=return_rlist_directly,
@@ -402,7 +401,7 @@ class VisorController:
             # start a new query and then add the backend qid to the session data
             # for future calls to execquery
 
-            print 'STARTING A NEW QUERY...'
+            print ('STARTING A NEW QUERY...')
             query_data = self.interface.query(query,
                                               return_rlist_directly=return_rlist_directly,
                                               query_ses_id=qsid,
@@ -429,12 +428,11 @@ class VisorController:
         """
         filepath = locals()['file']  # convert file -> filepath to avoid python clash
         if filepath:
-            print 'File received for upload: %s', filepath
+            print ('File received for upload: %s', filepath)
         if url:
-            print 'URL received for upload: %s', url
+            print ('URL received for upload: %s', url)
 
-        imageuploader = \
-            utils.imuptools.ImageUploader(self.compdata_paths.uploadedimgs,
+        imageuploader = imuptools.ImageUploader(self.compdata_paths.uploadedimgs,
                                           self.proc_opts.resize_width,
                                           self.proc_opts.resize_height)
         try:
@@ -452,7 +450,7 @@ class VisorController:
             jsonstr = json.dumps({'Error': 'Error uploading image', 'srcurl': url, 'impath': filepath})
             return jsonstr
 
-        localimg = urllib.quote(localimg)
+        localimg = urllib.parse.quote(localimg)
         jsonstr = json.dumps({'impath': localimg, 'srcurl': url})
         return jsonstr
 
@@ -483,7 +481,7 @@ class VisorController:
         if self.metadata_handler.metaindex is None or (self.metadata_handler.metaindex is not None
            and self.metadata_handler.is_all_metadata_loaded):
             self.metadata_handler.clear_metadata_index()
-            self.metadata_handler = meta.metadata_handler.MetaDataHandler(self.opts.datasets,
+            self.metadata_handler = metadata_handler.MetaDataHandler(self.opts.datasets,
                                                               self.metadata_paths.metadata,
                                                               self.process_pool)
             self.interface.metadata_handler = self.metadata_handler

@@ -2,9 +2,10 @@
 
 import os
 import shutil
-import models
-import managers
-import query_translations
+from retengine.models import query_data, opts, param_sets, errors
+from retengine.managers import result_cache, compdata_cache, query_manager
+from retengine.engine import backend_client
+from . import query_translations
 
 class VisorInterface(object):
     """
@@ -12,19 +13,17 @@ class VisorInterface(object):
         Calls VISOR backend via visor_engine module.
     """
 
-    def __init__(self, engine_class,
+    def __init__(self,
                  predefined_ranklistpath, ranklistpath,
                  compdata_paths,
                  process_pool,
                  metadata_handler,
-                 proc_opts=models.param_sets.VisorEngineProcessOpts(),
-                 opts=models.param_sets.VisorOptions()):
+                 proc_opts=param_sets.VisorEngineProcessOpts(),
+                 opts=param_sets.VisorOptions()):
         """
             Initializes the interface, the cache of each engine, and the query manager
             needed to process queries.
             Arguments:
-                engine_class: instance of VisorEngine, used
-                             for all interactions with the backend.
                 predefined_ranklistpath: Path to folder with predefined ranking lists
                 ranklistpath: Path to folder with ranking lists
                 compdata_paths: instance of CompDataPaths, used
@@ -36,7 +35,6 @@ class VisorInterface(object):
                 proc_opts: used for access to the configuration of the VISOR engine
                 opts: used for access to the configuration of the VISOR frontend
         """
-        self.engine_class = engine_class
         self.process_pool = process_pool
         self.proc_opts = proc_opts
         self.opts = opts
@@ -44,30 +42,29 @@ class VisorInterface(object):
 
         # set which result caches should be enabled to temporary variables
         if proc_opts.disable_cache:
-            enabled_result_caches = managers.ResultCache.CacheCfg.query_ses_only
-            enabled_result_excl_caches = managers.ResultCache.CacheCfg.query_ses_only
+            enabled_result_caches = result_cache.ResultCache.CacheCfg.query_ses_only
+            enabled_result_excl_caches = results_cache.ResultCache.CacheCfg.query_ses_only
         else:
-            enabled_result_caches = managers.ResultCache.CacheCfg.all
-            enabled_result_excl_caches = managers.ResultCache.CacheCfg.query_ses_only
+            enabled_result_caches = result_cache.ResultCache.CacheCfg.all
+            enabled_result_excl_caches = result_cache.ResultCache.CacheCfg.query_ses_only
 
         # initialize caches
         self.result_cache = {}
         for engine in self.opts.engines_dict:
             engine_ranklistpath = os.path.join(ranklistpath, engine)
             engine_predefined_ranklistpath = os.path.join(predefined_ranklistpath, engine)
-            self.result_cache[engine] = managers.ResultCache(engine_predefined_ranklistpath,
+            self.result_cache[engine] = result_cache.ResultCache(engine_predefined_ranklistpath,
                                                              engine_ranklistpath,
                                                              self.process_pool,
                                                              enabled_caches=enabled_result_caches,
                                                              enabled_excl_caches=enabled_result_excl_caches)
 
-        self.compdata_cache = managers.CompDataCache(compdata_paths,
+        self.compdata_cache = compdata_cache.CompDataCache(compdata_paths,
                                                      self.opts.engines_dict,
                                                      proc_opts.disable_cache)
 
         # create query manager to run queries
-        self.query_manager = managers.QueryManager(engine_class,
-                                                   opts,
+        self.query_manager = query_manager.QueryManager(opts,
                                                    self.compdata_cache,
                                                    self.result_cache,
                                                    self.process_pool,
@@ -82,14 +79,16 @@ class VisorInterface(object):
                 It returns False otherwise.
         """
         backends_available = len(self.opts.engines_dict) > 0
-        for engine in self.opts.engines_dict:
-            backends_available = backends_available and self.engine_class.check_backend_is_reachable(self.opts.engines_dict[engine]['backend_port'])
+        if backends_available:
+            for engine in self.opts.engines_dict:
+                ses = backend_client.Session(self.opts.engines_dict[engine]['backend_port'])
+                backends_available = backends_available and ses.self_test()
         return backends_available
 
 
     # ----------------------------------
     ## Routines for query execution
-    #      + All return an instance of models.QueryData
+    #      + All return an instance of query_data.QueryData
     #      + `query' should be called first, and will return results directly
     #             if they are cached in the rlists field of query data,
     #             otherwise only the status field of QueryData will be populated
@@ -128,7 +127,7 @@ class VisorInterface(object):
                 of results associated with it.
         """
 
-        if query['qtype'] == models.opts.Qtypes.text and query['qdef'].startswith('keywords:'):
+        if query['qtype'] == opts.Qtypes.text and query['qdef'].startswith('keywords:'):
 
             keywords = query['qdef'].replace('keywords:', '')
             training_images = []
@@ -138,8 +137,8 @@ class VisorInterface(object):
                 training_images = set().union(keyword_matches, training_images)
             for img in training_images:
                 rlist.append({'path': img})
-            status = models.QueryStatus(state=models.opts.States.results_ready)
-            return models.QueryData(status, rlist)
+            status = query_data.QueryStatus(state=opts.States.results_ready)
+            return query_data.QueryData(status, rlist)
 
         else:
             # get results directly from cache if possible
@@ -147,7 +146,7 @@ class VisorInterface(object):
 
             if rlist:
                 # *** READ RESULTS IN FROM CACHE ***
-                status = models.QueryStatus(state=models.opts.States.results_ready)
+                status = query_data.QueryStatus(state=opts.States.results_ready)
             else:
                 # *** READ STATUS/RESULTS IN FROM WORKER ***
                 # otherwise, try returning an existing query instance if possible ...
@@ -159,17 +158,17 @@ class VisorInterface(object):
                 # if the query is not in cache and finished with a fatal error, maybe it is being retried
                 # after a change in the settings. Give it a chance to run again without fully restarting
                 # the server
-                if status.state == models.opts.States.fatal_error_or_socket_timeout:
-                    print 'WARNING: Re-executing a previously failed query by fatal-error or timeout'
+                if status.state == opts.States.fatal_error_or_socket_timeout:
+                    print ('WARNING: Re-executing a previously failed query by fatal-error or timeout')
                     status = self.query_manager.start_query(query, user_ses_id, force_new_worker=True)
 
-                if return_rlist_directly and status.state == models.opts.States.results_ready:
+                if return_rlist_directly and status.state == opts.States.results_ready:
                     try:
                         rlist = self._get_results(status, query_ses_id, user_ses_id)
-                    except models.errors.ResultReadError:
-                        status = models.QueryStatus(state=models.opts.States.result_read_error)
+                    except errors.ResultReadError:
+                        status = query_data.QueryStatus(state=opts.States.result_read_error)
 
-            return models.QueryData(status, rlist)
+            return query_data.QueryData(status, rlist)
 
 
     def continue_query(self, qid, return_rlist_directly=True,
@@ -190,18 +189,18 @@ class VisorInterface(object):
         rlist = None
         try:
             status = self.query_manager.get_query_status(qid)
-        except models.errors.QueryIdError:
+        except errors.QueryIdError:
             # set error in status if Query ID doesn't exist
-            status = models.QueryStatus(state=models.opts.States.invalid_qid)
+            status = query_data.QueryStatus(state=opts.States.invalid_qid)
 
         # *** READ RESULTS IN FROM WORKER IF DONE ***
-        if return_rlist_directly and status.state == models.opts.States.results_ready:
+        if return_rlist_directly and status.state == opts.States.results_ready:
             try:
                 rlist = self._get_results(status, query_ses_id, user_ses_id)
-            except models.errors.ResultReadError:
-                status = models.QueryStatus(state=models.opts.States.result_read_error)
+            except errors.ResultReadError:
+                status = query_data.QueryStatus(state=opts.States.result_read_error)
 
-        return models.QueryData(status, rlist)
+        return query_data.QueryData(status, rlist)
 
 
     def _get_results(self, status, query_ses_id=None, user_ses_id=None):
@@ -209,7 +208,7 @@ class VisorInterface(object):
             Get the results of a query and also saves them to the results
             cache.
             If should only be used with queries whose status is
-            models.opts.States.results_ready.
+            opts.States.results_ready.
             Arguments:
                 status: Instance of QueryStatus, used to check is query
                         results are ready.
@@ -221,8 +220,8 @@ class VisorInterface(object):
                 reading from the backend.
         """
         # ensure we are reading from query with correct state
-        if status.state is not models.opts.States.results_ready:
-            raise models.errors.ResultReadError('Query must have results to read!')
+        if status.state is not opts.States.results_ready:
+            raise errors.ResultReadError('Query must have results to read!')
 
         # read in results
         rlist = self.query_manager.get_query_result(status)
@@ -261,11 +260,11 @@ class VisorInterface(object):
             q_excl_list[engine] = []
             for querystr in querystrs[engine]:
                 for dataset in self.opts.datasets:
-                    query = query_translations.querystr_tuple_to_query(querystr, models.opts.Qtypes.text, dataset, engine)
+                    query = query_translations.querystr_tuple_to_query(querystr, opts.Qtypes.text, dataset, engine)
                     q_excl_list[engine].append(self.result_cache[engine].query_in_exclude_list(query, ses_id=user_ses_id))
             # zip
             query_tuples[engine] = zip(querystrs[engine], q_excl_list[engine])
-            ##print 'Cached text queries returned: %s' % query_tuples[engine]
+            ##print ('Cached text queries returned: %s' % query_tuples[engine])
 
         return query_tuples
 
@@ -282,11 +281,11 @@ class VisorInterface(object):
             self.result_cache[engine].clear_query_exclude_list(ses_id=user_ses_id)
             for querystr in excl_list[engine]:
                 for dataset in self.opts.datasets:
-                    query = query_translations.querystr_tuple_to_query(querystr, models.opts.Qtypes.text, dataset, engine)
+                    query = query_translations.querystr_tuple_to_query(querystr, opts.Qtypes.text, dataset, engine)
                     self.compdata_cache.add_query_to_exclude_list(query, ses_id=user_ses_id)
                     self.result_cache[engine].add_query_to_exclude_list(query, ses_id=user_ses_id)
 
-        ##print 'Set text query exclude list: %s' % excl_list
+        ##print ('Set text query exclude list: %s' % excl_list)
 
 
     def delete_text_query(self, querystr, engine):
@@ -301,17 +300,17 @@ class VisorInterface(object):
         """
         for dataset in self.opts.datasets:
 
-            query = query_translations.querystr_tuple_to_query(querystr, models.opts.Qtypes.text, dataset, engine)
+            query = query_translations.querystr_tuple_to_query(querystr, opts.Qtypes.text, dataset, engine)
 
             self.compdata_cache.delete_compdata(query)
             self.result_cache[engine].delete_results(query, for_all_datasets=True)
 
             #NOTE: In the future, if there is a curated version of the query in the cache, remove it as well.
             #      This is disable until really needed
-            #query_curated = query_translations.querystr_tuple_to_query('#' + querystr, models.opts.Qtypes.text, dataset, engine)
+            #query_curated = query_translations.querystr_tuple_to_query('#' + querystr, opts.Qtypes.text, dataset, engine)
             #self.result_cache[engine]._mem_cache.delete_results(query_curated, for_all_datasets=True)
 
-            ##print 'Deleted cached text query: %s' % query
+            ##print ('Deleted cached text query: %s' % query)
 
 
     def clear_cache(self, cache_type):
@@ -357,10 +356,10 @@ class VisorInterface(object):
         self.compdata_cache.disable_cache = disabled
         if disabled:
             for engine in self.opts.engines_dict:
-                self.result_cache[engine].enabled_caches = managers.ResultCache.CacheCfg.query_ses_only
+                self.result_cache[engine].enabled_caches = result_cache.ResultCache.CacheCfg.query_ses_only
         else:
             for engine in self.opts.engines_dict:
-                self.result_cache[engine].enabled_caches = managers.ResultCache.CacheCfg.all
+                self.result_cache[engine].enabled_caches = result_cache.ResultCache.CacheCfg.all
 
 
     # ----------------------------------
@@ -376,7 +375,7 @@ class VisorInterface(object):
                 name: the name to be given to the classifier.
         """
         ucquery = query_translations.querystr_tuple_to_query('$' + name,
-                                                             models.opts.Qtypes.text,
+                                                             opts.Qtypes.text,
                                                              query['dsetname'],
                                                              query['engine'])
 
@@ -391,7 +390,7 @@ class VisorInterface(object):
         dst_classifier_fname = self.compdata_cache._get_classifier_fname(ucquery)
         dst_ranking_fname = self.result_cache[query['engine']]._get_disk_fname(ucquery)
 
-        ##print 'Creating uber classifier: $%s...' % name
+        ##print ('Creating uber classifier: $%s...' % name)
 
         try:
             # save the classifier file ... if it exists
@@ -401,7 +400,7 @@ class VisorInterface(object):
             # save the ranking file ... this one should exist
             shutil.copy(src_ranking_fname, dst_ranking_fname)
         except IOError as e:
-            print 'IOError while saving uber classifier: ', e
+            print ('IOError while saving uber classifier: ', e)
             return False
 
         return True

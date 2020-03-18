@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import sys
 
 ######
 # Main paths
@@ -20,6 +21,9 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BASE_DATA_DIR = '/webapps/visorgen/'
+
+# Add extra paths to modules
+sys.path.append( os.path.join(BASE_DIR, 'siteroot') )
 
 ######
 # Quick-start development settings - unsuitable for production
@@ -301,7 +305,7 @@ IIIF_IMAGE_MAX_WIDTH = 500
 
 # Setup settings for face-search engine
 FACE_ENGINE_SETTINGS = {}
-FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'] = os.path.join( PATHS['datasets'], VISOR['datasets'].keys()[0] )
+FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'] = os.path.join( PATHS['datasets'], list(VISOR['datasets'])[0] )
 FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'] = os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'dsetpaths.txt')
 FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_PATHS'] = None
 FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_BASE_PATH'] = None

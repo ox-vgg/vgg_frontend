@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
-import multiprocessing
-from multiprocessing.pool import ThreadPool # needed for the dummy pool
+from multiprocessing.dummy import Pool
+# NOTE: Using a 'real' Pool (not a dummy Pool) causes I/O errors when the
+# server is shutdown (or restarted). The dummy implementation seems to
+# provide better performance as well.
 
 class CpProcessPool:
     """
@@ -29,38 +31,35 @@ class CpProcessPool:
         """ Starts all the processes in the pool. """
         try:
             if not self._workers:
-                print 'Starting CpProcessPool...'
-                self._workers = multiprocessing.dummy.Pool(processes=self.processes)
-                # NOTE: Using a 'real' Pool (not a dummy Pool) causes I/O errors when the
-                # server is shutdown (or restarted). The dummy implementation seems to
-                # provide better performance as well.
+                print ('Starting CpProcessPool...')
+                self._workers = Pool(processes=self.processes)
         except Exception as e:
-            print 'CpProcessPool start: ', e
+            print ('CpProcessPool start: ', e)
 
 
     def close(self):
         """ Closes the pool. """
         try:
             if self._workers:
-                print 'Closing CpProcessPool...'
+                print ('Closing CpProcessPool...')
                 self._workers.close()
                 self._workers = None
-                print 'Closed CpProcessPool'
+                print ('Closed CpProcessPool')
         except Exception as e:
-            print 'CpProcessPool close: ', e
+            print ('CpProcessPool close: ', e)
 
 
     def stop(self):
         """ Terminates all process in the pool. """
         try:
             if self._workers:
-                print 'Stopping CpProcessPool...'
+                print ('Stopping CpProcessPool...')
                 self._workers.terminate()
                 self._workers.join()
                 self._workers = None
-                print 'Stopped CpProcessPool'
+                print ('Stopped CpProcessPool')
         except Exception as e:
-            print 'CpProcessPool stop: ', e
+            print ('CpProcessPool stop: ', e)
 
 
     def apply_async(self, **kwargs):
@@ -74,4 +73,4 @@ class CpProcessPool:
                 #print 'Submitting task to CpProcessPool...'
                 self._workers.apply_async(**kwargs)
         except Exception as e:
-            print 'CpProcessPool apply_async: ', e
+            print ('CpProcessPool apply_async: ', e)

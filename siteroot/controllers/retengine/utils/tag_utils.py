@@ -3,12 +3,8 @@
 import re
 import urllib
 from hashlib import md5
-try:
-    import simplejson as json
-except ImportError:
-    import json  # Python 2.6+ only
-
-from retengine import models
+import simplejson as json
+from retengine.models import opts, errors
 
 
 def get_query_strid(query, escape=False):
@@ -21,10 +17,10 @@ def get_query_strid(query, escape=False):
             a string id
     """
     # formulate string identifier for the query definition
-    queryhash = md5(json.dumps(query['qdef'])).hexdigest()
+    queryhash = md5( json.dumps(query['qdef']).encode('utf-8') ).hexdigest()
     queryhash = queryhash[0:8]
 
-    if isinstance(query['qdef'], basestring):
+    if isinstance(query['qdef'], str):
         querystr = query['qdef']
         if escape:
             querystr = escape_querystr(querystr)
@@ -61,15 +57,15 @@ def decode_query_strid(strid, escape=False):
     """
     qtype = strid.split('__', 1)[0]
 
-    if qtype != models.opts.Qtypes.text:
-        raise models.errors.StrIdDecodeError("Only queries of type 'text' can be decoded")
+    if qtype != opts.Qtypes.text:
+        raise errors.StrIdDecodeError("Only queries of type 'text' can be decoded")
 
     try:
         querystr = re.search('(?<=\{).+(?=\})', strid).group()
         if escape:
             querystr = unescape_querystr(querystr)
     except:
-        raise models.errors.StrIdDecodeError("Could not parse query text from query string")
+        raise errors.StrIdDecodeError("Could not parse query text from query string")
 
     return (querystr, qtype)
 

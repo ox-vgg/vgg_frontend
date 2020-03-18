@@ -56,14 +56,17 @@ def data_processing_pipeline_faces_images(input_list_of_frames, index, lock, DAT
         try:
             # Create/modify frame list file (a.k.a. DATASET_IM_PATHS)
             fout.write(('DATA-PIPELINE [%s]: INSERTING FRAME LIST INTO: %s\n') % (time.strftime("%H:%M:%S"), DATASET_IM_PATHS))
+            current_line_count = 0
+            if os.path.exists(DATASET_IM_PATHS):
+                with open(DATASET_IM_PATHS, "r") as dataset_imgs_file:
+                    for counter, line in enumerate(dataset_imgs_file):
+                        current_line_count = current_line_count + 1
+            fout.write(('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN CURRENT FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), current_line_count))
             with open(DATASET_IM_PATHS, "a+") as dataset_imgs_file:
-                for counter, line in enumerate(dataset_imgs_file):
-                    current_line_count = current_line_count + 1
-                fout.write(('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN CURRENT FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), current_line_count))
                 new_line_count = current_line_count
                 for i in range(0, len(frame_list)):
                     new_line_count = new_line_count + 1
-                    encode_frame_name = frame_list[i].encode("utf-8")
+                    encode_frame_name = frame_list[i]
                     dataset_imgs_file.write(encode_frame_name)
                     dataset_imgs_file.write('\n')
             fout.write(('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN NEW FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), new_line_count))
@@ -71,7 +74,7 @@ def data_processing_pipeline_faces_images(input_list_of_frames, index, lock, DAT
             new_files_list = os.path.join(tempfile.gettempdir(), 'faces_new_%d.log' % index)
             with open(new_files_list, "w") as new_files:
                 for i in range(0, len(frame_list)):
-                    encode_frame_name = frame_list[i].encode("utf-8")
+                    encode_frame_name = frame_list[i]
                     new_files.write(encode_frame_name)
                     new_files.write('\n')
         except Exception as e:
@@ -97,6 +100,8 @@ def data_processing_pipeline_faces_images(input_list_of_frames, index, lock, DAT
         fout.write(('DATA-PIPELINE [%s]: %s\n') % (time.strftime("%H:%M:%S"), str(popen_cmd)))
         popen_obj = Popen(popen_cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = popen_obj.communicate()
+        output = output.decode()
+        err = err.decode()
         if output:
             fout.write(('DATA-PIPELINE [%s]: OUTPUT STREAM\n%s\n') % (time.strftime("%H:%M:%S"), output))
         if err:
@@ -186,6 +191,8 @@ def data_processing_pipeline_faces_videos(input_list_of_videos, index, lock, DAT
             fout.write(('DATA-PIPELINE [%s]: %s\n') % (time.strftime("%H:%M:%S"), str(popen_cmd)))
             popen_obj = Popen(popen_cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             output, err = popen_obj.communicate()
+            output = output.decode()
+            err = err.decode()
             splitted_output = None
             if err:
                 fout.write(('DATA-PIPELINE [%s]: ERROR STREAM\n%s\n') % (time.strftime("%H:%M:%S"), err))
@@ -204,18 +211,19 @@ def data_processing_pipeline_faces_videos(input_list_of_videos, index, lock, DAT
                 try:
                     # Create/modify frame list file (a.k.a. DATASET_IM_PATHS)
                     fout.write(('DATA-PIPELINE [%s]: INSERTING FRAME LIST INTO: %s\n') % (time.strftime("%H:%M:%S"), DATASET_IM_PATHS))
-                    with open(DATASET_IM_PATHS, "a+") as dataset_imgs_file:
+                    current_line_count = 0
+                    with open(DATASET_IM_PATHS, "r") as dataset_imgs_file:
                         for counter, line in enumerate(dataset_imgs_file):
                             current_line_count = current_line_count + 1
-                        fout.write(('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN CURRENT FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), current_line_count))
+                    fout.write(('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN CURRENT FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), current_line_count))
+                    with open(DATASET_IM_PATHS, "a+") as dataset_imgs_file:
                         new_line_count = current_line_count
                         for line in splitted_output:
                             if len(line) > 0 and ('.jpg' in line): # if COMPUTE_POSITIVE_FEATURES_SCRIPT was successful,
                                                                    # lines with added files must terminate in ".jpg"
                                 line = line.strip()
                                 new_line_count = new_line_count + 1
-                                encode_frame_name = line.encode("utf-8")
-                                dataset_imgs_file.write(encode_frame_name)
+                                dataset_imgs_file.write(line)
                                 dataset_imgs_file.write('\n')
 
                     fout.write(('DATA-PIPELINE [%s]: NUMBER OF FRAMES IN NEW FRAME LIST FILE: %d\n') % (time.strftime("%H:%M:%S"), new_line_count))

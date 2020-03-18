@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
-from multiprocessing import Manager
-
-# for pickling of visor_engine method prior to sending to worker pool
-import copy_reg
-import types
-import pickle
-from retengine.utils import pickle_class_methods
-
-from retengine import models
+from retengine.models import opts, query_data, param_sets, errors
 from retengine import query_translations
+from retengine.engine.visor_engine import VisorEngine
 
 # initialise manager to create new shared memory area for the retrieval
+from multiprocessing import Manager
 manager = Manager()
-visor_engine_process_func = None
+
+# for pickling of visor_engine method prior to sending to worker pool
+def call_it(instance, name, args=(), kwargs=None):
+    """ Indirect caller for instance methods and multiprocessing """
+    if kwargs is None:
+        kwargs = {}
+    return getattr(instance, name)(*args, **kwargs)
 
 class QueryWorker(object):
     """
@@ -34,15 +34,15 @@ class QueryWorker(object):
                                        queries.
         """
         # get a new query ID
-        # print 'Generating a new query ID...'
+        # print ('Generating a new query ID...')
         self.qid = visor_engine.get_query_id(query['engine'], query['dsetname'])
         self.query = query
         self.qindex = query_translations.get_qhash(query)
-        # print 'Initializing query namespace...'
+        # print ('Initializing query namespace...')
         self.shared_vars = manager.Namespace()
 
         # configure initial shared memory namespace values
-        self.shared_vars.state = models.opts.States.processing
+        self.shared_vars.state = opts.States.processing
         self.shared_vars.postrainimg_paths = []
         self.shared_vars.curatedtrainimgs_paths = []
         self.shared_vars.negtrainimg_count = 0
@@ -51,30 +51,13 @@ class QueryWorker(object):
         self.shared_vars.exectime_ranking = 0.0
         self.shared_vars.err_msg = ''
 
-        # define pickleable visor_engine function for processing
-        global visor_engine_process_func
-        copy_reg.pickle(types.MethodType,
-                        pickle_class_methods._pickle_method,
-                        pickle_class_methods._unpickle_method)
-
-        # NOTE: The pickling fails if the query has been excluded (unselected) from the
-        #       list of cached text queries, probably because its session seems to have
-        #       been removed from memory
-        try:
-            if not on_cache_exclude_list:
-                visor_engine_process_func = pickle.loads(pickle.dumps(visor_engine.process))
-        except Exception as e:
-            print e
-            pass
-
-
     def get_status(self):
         """
             Gets the current status of the query.
             Returns:
                 A QueryStatus object.
         """
-        return models.QueryStatus(qid=self.qid,
+        return query_data.QueryStatus(qid=self.qid,
                                   query=self.query,
                                   state=self.shared_vars.state,
                                   postrainimg_paths=self.shared_vars.postrainimg_paths,
@@ -95,15 +78,13 @@ class QueryManager(object):
         query.
     """
 
-    def __init__(self, engine_class, visor_opts,
+    def __init__(self, visor_opts,
                  compdata_cache, result_cache,
                  process_pool,
-                 proc_opts=models.param_sets.VisorEngineProcessOpts()):
+                 proc_opts= param_sets.VisorEngineProcessOpts()):
         """
             Initializes the manager.
             Arguments:
-                engine_class: visor engine object, which will execute the
-                              query
                 visor_opts: current configuration of options for the visor frontend.
                 compdata_cache: Computational data cache manager
                 result_cache: Results cache manager
@@ -118,7 +99,7 @@ class QueryManager(object):
         self._workers = {}
 
         # initialize engine
-        self._engine = engine_class(visor_opts, compdata_cache, self.result_cache)
+        self._engine = VisorEngine(visor_opts, compdata_cache, self.result_cache)
 
 
     def _get_worker_from_definition(self, query):
@@ -169,23 +150,27 @@ class QueryManager(object):
             # determine if on cache exclude list
             excl_query = self.result_cache[query['engine']].query_in_exclude_list(query, ses_id=user_ses_id)
 
-            # print 'Initializing query worker process...'
+            # print ('Initializing query worker process...')
             try:
                 worker = QueryWorker(query, self._engine, excl_query)
                 self._workers[worker.qid] = worker
 
                 # start the query
-                # print 'Launching query process...'
-                self.process_pool.apply_async(func=self._engine.process,
-                                              args=(query,
-                                                    worker.qid,
-                                                    worker.shared_vars,
-                                                    self._proc_opts,
-                                                    user_ses_id))
-            except models.errors.QueryIdError:
+                # print ('Launching query process...')
+                self.process_pool.apply_async(func=call_it,
+                                              args=(self._engine,
+                                                    'process',
+                                                    (query,
+                                                     worker.qid,
+                                                     worker.shared_vars,
+                                                     self._proc_opts,
+                                                     user_ses_id)
+                                                    )
+                                             )
+            except errors.QueryIdError:
                 # this exception is triggered by the constructor of QueryWorker
                 # if the backend cannot be contacted
-                return models.QueryStatus(state=models.opts.States.fatal_error_or_socket_timeout)
+                return query_data.QueryStatus(state=opts.States.fatal_error_or_socket_timeout)
 
         # return query status (including qid as a field)
         return worker.get_status()
@@ -204,7 +189,7 @@ class QueryManager(object):
         if qid in self._workers:
             return self._workers[qid].get_status()
         else:
-            raise models.errors.QueryIdError('Query ID %d is invalid' % qid)
+            raise errors.QueryIdError('Query ID %d is invalid' % qid)
 
 
     def get_query_status_from_definition(self, query):
@@ -238,8 +223,8 @@ class QueryManager(object):
                 It raises a ResultReadError if there is a problem getting
                 the query result.
         """
-        if not isinstance(status, models.QueryStatus):
-            raise ValueError('status must be of type models.QueryStatus')
+        if not isinstance(status, query_data.QueryStatus):
+            raise ValueError('status must be of type query_data.QueryStatus')
 
         engine = self._workers[status.qid].query['engine']
         rlist = self._engine.release_query_id_and_return_results(engine, status.qid)

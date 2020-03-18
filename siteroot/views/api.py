@@ -5,7 +5,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 
-import urllib
+import urllib.parse
 import os
 import sys
 import json
@@ -21,7 +21,7 @@ if os.path.exists(PATH_TO_CAFFE_BACKEND_PROTO):
     import cpuvisor_config_pb2
 
 import retengine.engine.backend_client
-import api_globals
+from views import api_globals
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../pipeline')) # add this to be able to load all data ingestion pipelines
 from data_pipeline_cpuvisor import data_processing_pipeline_cpuvisor
 from data_pipeline_faces import data_processing_pipeline_faces
@@ -367,7 +367,7 @@ class APIFunctions:
             url_path = url_path.replace('postrainimgs', 'curatedtrainimgs')
             img_set = 'curatedtrainimgs'
 
-        real_path = urllib.unquote(url_path).replace(settings.SITE_PREFIX + '/' + img_set, settings.PATHS[img_set])
+        real_path = urllib.parse.unquote(url_path).replace(settings.SITE_PREFIX + '/' + img_set, settings.PATHS[img_set])
 
         if not os.path.exists(real_path):
             raise Http404('Requested image ' + url_path + ' does not exist')
@@ -405,7 +405,7 @@ class APIFunctions:
         else:
             img = request.FILES['file']
             filename = str(request.FILES['file'])
-            data = str(img.read())
+            data = img.read()
             jsonstr = self.visor_controller.uploadimage(None, None, img_data={'filename': filename, 'data': data})
 
         if jsonstr == '':
@@ -432,7 +432,7 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
         if not self.backend_thread:
-            print 'Starting backend service...'
+            print ('Starting backend service...')
             self.backend_thread = threading.Thread(target=api_globals.start_backend_service, args=(engine,))
             self.backend_thread.start()
             message = 'Starting the backend service ... This process might take a couple of minutes. Please go back to the Home page and wait for the backend to respond.'
@@ -464,7 +464,7 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
         if not self.backend_thread:
-            print 'Stopping backend service...'
+            print ('Stopping backend service...')
             self.backend_thread = threading.Thread(target=api_globals.stop_backend_service, args=(engine,))
             self.backend_thread.start()
             message = 'Stopping the backend service ... This process might take a few seconds. To check the backend is off-line, please go back to the Home page and refresh the page until you can see a message indicating that there is an error interacting with the backend.'
@@ -500,7 +500,7 @@ class APIFunctions:
             for idx in range(len(keyword_list)):
                 json_response["results"].append({'id': idx+1, 'text': keyword_list[idx]})
         except Exception as e:
-            print e
+            print (e)
             json_response = {"results": []}
             pass
 
@@ -693,7 +693,7 @@ class APIFunctions:
                 return redirect('pipeline_input_status')
             else:
                 # get the list of files from a IIIF manifest that is online, pointed at by the specified URL
-                dset = settings.VISOR['datasets'].keys()[0] # I don't like this, but we have to do it like this for now
+                dset = list(settings.VISOR['datasets'].keys())[0] # I don't like this, but we have to do it like this for now
                 metadata_dir = os.path.join(self.visor_controller.metadata_paths.metadata , dset)
                 self.pipeline_input_thread = threading.Thread(target=api_globals.gather_pipeline_input,
                                 args=('url', img_base_path, [url], file_system_encoding_not_UTF8, self.pipeline_frame_list, metadata_dir), )
@@ -720,7 +720,7 @@ class APIFunctions:
                     # This allows the possibility of uploading a list of images in a text file
                     # However, the whole file must be read before leaving this thread and starting the other.
                     uploaded_file = file_list[0].read()
-                    file_list = uploaded_file.split('\n')
+                    file_list = uploaded_file.decode().split('\n')
                     if len(file_list[-1]) == 0:
                         file_list = file_list[:-1]
                     self.total_input_files = len(file_list)
@@ -735,6 +735,44 @@ class APIFunctions:
                         # start the thread and redirect to the status-checking page
                         self.pipeline_input_thread.start()
                         return redirect('pipeline_input_status')
+                else:
+                    # When uploading files in this way, we cannot use a separate thread, since the files are loaded in memory as stream
+                    # objects by Django and if we start another thread the streams are closed, so the separate thread cannot save them.
+                    # Therefore, the files must be checked and saved in this thread. Apply all limitations here and in the corresponding HTML.
+                    if len(file_list) > settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES:
+                        # abort !. File ingestion might take too long a lead to a time-out or a crash
+                        message = ('You can only upload a maximum of %d files in total. Please select less files and try again. ') % settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES
+                        redirect_to = settings.SITE_PREFIX + '/admintools'
+                        return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
+                    total_size = 0
+                    for afile in file_list:
+                        filename, file_extension = os.path.splitext(afile.name)
+                        total_size = total_size + afile.size
+                        # check the accumulated total size of the files to be ingested
+                        if total_size > settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES:
+                            # abort !. File ingestion might take too long a lead to a time-out or a crash
+                            message = ('You can only upload a maximum of %d MB in total. Please select less files and try again. ') % (settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES/1048576)
+                            redirect_to = settings.SITE_PREFIX + '/admintools'
+                            return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
+                        # check all files for a valid image extension
+                        if file_extension.lower() not in settings.VALID_IMG_EXTENSIONS:
+                            # otherwise, abort !. This might seem drastic, but it is better to
+                            # keep the image folder clean !.
+                            message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (afile.name, str(settings.VALID_IMG_EXTENSIONS_STR))
+                            redirect_to = settings.SITE_PREFIX + '/admintools'
+                            return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
+                    # ... and if we made it until here, try to upload all selected files and copy them to the images folder
+                    for afile in file_list:
+                        full_path = os.path.join(img_base_path, afile.name)
+                        # save the file to disk
+                        if file_system_encoding_not_UTF8:
+                            full_path = full_path.encode('utf-8') # if needed, convert from utf-8
+                        with open(full_path, 'wb+') as destination:
+                            for chunk in afile.chunks():
+                                destination.write(chunk)
+                        self.pipeline_frame_list.append(afile.name)
+                    # ... and if we made it until here, we are ready to start the pipeline
+                    return redirect('pipeline_start')
             elif len(request.FILES.getlist('input_json')) == 1 :
                 # get the list of files from a local IIIF manifest in JSON format
                 json_file_in = request.FILES.getlist('input_json')[0]
@@ -742,7 +780,7 @@ class APIFunctions:
                 for chunk in json_file_in.chunks():
                     temp_json_file.write(chunk)
                 temp_json_file.close()
-                dset = settings.VISOR['datasets'].keys()[0] # I don't like this, but we have to do it like this for now
+                dset = list(settings.VISOR['datasets'].keys())[0] # I don't like this, but we have to do it like this for now
                 metadata_dir = os.path.join(self.visor_controller.metadata_paths.metadata , dset)
                 self.pipeline_input_thread = threading.Thread(target=api_globals.gather_pipeline_input,
                                 args=('json', img_base_path, [temp_json_file.name], file_system_encoding_not_UTF8,
@@ -750,44 +788,6 @@ class APIFunctions:
                 # start the thread and redirect to the status-checking page
                 self.pipeline_input_thread.start()
                 return redirect('pipeline_input_status')
-            else:
-                # When uploading files in this way, we cannot use a separate thread, since the files are loaded in memory as stream
-                # objects by Django and if we start another thread the streams are closed, so the separate thread cannot save them.
-                # Therefore, the files must be checked and saved in this thread. Apply all limitations here and in the corresponding HTML.
-                if len(file_list) > settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES:
-                    # abort !. File ingestion might take too long a lead to a time-out or a crash
-                    message = ('You can only upload a maximum of %d files in total. Please select less files and try again. ') % settings.MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES
-                    redirect_to = settings.SITE_PREFIX + '/admintools'
-                    return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
-                total_size = 0
-                for afile in file_list:
-                    filename, file_extension = os.path.splitext(afile.name)
-                    total_size = total_size + afile.size
-                    # check the accumulated total size of the files to be ingested
-                    if total_size > settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES:
-                        # abort !. File ingestion might take too long a lead to a time-out or a crash
-                        message = ('You can only upload a maximum of %d MB in total. Please select less files and try again. ') % (settings.MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES/1048576)
-                        redirect_to = settings.SITE_PREFIX + '/admintools'
-                        return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
-                    # check all files for a valid image extension
-                    if file_extension.lower() not in settings.VALID_IMG_EXTENSIONS:
-                        # otherwise, abort !. This might seem drastic, but it is better to
-                        # keep the image folder clean !.
-                        message = ('Input file %s does not seem to be an image, as it does not have any of the following extensions: %s. Please remove this file and try again. ') % (afile.name, str(settings.VALID_IMG_EXTENSIONS_STR))
-                        redirect_to = settings.SITE_PREFIX + '/admintools'
-                        return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
-                # ... and if we made it until here, try to upload all selected files and copy them to the images folder
-                for afile in file_list:
-                    full_path = os.path.join(img_base_path, afile.name)
-                    # save the file to disk
-                    if file_system_encoding_not_UTF8:
-                        full_path = full_path.encode('utf-8') # if needed, convert from utf-8
-                    with open(full_path, 'wb+') as destination:
-                        for chunk in afile.chunks():
-                            destination.write(chunk)
-                    self.pipeline_frame_list.append(afile.name)
-                # ... and if we made it until here, we are ready to start the pipeline
-                return redirect('pipeline_start')
 
         message = 'The input to the pipeline is invalid!. Please try again.'
         redirect_to = settings.SITE_PREFIX + '/admintools'

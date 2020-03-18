@@ -1,9 +1,7 @@
 import os
-import sys
-
 from retengine.engine import backend_client
-from retengine import utils as retengine_utils
-from retengine import models
+from retengine.utils import timing
+from retengine.models import errors
 
 
 class FeatureComputer(object):
@@ -30,12 +28,14 @@ class FeatureComputer(object):
             Returns:
                 The time it took to compute the features
         """
-        with retengine_utils.timing.TimerBlock() as timer:
-            out_dicts = [dict(self.__dict__.items() + out_dict.items())
+        with timing.TimerBlock() as timer:
+            out_dicts = [dict(list(self.__dict__.items()) + list(out_dict.items()))
                          for out_dict in out_dicts]
-            map(_compute_feat, out_dicts)
+            for adict in out_dicts:
+                _compute_feat(adict)
 
         comp_time = timer.interval
+
         ##print 'Done with call to compute_feats for Query ID:', self.query_id
         return comp_time
 
@@ -59,43 +59,46 @@ def _compute_feat(out_dict):
             It raises FeatureCompError is the backend reports something went
             wrong with the feature computation.
     """
-    impath = out_dict['clean_fn']
-    featpath = out_dict['feat_fn']
+    try:
+        impath = out_dict['clean_fn']
+        featpath = out_dict['feat_fn']
 
-    ses = backend_client.Session(out_dict['backend_port'])
+        ses = backend_client.Session(out_dict['backend_port'])
 
-    is_symlink = os.path.islink(impath)
-    if is_symlink:
-        canonical_impath = os.path.realpath(impath)
-    else:
-        canonical_impath = impath
+        is_symlink = os.path.islink(impath)
+        if is_symlink:
+            canonical_impath = os.path.realpath(impath)
+        else:
+            canonical_impath = impath
 
-    is_symlink_feat = os.path.islink(featpath)
-    if is_symlink_feat:
-        canonical_featpath = os.path.realpath(featpath)
-    else:
-        canonical_featpath = featpath
+        is_symlink_feat = os.path.islink(featpath)
+        if is_symlink_feat:
+            canonical_featpath = os.path.realpath(featpath)
+        else:
+            canonical_featpath = featpath
 
-    if out_dict['anno'] == 1:
-        call_succeeded = ses.add_pos_trs(out_dict['query_id'],
-                                         canonical_impath, canonical_featpath,
-                                         out_dict['from_dataset'],
-                                         out_dict['extra_params'])
-    elif out_dict['anno'] == -1:
-        call_succeeded = ses.add_neg_trs(out_dict['query_id'],
-                                         canonical_impath, canonical_featpath,
-                                         out_dict['from_dataset'],
-                                         out_dict['extra_params'])
-    else:
-        call_succeeded = True
+        if out_dict['anno'] == 1:
+            call_succeeded = ses.add_pos_trs(out_dict['query_id'],
+                                             canonical_impath, canonical_featpath,
+                                             out_dict['from_dataset'],
+                                             out_dict['extra_params'])
+        elif out_dict['anno'] == -1:
+            call_succeeded = ses.add_neg_trs(out_dict['query_id'],
+                                             canonical_impath, canonical_featpath,
+                                             out_dict['from_dataset'],
+                                             out_dict['extra_params'])
+        else:
+            call_succeeded = True
 
-    if not call_succeeded:
-        raise models.errors.FeatureCompError('Failed computing features of ' + canonical_impath)
+        if not call_succeeded:
+            raise errors.FeatureCompError('Failed computing features of ' + canonical_impath)
 
-    if is_symlink:
-        sys.stdout.write('computed features for: ' + impath +
-                         ' (=>' + canonical_impath + ')\n')
-    else:
-        sys.stdout.write('computed features for: ' + impath + '\n')
+        if is_symlink:
+            print ('computed features for: ' + impath +
+                             ' (=>' + canonical_impath + ')')
+        else:
+            print('computed features for: ' + impath)
 
-    ##print "Backend call done: ", impath
+        ##print "Backend call done: ", impath
+    except Exception as e:
+        print ("Error computing features for %s: " % impath, e )

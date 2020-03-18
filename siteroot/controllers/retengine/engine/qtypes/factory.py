@@ -1,4 +1,8 @@
-import engines
+from retengine.engine.qtypes.engines import dsetimage_query
+from retengine.engine.qtypes.engines import image_query
+from retengine.engine.qtypes.engines import text_query
+from retengine.engine.qtypes.engines import refine_query
+from retengine.engine.qtypes.engines import curated_query
 from retengine import models
 
 def get_query_handler(query, query_id, backend_port, compdata_cache, opts):
@@ -19,15 +23,15 @@ def get_query_handler(query, query_id, backend_port, compdata_cache, opts):
         if query['qdef'][0] == '#':
             # query['qdef'] =  query['qdef'][1:] # Remove the first special character. NOTE: Not necessary now. Disabled until needed.
             query['qtype'] = models.opts.Qtypes.curated
-            return engines.CuratedQuery(query_id, query,
+            return curated_query.CuratedQuery(query_id, query,
                                         backend_port, compdata_cache, opts)
 
-        return engines.TextQuery(query_id, query, backend_port, compdata_cache, opts)
+        return text_query.TextQuery(query_id, query, backend_port, compdata_cache, opts)
     elif query['qtype'] == models.opts.Qtypes.image:
-        return engines.ImageQuery(query_id, query, backend_port, compdata_cache, opts)
+        return image_query.ImageQuery(query_id, query, backend_port, compdata_cache, opts)
     elif query['qtype'] == models.opts.Qtypes.dsetimage:
-        return engines.DsetimageQuery(query_id, query, backend_port, compdata_cache, opts)
+        return dsetimage_query.DsetimageQuery(query_id, query, backend_port, compdata_cache, opts)
     elif query['qtype'] == models.opts.Qtypes.refine:
-        return engines.RefineQuery(query_id, query, backend_port, compdata_cache, opts)
+        return refine_query.RefineQuery(query_id, query, backend_port, compdata_cache, opts)
 
     return None

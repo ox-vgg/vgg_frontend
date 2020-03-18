@@ -5,16 +5,13 @@ import threading
 import requests
 import zmq
 import random
-try:
-    import simplejson as json
-except ImportError:
-    import json  # Python 2.6+ only
+import simplejson as json
 import platform
 import socket
 
 from retengine import models
-from retengine import managers
-from retengine import utils as retengine_utils
+from retengine.managers import compdata_cache as compdata_cache_module
+from retengine.utils import timing
 
 random.seed()
 ZMQ_IMPATH_TERMINATE_MSG = 'TERMINATE'
@@ -48,7 +45,7 @@ class TextQuery(object):
         """
         if not isinstance(opts, models.param_sets.VisorEngineProcessOpts):
             raise ValueError('opts must be of type models.param_sets.VisorEngineProcessOpts')
-        if not isinstance(compdata_cache, managers.CompDataCache):
+        if not isinstance(compdata_cache, compdata_cache_module.CompDataCache):
             raise ValueError('compdata_cache must be of type managers.CompDataCache')
 
         self.query_id = query_id
@@ -120,8 +117,8 @@ class TextQuery(object):
             istreceiver.start()
 
         # make HTTP request
-        # print 'Query ID for current query: %d' % self.query_id
-        with retengine_utils.timing.TimerBlock() as timer:
+        # print ('Query ID for current query: %d' % self.query_id)
+        with timing.TimerBlock() as timer:
             try:
                 # preinitialize zmq socket
                 func_loc = ('http://%s:%d/init_zmq_context' % \
@@ -167,23 +164,23 @@ class TextQuery(object):
                                      data=request_data,
                                      timeout=10*60) #times out at 10m
             except requests.exceptions.Timeout:
-                print 'Image download and feature computation timed out for query:', self.query
-            except requests.exceptions.ConnectionError, e:
-                print 'Could not connect to imsearchtool service'
+                print ('Image download and feature computation timed out for query:', self.query)
+            except requests.exceptions.ConnectionError as e:
+                print ('Could not connect to imsearchtool service')
                 raise e
 
         comp_time = timer.interval
-        # print 'Done with call to imsearchtool for Query ID:', self.query_id
+        # print ('Done with call to imsearchtool for Query ID:', self.query_id)
 
         # send terminate message to impath callback thread if required
         if zmq_impath_return_ch:
             istreceiver_terminator = istreceiver.context.socket(zmq.REQ)
             istreceiver_terminator.connect(zmq_impath_return_ch)
-            istreceiver_terminator.send(ZMQ_IMPATH_TERMINATE_MSG)
-            istreceiver_terminator.recv()
+            istreceiver_terminator.send_string(ZMQ_IMPATH_TERMINATE_MSG)
+            istreceiver_terminator.recv_string()
             # wait max of 50ms for join just in case
             istreceiver.join(0.050)
-        #print 'Done with call to imsearchtool for Query ID:', self.query_id
+        #print ('Done with call to imsearchtool for Query ID:', self.query_id)
 
         return comp_time
 
@@ -207,8 +204,8 @@ class IstImpathReturnThread(threading.Thread):
         self.impath_receiver = self.context.socket(zmq.REP)
         self.impath_receiver.bind(impath_return_ch)
         if 'ipc:' in impath_return_ch:
-            os.chmod(impath_return_ch[6:], 0774)
-        print 'done initialization'
+            os.chmod(impath_return_ch[6:], 0o774)
+        print ('done initialization')
 
         super(IstImpathReturnThread, self).__init__()
 
@@ -221,12 +218,12 @@ class IstImpathReturnThread(threading.Thread):
         """
         try:
             while True:
-                print 'receiving'
-                zmq_msg = self.impath_receiver.recv()
-                print 'received'
+                print ('receiving')
+                zmq_msg = self.impath_receiver.recv_string()
+                print ('received')
                 # break on receiving terminate message
                 if zmq_msg == ZMQ_IMPATH_TERMINATE_MSG:
-                    self.impath_receiver.send('RECEIVED')
+                    self.impath_receiver.send_string('RECEIVED')
                     break
                 # otherwise message is image path, so append it to postrainimg_paths
                 diridx = zmq_msg.find(POSTRAINIMGS_DIRNAME)
@@ -236,9 +233,9 @@ class IstImpathReturnThread(threading.Thread):
                                         variable')
                 zmq_msg = zmq_msg[diridx-1:]
                 self.shared_vars.postrainimg_paths = self.shared_vars.postrainimg_paths + [zmq_msg,]
-                # print 'Updated postrainimg_paths:', zmq_msg
-                self.impath_receiver.send('RECEIVED')
+                # print ('Updated postrainimg_paths:', zmq_msg)
+                self.impath_receiver.send_string('RECEIVED')
         finally:
-            print 'received terminate message'
+            print ('received terminate message')
             #self.impath_receiver.close()
             #self.context.term()

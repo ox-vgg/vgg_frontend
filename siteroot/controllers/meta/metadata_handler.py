@@ -51,7 +51,7 @@ class MetaDataHandler:
         self.metaindex = None
         self.is_all_metadata_loaded = False
         found_a_csv = False
-        for (dset, pretty) in prep_dsets.iteritems():
+        for (dset, pretty) in prep_dsets.items():
             self.fname2meta[dset] = {}
             self.keyword2fname[dset] = {}
             try:
@@ -77,7 +77,7 @@ class MetaDataHandler:
                 # start thread to load all metadata
                 self.process_pool.apply_async(func=self.load_all_dset_metadata, args=(dset, create_index,))
             except Exception as e:
-                print "Error while pre-loading metadata for " + dset + ": " + str(e) + '\n'
+                print ("Error while pre-loading metadata for " + dset + ": " + str(e) + '\n')
 
 
     def load_all_dset_metadata(self, dsetname, create_index=False):
@@ -104,10 +104,10 @@ class MetaDataHandler:
             for afile in os.listdir(os.path.join(self.metadata_dir, dsetname)):
                 if afile.endswith(".csv"):
                     metadata_file = os.path.join(self.metadata_dir, dsetname, afile)
-                    print 'Found metadata file at', metadata_file
+                    print ('Found metadata file at', metadata_file)
                     if create_index:
                         metaindex = open_dir(self.index_dir)
-                    with open(metadata_file, 'rb') as fin:
+                    with open(metadata_file, 'r') as fin:
                         reader = csv.DictReader(fin)
                         for row in reader:
                             id_field = None
@@ -134,7 +134,7 @@ class MetaDataHandler:
                                         query = QueryParser('key', metaindex.schema).parse(key)
                                         writer.delete_by_query(query, metaindex.searcher())
                                         # add document
-                                        writer.add_document(key=unicode(key), dataset=unicode(dsetname))
+                                        writer.add_document(key=str(key), dataset=str(dsetname))
                                     writer.commit()
                                 if keyword_list: # we would like to do this, even if the index is not created
                                     # register link keyword-file
@@ -148,11 +148,11 @@ class MetaDataHandler:
                             else:
                                 raise Exception('"filename" and/or "file_attributes" columns not found in ' + afile + ' (are you missing the column names?). Metadata will not be available!.')
 
-                        print 'Finished loading metadata for %s in %s' % (dsetname, str(time.time()-t))
+                        print ('Finished loading metadata for %s in %s' % (dsetname, str(time.time()-t)))
                         self.is_all_metadata_loaded = True
                     break
         except Exception as e:
-            print "load_all_dset_metadata Exception:" + str(e) + '\n'
+            print ("load_all_dset_metadata Exception:" + str(e) + '\n')
 
 
     def get_files_by_keyword(self, keyword, dsetname):
@@ -173,7 +173,7 @@ class MetaDataHandler:
             else:
                 results_list = self.keyword2fname[dsetname][keyword]
         except Exception as e:
-            print e
+            print (e)
             results_list = []
 
         return results_list
@@ -202,7 +202,7 @@ class MetaDataHandler:
                 try:
                     searcher.search_with_collector(query, tlc)
                 except TimeLimit:
-                    print "searchByKeyWord: Index search took too long, aborting!"
+                    print ("searchByKeyWord: Index search took too long, aborting!")
 
                 # get partial results, if available
                 results = tlc.results()
@@ -302,5 +302,5 @@ class MetaDataHandler:
             shutil.rmtree(self.index_dir)
             self.is_all_metadata_loaded = False
         except Exception as e:
-            print 'clear_metadata_index Exception: ' + str(e)
+            print ('clear_metadata_index Exception: ' + str(e))
             pass

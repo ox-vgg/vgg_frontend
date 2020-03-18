@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from base_query import BaseQuery
+from .base_query import BaseQuery
 
 class ImageQuery(BaseQuery):
     """
