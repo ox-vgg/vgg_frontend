@@ -43,13 +43,10 @@ class APIFunctions:
         available_engines = self.visor_controller.opts.engines_dict
         self.ENGINES_WITH_PIPELINE = ['cpuvisor-srv', 'faces']
 
-        # init paths to negative/positive dirs
+        # init paths to data ingestion files/folders
         self.DATASET_IM_BASE_PATH = None
         self.DATASET_IM_PATHS = None
-        self.NEGATIVE_IM_PATHS = None
-        self.NEGATIVE_IM_BASE_PATH = None
         self.DATASET_FEATS_FILE = None
-        self.NEG_FEATS_FILE = None
 
         # init vars to support the multi-threaded pipeline
         self.threads_map = {}
@@ -81,8 +78,7 @@ class APIFunctions:
                engine: Key to the engine in the dictionary of supported engines in the settings
             Returns:
                A tuple with at least the path to the base folder for the image ingestion and the
-               names and paths to the holders for the positive feature files. Additionally, it
-               can return the names and paths to the holders for the negative feature files.
+               names and paths to the holders for the feature files.
         """
         if engine == 'cpuvisor-srv':
 
@@ -95,20 +91,14 @@ class APIFunctions:
             # Get some info from the proto config
             return  (cpuvisor_config_proto.preproc_config.dataset_im_base_path,
             cpuvisor_config_proto.preproc_config.dataset_im_paths,
-            cpuvisor_config_proto.preproc_config.neg_im_paths,
-            cpuvisor_config_proto.preproc_config.neg_im_base_path,
-            cpuvisor_config_proto.preproc_config.dataset_feats_file,
-            cpuvisor_config_proto.preproc_config.neg_feats_file)
+            cpuvisor_config_proto.preproc_config.dataset_feats_file)
 
         if engine == 'faces':
 
             # Get the info from the settings
             return  (settings.FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'],
                 settings.FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'],
-                settings.FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_PATHS'],
-                settings.FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_BASE_PATH'],
-                settings.FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'],
-                settings.FACE_ENGINE_SETTINGS['FACES_NEG_FEATS_FILE'])
+                settings.FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'])
 
 
     @method_decorator(require_GET)
@@ -613,12 +603,7 @@ class APIFunctions:
             Arguments:
                request: request object containing details of the user session, etc.
         """
-        if ('input_type' not in request.POST) or (request.POST['input_type'] not in ['positive', 'negative', 'video']):
-            message = 'The input type descriptor is missing or invalid. The pipeline cannot be started.'
-            redirect_to = settings.SITE_PREFIX + '/admintools'
-            return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
-
-        if ('input_type' not in request.POST) or (request.POST['input_type'] not in ['positive', 'negative', 'video']):
+        if ('input_type' not in request.POST) or (request.POST['input_type'] not in ['positive', 'video']):
             message = 'The input type descriptor is missing or invalid. The pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
@@ -649,15 +634,11 @@ class APIFunctions:
 
         # get engine config
         (self.DATASET_IM_BASE_PATH, self.DATASET_IM_PATHS,
-        self.NEGATIVE_IM_PATHS, self.NEGATIVE_IM_BASE_PATH,
-        self.DATASET_FEATS_FILE, self.NEG_FEATS_FILE) = self.get_engine_config(request.POST['engine'])
+        self.DATASET_FEATS_FILE) = self.get_engine_config(request.POST['engine'])
 
         self.pipeline_input_type = request.POST['input_type']
         img_base_path = self.DATASET_IM_BASE_PATH
         file_with_list_of_paths = self.DATASET_IM_PATHS
-        if self.pipeline_input_type == 'negative':
-            img_base_path = self.NEGATIVE_IM_BASE_PATH
-            file_with_list_of_paths = self.NEGATIVE_IM_PATHS
 
         if not img_base_path or not file_with_list_of_paths:
             message = 'The image source paths for the current engine are not properly set. The pipeline cannot be started.'
@@ -824,16 +805,11 @@ class APIFunctions:
 
         # get engine config
         (self.DATASET_IM_BASE_PATH, self.DATASET_IM_PATHS,
-        self.NEGATIVE_IM_PATHS, self.NEGATIVE_IM_BASE_PATH,
-        self.DATASET_FEATS_FILE, self.NEG_FEATS_FILE) = self.get_engine_config(self.pipeline_engine)
+        self.DATASET_FEATS_FILE) = self.get_engine_config(self.pipeline_engine)
 
         img_base_path = self.DATASET_IM_BASE_PATH
         file_with_list_of_paths = self.DATASET_IM_PATHS
         dataset_features_out_file = self.DATASET_FEATS_FILE
-        if self.pipeline_input_type == 'negative':
-            img_base_path = self.NEGATIVE_IM_BASE_PATH
-            file_with_list_of_paths = self.NEGATIVE_IM_PATHS
-            dataset_features_out_file = self.NEG_FEATS_FILE
 
         if not img_base_path or not file_with_list_of_paths:
             message = 'The image source paths for the current engine are not properly set. The pipeline cannot be started.'
@@ -846,12 +822,8 @@ class APIFunctions:
             # Calculate number of threads. Set to a maximum of settings.FRAMES_THREAD_NUM_LIMIT and a minimum of 1.
             num_threads = max(1, min(len(self.pipeline_frame_list)/settings.PREPROC_CHUNK_SIZE, settings.FRAMES_THREAD_NUM_LIMIT))
 
-            # if the 'negative' features are being computed, always use one thread,
-            # as 'cpuvisor_preproc' does not support chunks for negative features
+            # set chunk size
             chunk_size = settings.PREPROC_CHUNK_SIZE
-            if self.pipeline_input_type == 'negative':
-                num_threads = 1
-                chunk_size = len(self.pipeline_frame_list) + 1
 
             # Start pipeline.
             self.global_input_index = 0
@@ -988,11 +960,6 @@ class APIFunctions:
 
             number_of_frame_chunks = int(round((number_of_frames /settings.PREPROC_CHUNK_SIZE*1.0) + 0.5))
 
-            # if the 'negative' features are being computed, we always use one thread,
-            # as 'cpuvisor_preproc' does not support chunks for negative features
-            if self.pipeline_input_type == 'negative':
-                number_of_frame_chunks = 1 # so there is always one one chunk
-
             if alive_thread_counter == 0 and processing_frames and self.global_input_index + 1 >= number_of_frames:
                 message = 'The data pipeline has finished !.'
                 redirect_to = settings.SITE_PREFIX + '/admintools'
@@ -1002,9 +969,6 @@ class APIFunctions:
 
                 img_base_path = self.DATASET_IM_BASE_PATH
                 file_with_list_of_paths = self.DATASET_IM_PATHS
-                if self.pipeline_input_type == 'negative':
-                    img_base_path = self.NEGATIVE_IM_BASE_PATH
-                    file_with_list_of_paths = self.NEGATIVE_IM_PATHS
 
                 list_end = min(self.global_input_index + settings.PREPROC_CHUNK_SIZE, number_of_frames)
                 frame_list = self.pipeline_frame_list[self.global_input_index : list_end]
@@ -1041,7 +1005,7 @@ class APIFunctions:
             Arguments:
                request: request object containing details of the user session, etc.
         """
-        if ('input_type' not in request.POST) or (request.POST['input_type'] not in ['positive', 'negative']):
+        if ('input_type' not in request.POST) or (request.POST['input_type'] not in ['positive']):
             message = 'The input type descriptor is missing or invalid. The clearing cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
@@ -1053,32 +1017,23 @@ class APIFunctions:
 
         # get engine config
         (self.DATASET_IM_BASE_PATH, self.DATASET_IM_PATHS,
-        self.NEGATIVE_IM_PATHS, self.NEGATIVE_IM_BASE_PATH,
-        self.DATASET_FEATS_FILE, self.NEG_FEATS_FILE) = self.get_engine_config(request.POST['engine'])
+        self.DATASET_FEATS_FILE) = self.get_engine_config(request.POST['engine'])
 
-        clear_backend_type = request.POST['input_type']
         feats_file = self.DATASET_FEATS_FILE
         file_with_list_of_paths = self.DATASET_IM_PATHS
-        if clear_backend_type == 'negative':
-            feats_file = self.NEG_FEATS_FILE
-            file_with_list_of_paths = self.NEGATIVE_IM_PATHS
 
         if not feats_file:
-            message = 'The positive/negative feature files of the engine are not properly set. The clearing cannot be started.'
+            message = 'The feature files of the engine are not properly set. The clearing cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
         try:
-            if clear_backend_type == 'negative':
-                # there is only one negative features file
-                os.remove(feats_file)
-            else:
-                # there can be several positive features files, so search
-                # for them and remove them all
-                path, filename = os.path.split(feats_file)
-                filename = filename.replace('.', '*.')
-                for afile in glob.glob(os.path.join(path, filename)):
-                    os.remove(afile)
+            # There can be several features files, so search
+            # for them and remove them all
+            path, filename = os.path.split(feats_file)
+            filename = filename.replace('.', '*.')
+            for afile in glob.glob(os.path.join(path, filename)):
+                os.remove(afile)
             if os.path.exists(file_with_list_of_paths):
                 os.remove(file_with_list_of_paths)
         except Exception as e:
@@ -1086,7 +1041,7 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
-        message = 'The ' + clear_backend_type + ' backend data has been cleared!.'
+        message = 'The backend data has been cleared!.'
         redirect_to = settings.SITE_PREFIX + '/admintools'
         return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 

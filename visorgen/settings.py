@@ -362,7 +362,4 @@ CONFIG_PROTO_PATH = os.path.join(BASE_DIR, '..', 'vgg_classifier', 'config.proto
 FACE_ENGINE_SETTINGS = {}
 FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'] = os.path.join( PATHS['datasets'], list(VISOR['datasets'])[0] )
 FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'] = os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'dsetpaths.txt')
-FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_PATHS'] = None
-FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_BASE_PATH'] = None
 FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'] = os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'features', 'database.pkl')
-FACE_ENGINE_SETTINGS['FACES_NEG_FEATS_FILE'] = None
