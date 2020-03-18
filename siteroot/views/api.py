@@ -14,12 +14,6 @@ import threading
 import ast
 import tempfile
 
-PATH_TO_CAFFE_BACKEND_PROTO = os.path.join(settings.BASE_DIR, '../vgg_classifier/proto')
-if os.path.exists(PATH_TO_CAFFE_BACKEND_PROTO):
-    from google.protobuf import text_format
-    sys.path.append(PATH_TO_CAFFE_BACKEND_PROTO) # add this to be able to load cpuvisor_config_pb2
-    import cpuvisor_config_pb2
-
 import retengine.engine.backend_client
 from views import api_globals
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../pipeline')) # add this to be able to load all data ingestion pipelines
@@ -41,7 +35,11 @@ class APIFunctions:
         """
         self.visor_controller = visor_controller
         available_engines = self.visor_controller.opts.engines_dict
-        self.ENGINES_WITH_PIPELINE = ['cpuvisor-srv', 'faces']
+        self.ENGINES_WITH_PIPELINE = []
+        for engine in settings.VISOR['engines']:
+            if ('dataset_im_paths' in settings.VISOR['engines'][engine] and
+                'dataset_feats_file' in settings.VISOR['engines'][engine]):
+                self.ENGINES_WITH_PIPELINE.append(engine)
 
         # init paths to data ingestion files/folders
         self.DATASET_IM_BASE_PATH = None
@@ -80,25 +78,18 @@ class APIFunctions:
                A tuple with at least the path to the base folder for the image ingestion and the
                names and paths to the holders for the feature files.
         """
-        if engine == 'cpuvisor-srv':
+        dataset_im_base_path = None
+        dataset_im_paths = None
+        dataset_feats_file = None
 
-            # read cpuvisor configuration file
-            cpuvisor_config_proto = cpuvisor_config_pb2.Config()
-            cpuvisor_config_file = open(settings.CONFIG_PROTO_PATH, "r")
-            text_format.Merge(str(cpuvisor_config_file.read()), cpuvisor_config_proto)
-            cpuvisor_config_file.close()
+        if engine in self.ENGINES_WITH_PIPELINE:
+            dataset_im_base_path = os.path.join( settings.PATHS['datasets'], list(settings.VISOR['datasets'])[0] )
+            dataset_im_paths = settings.VISOR['engines'][engine]['dataset_im_paths']
+            dataset_feats_file = settings.VISOR['engines'][engine]['dataset_feats_file']
 
-            # Get some info from the proto config
-            return  (cpuvisor_config_proto.preproc_config.dataset_im_base_path,
-            cpuvisor_config_proto.preproc_config.dataset_im_paths,
-            cpuvisor_config_proto.preproc_config.dataset_feats_file)
-
-        if engine == 'faces':
-
-            # Get the info from the settings
-            return  (settings.FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'],
-                settings.FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'],
-                settings.FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'])
+        return (dataset_im_base_path,
+                dataset_im_paths,
+                dataset_feats_file)
 
 
     @method_decorator(require_GET)

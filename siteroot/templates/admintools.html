@@ -9,6 +9,7 @@ The following variables are defined:
   IMPROC_ENGINE - Image Search Engine currently selected
   IMPROC_ENGINE_LIST - List of Image Search Engines
   ENGINES_NAMES - Dictionary of engines names
+  ENGINES_WITH_PIPELINE - Dictionary of engines (with pipeline) names
   CACHED_TEXT_QUERIES - List of cached text queries
   HOME_LOCATION - location of the root home page taking into account possible redirections
   MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES - Maximum amount of bytes when uploading individual files
@@ -180,7 +181,7 @@ The following variables are defined:
                                 <dl>
                                     <dt>Search Engine:
                                         <select name="engine">
-                                        {% for ENGINE,NAME in ENGINES_NAMES.items %}
+                                        {% for ENGINE,NAME in ENGINES_WITH_PIPELINE.items %}
                                             <option value="{{ENGINE}}">{{NAME}}</option>
                                         {% endfor %}
                                         </select>
@@ -220,7 +221,7 @@ The following variables are defined:
                         <h2>Clear Backend Data</h2>
                         <dt>Search Engine:
                             <select name="engine">
-                            {% for ENGINE,NAME in ENGINES_NAMES.items %}
+                            {% for ENGINE,NAME in ENGINES_WITH_PIPELINE.items %}
                                 <option value="{{ENGINE}}">{{NAME}}</option>
                             {% endfor %}
                             </select>

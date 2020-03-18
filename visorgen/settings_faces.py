@@ -216,7 +216,9 @@ VISOR = {
                               'pattern_fname_classifier' : 'dummy', # Not used but cannot be 'None'
                               'can_save_uber_classifier': True,
                               'skip_query_progress': False,
-                              'engine_for_similar_search': 'faces'
+                              'engine_for_similar_search': 'faces',
+                              'dataset_im_paths': os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'dsetpaths.txt'),
+                              'dataset_feats_file': os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'features', 'database.pkl')
                             },
                     },
 }
@@ -298,13 +300,3 @@ VALID_IMG_EXTENSIONS_STR = ', '.join(VALID_IMG_EXTENSIONS) # '.txt' is added lat
 
 # Set the maximum width for an image obtained from a IIIF manifest specification
 IIIF_IMAGE_MAX_WIDTH = 500
-
-######
-# Face search engine - Data Ingestion settings
-######
-
-# Setup settings for face-search engine
-FACE_ENGINE_SETTINGS = {}
-FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'] = os.path.join( PATHS['datasets'], list(VISOR['datasets'])[0] )
-FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'] = os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'dsetpaths.txt')
-FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'] = os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'features', 'database.pkl')
