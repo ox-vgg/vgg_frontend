@@ -221,8 +221,7 @@ VISOR = {
                                   'skip_query_progress': False,
                                   'engine_for_similar_search': 'cpuvisor-srv',
                                   'improc_timeout': 10,
-                                  'dataset_im_paths': os.path.join( BASE_DATA_DIR, 'backend_data', 'cpuvisor-srv', 'dsetpaths.txt'),
-                                  'dataset_feats_file': os.path.join( BASE_DATA_DIR, 'backend_data', 'cpuvisor-srv', 'dsetfeats.binaryproto')
+                                  'data_manager_module': 'data_pipeline_cpuvisor'
                                 },
 
                 # Sample backend engine for text search.
@@ -238,6 +237,7 @@ VISOR = {
                                   'skip_query_progress': True,  # Set to True because this engine can return
                                                                 # results almost instantly
                                   'engine_for_similar_search': None, # Set to 'cpuvisor-srv' only if that engine is included in the settings
+                                  'data_manager_module': 'data_pipeline_text'
                                 },
 
                 # Sample backend engine for face search.
@@ -251,12 +251,11 @@ VISOR = {
                               'can_save_uber_classifier': True,
                               'skip_query_progress': False,
                               'engine_for_similar_search': 'faces',
-                              'dataset_im_paths': os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'dsetpaths.txt'),
-                              'dataset_feats_file': os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'features', 'database.pkl')
+                              'data_manager_module': 'data_pipeline_faces'
                             },
 
                 # Sample backend engine for instance search.
-                # It support images and text as input.
+                ## It support images and text as input.
                 'instances':{ 'full_name' : 'Instances',
                               'url': '/',
                               'backend_port' : 45288,

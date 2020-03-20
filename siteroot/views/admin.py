@@ -75,8 +75,7 @@ class AdminPages:
 
         engines_with_pipeline = {}
         for engine in settings.VISOR['engines']:
-            if ('dataset_im_paths' in settings.VISOR['engines'][engine] and
-                'dataset_feats_file' in settings.VISOR['engines'][engine]):
+            if 'data_manager_module' in settings.VISOR['engines'][engine]:
                 engines_with_pipeline[engine] = settings.VISOR['engines'][engine]['full_name']
 
         # set up rendering context and render the page

@@ -9,16 +9,15 @@ import urllib.parse
 import os
 import sys
 import json
-import glob
 import threading
 import ast
 import tempfile
+import shutil
+import importlib
 
 import retengine.engine.backend_client
 from views import api_globals
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../pipeline')) # add this to be able to load all data ingestion pipelines
-from data_pipeline_cpuvisor import data_processing_pipeline_cpuvisor
-from data_pipeline_faces import data_processing_pipeline_faces
 
 class APIFunctions:
     """
@@ -35,16 +34,21 @@ class APIFunctions:
         """
         self.visor_controller = visor_controller
         available_engines = self.visor_controller.opts.engines_dict
-        self.ENGINES_WITH_PIPELINE = []
+        self.engines_with_pipeline = []
+        self.engines_data_managers = {}
         for engine in settings.VISOR['engines']:
-            if ('dataset_im_paths' in settings.VISOR['engines'][engine] and
-                'dataset_feats_file' in settings.VISOR['engines'][engine]):
-                self.ENGINES_WITH_PIPELINE.append(engine)
+            engine_settings = settings.VISOR['engines'][engine]
+            if 'data_manager_module' in engine_settings:
+                self.engines_with_pipeline.append(engine)
+                module = importlib.import_module(engine_settings['data_manager_module'])
+                self.engines_data_managers[engine] = {
+                'data_pipeline' : module.data_processing_pipeline,
+                'clear_data' : module.clear_data,
+                'base_data_folder': os.path.join( settings.BASE_DATA_DIR, 'backend_data', engine)
+                }
 
         # init paths to data ingestion files/folders
-        self.DATASET_IM_BASE_PATH = None
-        self.DATASET_IM_PATHS = None
-        self.DATASET_FEATS_FILE = None
+        self.DATASET_IM_BASE_PATH = os.path.join( settings.PATHS['datasets'], list(settings.VISOR['datasets'])[0] )
 
         # init vars to support the multi-threaded pipeline
         self.threads_map = {}
@@ -67,29 +71,6 @@ class APIFunctions:
 
         # init vars to support pipeline input acquisition
         self.pipeline_input_thread = None
-
-
-    def get_engine_config(self, engine):
-        """
-            Retrieves the data ingestion pipeline configuration for the specified engine.
-            Arguments:
-               engine: Key to the engine in the dictionary of supported engines in the settings
-            Returns:
-               A tuple with at least the path to the base folder for the image ingestion and the
-               names and paths to the holders for the feature files.
-        """
-        dataset_im_base_path = None
-        dataset_im_paths = None
-        dataset_feats_file = None
-
-        if engine in self.ENGINES_WITH_PIPELINE:
-            dataset_im_base_path = os.path.join( settings.PATHS['datasets'], list(settings.VISOR['datasets'])[0] )
-            dataset_im_paths = settings.VISOR['engines'][engine]['dataset_im_paths']
-            dataset_feats_file = settings.VISOR['engines'][engine]['dataset_feats_file']
-
-        return (dataset_im_base_path,
-                dataset_im_paths,
-                dataset_feats_file)
 
 
     @method_decorator(require_GET)
@@ -599,7 +580,7 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
-        if ('engine' not in request.POST) or (request.POST['engine'] not in self.ENGINES_WITH_PIPELINE):
+        if ('engine' not in request.POST) or (request.POST['engine'] not in self.engines_with_pipeline):
             message = 'There is no data pipeline defined for the selected engine. A pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
@@ -623,15 +604,11 @@ class APIFunctions:
                 redirect_to = settings.SITE_PREFIX + '/admintools'
                 return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
-        # get engine config
-        (self.DATASET_IM_BASE_PATH, self.DATASET_IM_PATHS,
-        self.DATASET_FEATS_FILE) = self.get_engine_config(request.POST['engine'])
-
         self.pipeline_input_type = request.POST['input_type']
         img_base_path = self.DATASET_IM_BASE_PATH
-        file_with_list_of_paths = self.DATASET_IM_PATHS
+        data_base_path = self.engines_data_managers[request.POST['engine']]['base_data_folder']
 
-        if not img_base_path or not file_with_list_of_paths:
+        if not img_base_path or not data_base_path:
             message = 'The image source paths for the current engine are not properly set. The pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
@@ -679,7 +656,7 @@ class APIFunctions:
                 # for videos, just go straight to the pipeline
                 file_list = request.FILES.getlist('input_video_list')
                 uploaded_file = file_list[0].read()
-                file_list = uploaded_file.split('\n')
+                file_list = uploaded_file.decode().split('\n')
                 if len(file_list[-1]) == 0:
                     file_list = file_list[:-1]
                 self.total_input_files = len(file_list)
@@ -793,62 +770,68 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
-
-        # get engine config
-        (self.DATASET_IM_BASE_PATH, self.DATASET_IM_PATHS,
-        self.DATASET_FEATS_FILE) = self.get_engine_config(self.pipeline_engine)
-
         img_base_path = self.DATASET_IM_BASE_PATH
-        file_with_list_of_paths = self.DATASET_IM_PATHS
-        dataset_features_out_file = self.DATASET_FEATS_FILE
+        data_base_path = self.engines_data_managers[self.pipeline_engine]['base_data_folder']
 
-        if not img_base_path or not file_with_list_of_paths:
+        if not img_base_path or not data_base_path:
             message = 'The image source paths for the current engine are not properly set. The pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
         # finally ready to start ..
-        if self.pipeline_engine == 'cpuvisor-srv':
+        if self.pipeline_input_type != 'video':
 
-            # Calculate number of threads. Set to a maximum of settings.FRAMES_THREAD_NUM_LIMIT and a minimum of 1.
-            num_threads = max(1, min(len(self.pipeline_frame_list)/settings.PREPROC_CHUNK_SIZE, settings.FRAMES_THREAD_NUM_LIMIT))
+                # set chunk size
+                chunk_size = settings.PREPROC_CHUNK_SIZE
+
+                # use this 'if' for multi-threaded ingestions
+                if self.pipeline_engine in ['cpuvisor-srv', 'faces']:
+
+                    # Calculate number of threads. Set to a maximum of settings.FRAMES_THREAD_NUM_LIMIT and a minimum of 1.
+                    num_threads = max(1, min(len(self.pipeline_frame_list)//settings.PREPROC_CHUNK_SIZE, settings.FRAMES_THREAD_NUM_LIMIT))
+
+                    # Start pipeline.
+                    self.global_input_index = 0
+                    for i in range(0, num_threads):
+                        list_end = min(self.global_input_index + chunk_size, len(self.pipeline_frame_list))
+                        frame_list = self.pipeline_frame_list[self.global_input_index : list_end]
+                        chunk_thread = threading.Thread(
+                                       target=self.engines_data_managers[self.pipeline_engine]['data_pipeline'],
+                                       args=(frame_list, 'images', self.global_input_index, self.lock,
+                                             img_base_path, data_base_path,
+                                             settings.CONFIG_PROTO_PATH, chunk_size))
+                        chunk_thread.start()
+                        self.threads_map[self.global_input_index] = chunk_thread
+                        self.global_input_index = list_end
+
+                # use this 'if' for single-threaded ingestions
+                if self.pipeline_engine in ['text']:
+
+                    # Use only one thread by default
+                    num_threads = 1
+
+                    # Start pipeline.
+                    self.global_input_index = 0
+                    for i in range(0, num_threads):
+                        frame_list = self.pipeline_frame_list
+                        chunk_thread = threading.Thread(
+                                        target=self.engines_data_managers[self.pipeline_engine]['data_pipeline'],
+                                        args=(frame_list, 'images',
+                                             self.global_input_index, self.lock,
+                                             img_base_path, data_base_path))
+                        chunk_thread.start()
+                        self.threads_map[self.global_input_index] = chunk_thread
+                        self.global_input_index = len(self.pipeline_frame_list)
+
+        else: # if  self.pipeline_input_type == 'video':
+
+            if self.pipeline_engine == 'cpuvisor-srv':
+                message = 'Video ingestion for this engine is not supported yet.'
+                redirect_to = settings.SITE_PREFIX + '/admintools'
+                return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
             # set chunk size
             chunk_size = settings.PREPROC_CHUNK_SIZE
-
-            # Start pipeline.
-            self.global_input_index = 0
-            for i in range(0, num_threads):
-                list_end = min(self.global_input_index + chunk_size, len(self.pipeline_frame_list))
-                frame_list = self.pipeline_frame_list[self.global_input_index : list_end]
-                chunk_thread = threading.Thread(target=data_processing_pipeline_cpuvisor,
-                               args=(frame_list, self.global_input_index, self.lock, self.pipeline_input_type,
-                                     img_base_path, file_with_list_of_paths,
-                                     settings.CONFIG_PROTO_PATH, chunk_size))
-                chunk_thread.start()
-                self.threads_map[self.global_input_index] = chunk_thread
-                self.global_input_index = list_end
-
-        if self.pipeline_engine == 'faces' and self.pipeline_input_type != 'video':
-
-            # Calculate number of threads. Set to a maximum of settings.FRAMES_THREAD_NUM_LIMIT and a minimum of 1.
-            num_threads = max(1, min(len(self.pipeline_frame_list)/settings.PREPROC_CHUNK_SIZE, settings.FRAMES_THREAD_NUM_LIMIT))
-
-            # Start pipeline.
-            self.global_input_index = 0
-            for i in range(0, num_threads):
-                list_end = min(self.global_input_index + settings.PREPROC_CHUNK_SIZE, len(self.pipeline_frame_list))
-                frame_list = self.pipeline_frame_list[self.global_input_index : list_end]
-                chunk_thread = threading.Thread(target=data_processing_pipeline_faces,
-                               args=(frame_list, 'images', # face engine always ingest images if self.pipeline_input_type != 'video'
-                                     self.global_input_index, self.lock,
-                                     img_base_path, file_with_list_of_paths,
-                                     dataset_features_out_file))
-                chunk_thread.start()
-                self.threads_map[self.global_input_index] = chunk_thread
-                self.global_input_index = list_end
-
-        if self.pipeline_engine == 'faces' and self.pipeline_input_type == 'video':
 
             # Calculate number of threads. Set to a maximum of self.num_video_threads.
             num_threads = min(len(self.pipeline_video_list), self.num_video_threads)
@@ -857,12 +840,12 @@ class APIFunctions:
             for i in range(0, num_threads):
                 list_end = min(self.global_input_index + self.video_chunk_size, len(self.pipeline_video_list))
                 video_list = self.pipeline_video_list[self.global_input_index : list_end]
-                chunk_thread = threading.Thread(target=data_processing_pipeline_faces,
-                               args=(video_list,
-                                     self.pipeline_input_type,
+                chunk_thread = threading.Thread(
+                                target=self.engines_data_managers[self.pipeline_engine]['data_pipeline'],
+                                args=(video_list, 'video',
                                      self.global_input_index, self.lock,
-                                     img_base_path, file_with_list_of_paths,
-                                     dataset_features_out_file))
+                                     img_base_path, data_base_path,
+                                     settings.CONFIG_PROTO_PATH, chunk_size))
                 chunk_thread.start()
                 self.threads_map[self.global_input_index] = chunk_thread
                 self.global_input_index = list_end
@@ -897,33 +880,47 @@ class APIFunctions:
         processing_video = number_of_videos > 0
         number_of_frame_chunks = 0
 
-        if self.pipeline_engine == 'faces' and self.pipeline_input_type != 'video':
+        if self.pipeline_input_type != 'video':
 
-            number_of_frame_chunks = int(round((number_of_frames /settings.PREPROC_CHUNK_SIZE*1.0) + 0.5))
+                # use this 'if' for multi-threaded ingestions
+                if self.pipeline_engine in ['cpuvisor-srv', 'faces']:
 
-            if alive_thread_counter == 0 and processing_frames and self.global_input_index + 1 > number_of_frames:
-                message = 'The data pipeline has finished !.'
-                redirect_to = settings.SITE_PREFIX + '/admintools'
-                return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
-            elif processing_frames and alive_thread_counter < settings.FRAMES_THREAD_NUM_LIMIT and self.global_input_index + 1 <= number_of_frames:
-                # since we are under the FRAMES_THREAD_NUM_LIMIT quota, let's try to start a new thread for the next chunk of frames
+                    number_of_frame_chunks = int(round((number_of_frames /settings.PREPROC_CHUNK_SIZE*1.0) + 0.5))
 
-                img_base_path = self.DATASET_IM_BASE_PATH
-                file_with_list_of_paths = self.DATASET_IM_PATHS
-                dataset_features_out_file = self.DATASET_FEATS_FILE
-                list_end = min(self.global_input_index + settings.PREPROC_CHUNK_SIZE, number_of_frames)
-                frame_list = self.pipeline_frame_list[self.global_input_index : list_end]
-                if len(frame_list) > 0:
-                    chunk_thread = threading.Thread(target=data_processing_pipeline_faces,
-                                   args=(frame_list, 'images', # face engine always ingest images if self.pipeline_input_type != 'video'
-                                         self.global_input_index, self.lock,
-                                         img_base_path, file_with_list_of_paths,
-                                         dataset_features_out_file))
-                    chunk_thread.start()
-                    self.threads_map[self.global_input_index] = chunk_thread
-                    self.global_input_index = list_end
+                    if alive_thread_counter == 0 and processing_frames and self.global_input_index + 1 >= number_of_frames:
+                        message = 'The data pipeline has finished !.'
+                        redirect_to = settings.SITE_PREFIX + '/admintools'
+                        return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
+                    elif processing_frames and alive_thread_counter < settings.FRAMES_THREAD_NUM_LIMIT and self.global_input_index + 1 < number_of_frames:
+                        # since we are under the FRAMES_THREAD_NUM_LIMIT quota, let's try to start a new thread for the next chunk of frames
 
-        if self.pipeline_engine == 'faces' and self.pipeline_input_type == 'video':
+                        img_base_path = self.DATASET_IM_BASE_PATH
+                        data_base_path = self.engines_data_managers[self.pipeline_engine]['base_data_folder']
+                        list_end = min(self.global_input_index + settings.PREPROC_CHUNK_SIZE, number_of_frames)
+                        frame_list = self.pipeline_frame_list[self.global_input_index : list_end]
+                        if len(frame_list) > 0:
+                            chunk_thread = threading.Thread(
+                                           target=self.engines_data_managers[self.pipeline_engine]['data_pipeline'],
+                                           args=(frame_list, 'images',
+                                                 self.global_input_index, self.lock,
+                                                 img_base_path, data_base_path,
+                                                 settings.CONFIG_PROTO_PATH, settings.PREPROC_CHUNK_SIZE))
+                            chunk_thread.start()
+                            self.threads_map[self.global_input_index] = chunk_thread
+                            self.global_input_index = list_end
+
+                # use this 'if' for single-threaded ingestions
+                if self.pipeline_engine in ['text']:
+
+                    # single-threaded ingestions will ingest everything on one chunk and only one thread
+                    number_of_frame_chunks = 1
+
+                    if alive_thread_counter == 0 and processing_frames and self.global_input_index + 1 > number_of_frames:
+                        message = 'The data pipeline has finished !.'
+                        redirect_to = settings.SITE_PREFIX + '/admintools'
+                        return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
+
+        else: # self.pipeline_input_type == 'video':
 
             if alive_thread_counter == 0 and processing_video and self.global_input_index + 1 > number_of_videos:
                 message = 'The data pipeline has finished !.'
@@ -933,45 +930,19 @@ class APIFunctions:
                 # since we are under the self.num_video_threads quota, let's try to start a new thread for the next video
 
                 img_base_path = self.DATASET_IM_BASE_PATH
-                file_with_list_of_paths = self.DATASET_IM_PATHS
-                dataset_features_out_file = self.DATASET_FEATS_FILE
+                data_base_path = self.engines_data_managers[self.pipeline_engine]['base_data_folder']
                 list_end = min(self.global_input_index + self.video_chunk_size, number_of_videos)
                 video_list = self.pipeline_video_list[self.global_input_index : list_end]
                 if len(video_list) > 0:
-                    chunk_thread = threading.Thread(target=data_processing_pipeline_faces,
-                                   args=(video_list, self.pipeline_input_type,
+                    chunk_thread = threading.Thread(
+                                    target=self.engines_data_managers[self.pipeline_engine]['data_pipeline'],
+                                    args=(video_list, 'video',
                                          self.global_input_index, self.lock,
-                                         img_base_path, file_with_list_of_paths,
-                                         dataset_features_out_file))
-                    chunk_thread.start()
-                    self.threads_map[self.global_input_index] = chunk_thread
-                    self.global_input_index = list_end
-
-        if self.pipeline_engine == 'cpuvisor-srv':
-
-            number_of_frame_chunks = int(round((number_of_frames /settings.PREPROC_CHUNK_SIZE*1.0) + 0.5))
-
-            if alive_thread_counter == 0 and processing_frames and self.global_input_index + 1 >= number_of_frames:
-                message = 'The data pipeline has finished !.'
-                redirect_to = settings.SITE_PREFIX + '/admintools'
-                return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
-            elif processing_frames and alive_thread_counter < settings.FRAMES_THREAD_NUM_LIMIT and self.global_input_index + 1 < number_of_frames:
-                # since we are under the FRAMES_THREAD_NUM_LIMIT quota, let's try to start a new thread for the next chunk of frames
-
-                img_base_path = self.DATASET_IM_BASE_PATH
-                file_with_list_of_paths = self.DATASET_IM_PATHS
-
-                list_end = min(self.global_input_index + settings.PREPROC_CHUNK_SIZE, number_of_frames)
-                frame_list = self.pipeline_frame_list[self.global_input_index : list_end]
-                if len(frame_list) > 0:
-                    chunk_thread = threading.Thread(target=data_processing_pipeline_cpuvisor,
-                                   args=(frame_list, self.global_input_index, self.lock, self.pipeline_input_type,
-                                         img_base_path, file_with_list_of_paths,
+                                         img_base_path, data_base_path,
                                          settings.CONFIG_PROTO_PATH, settings.PREPROC_CHUNK_SIZE))
                     chunk_thread.start()
                     self.threads_map[self.global_input_index] = chunk_thread
                     self.global_input_index = list_end
-
 
         home_location = settings.SITE_PREFIX + '/'
         if 'HTTP_X_FORWARDED_HOST' in request.META:
@@ -1001,34 +972,16 @@ class APIFunctions:
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
-        if ('engine' not in request.POST) or (request.POST['engine'] not in self.ENGINES_WITH_PIPELINE):
+        if ('engine' not in request.POST) or (request.POST['engine'] not in self.engines_with_pipeline):
             message = 'There is no data pipeline defined for the selected engine. A pipeline cannot be started.'
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
-        # get engine config
-        (self.DATASET_IM_BASE_PATH, self.DATASET_IM_PATHS,
-        self.DATASET_FEATS_FILE) = self.get_engine_config(request.POST['engine'])
-
-        feats_file = self.DATASET_FEATS_FILE
-        file_with_list_of_paths = self.DATASET_IM_PATHS
-
-        if not feats_file:
-            message = 'The feature files of the engine are not properly set. The clearing cannot be started.'
-            redirect_to = settings.SITE_PREFIX + '/admintools'
-            return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
-
-        try:
-            # There can be several features files, so search
-            # for them and remove them all
-            path, filename = os.path.split(feats_file)
-            filename = filename.replace('.', '*.')
-            for afile in glob.glob(os.path.join(path, filename)):
-                os.remove(afile)
-            if os.path.exists(file_with_list_of_paths):
-                os.remove(file_with_list_of_paths)
-        except Exception as e:
-            message = 'There was an error while clearing the backend. Exception: ' + str(e)
+        engine = request.POST['engine']
+        data_base_path = self.engines_data_managers[request.POST['engine']]['base_data_folder']
+        err = self.engines_data_managers[engine]['clear_data'](data_base_path)
+        if len(err)>0 :
+            message = 'There was an error while clearing the backend. Exception: ' + err
             redirect_to = settings.SITE_PREFIX + '/admintools'
             return render_to_response("alert_and_redirect.html", context={'REDIRECT_TO': redirect_to, 'MESSAGE': message})
 
