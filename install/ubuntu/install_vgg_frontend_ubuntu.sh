@@ -2,7 +2,7 @@
 
 # - This script is to be run in a clean Ubuntu 16 LTS machine, by a sudoer user.
 # - The directory /webapps/ should not exist.
-# - A python3 virtualenv is created in /webapps/visorgen/ wich needs to be activated to run the application.
+# - A python3 virtualenv is created in /webapps/visorgen/ which needs to be activated to run the application.
 
 # update repositories
 sudo apt-get update

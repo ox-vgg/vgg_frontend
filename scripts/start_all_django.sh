@@ -32,5 +32,6 @@ case "${1}" in
     ;;
 esac
 cd /webapps/visorgen/vgg_frontend/
+source ../bin/activate
 python manage.py runserver 0.0.0.0:8000
 #tail -f /dev/null # (for docker deployment)

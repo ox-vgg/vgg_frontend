@@ -32,6 +32,7 @@ case "${1}" in
     ;;
 esac
 cd /webapps/visorgen/vgg_frontend/
+source ../bin/activate
 /etc/init.d/nginx restart
 ./start_uwsgi_server.sh
 #tail -f /dev/null # (for docker deployment)
