@@ -5,6 +5,8 @@
 # - A python3 virtualenv is created in /webapps/visorgen/ which needs to be activated to run the application.
 # - If you have a GPU and NVIDIA drivers in your PC, then PyTorch should support GPU automatically.
 #   Otherwise, please refer to the PyTorch web page https://pytorch.org/ for specific installation instructions.
+# - It creates one user for the Admin Tools: login/passwd --> admin/vggadmin
+# - Start the application with /webapps/visorgen/vgg_frontend/scripts/ start_all_django.sh faces
 
 # update repositories
 sudo apt-get update
