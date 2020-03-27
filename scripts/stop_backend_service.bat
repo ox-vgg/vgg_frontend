@@ -13,8 +13,6 @@ exit /B
     echo Category search engine not yet supported in Windows
     exit /B
 :CASE_faces
-    REM image downloader no longer used
-    REM taskkill /FI "WINDOWTITLE eq vgg_img_downloader*" /F /T
     taskkill /FI "WINDOWTITLE eq vgg_face_search_service*" /F /T
     exit /B
 :CASE_instances
