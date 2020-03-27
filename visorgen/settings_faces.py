@@ -217,8 +217,7 @@ VISOR = {
                               'can_save_uber_classifier': True,
                               'skip_query_progress': False,
                               'engine_for_similar_search': 'faces',
-                              'dataset_im_paths': os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'dsetpaths.txt'),
-                              'dataset_feats_file': os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'features', 'database.pkl')
+                              'data_manager_module': 'data_pipeline_faces'
                             },
                     },
 }
@@ -300,3 +299,10 @@ VALID_IMG_EXTENSIONS_STR = ', '.join(VALID_IMG_EXTENSIONS) # '.txt' is added lat
 
 # Set the maximum width for an image obtained from a IIIF manifest specification
 IIIF_IMAGE_MAX_WIDTH = 500
+
+######
+# Category search engine - Data Ingestion settings
+######
+
+# Not used. To be deleted in the future.
+CONFIG_PROTO_PATH = None

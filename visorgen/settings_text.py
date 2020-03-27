@@ -217,7 +217,8 @@ VISOR = {
                                   'can_save_uber_classifier': False,
                                   'skip_query_progress': True,  # Set to True because this engine can return
                                                                 # results almost instantly
-                                  'engine_for_similar_search': None # Set to 'cpuvisor-srv' only if that engine is included in the settings
+                                  'engine_for_similar_search': None, # Set to 'cpuvisor-srv' only if that engine is included in the settings
+                                  'data_manager_module': 'data_pipeline_text'
                                 },
                     },
 }
@@ -269,3 +270,10 @@ IMSEARCHTOOLS = {
 
 # Base folder of scripts to manage the service
 MANAGE_SERVICE_SCRIPTS_BASE_PATH = os.path.join(BASE_DIR, 'scripts')
+
+######
+# Category search engine - Data Ingestion settings
+######
+
+# Not used. To be deleted in the future.
+CONFIG_PROTO_PATH = None

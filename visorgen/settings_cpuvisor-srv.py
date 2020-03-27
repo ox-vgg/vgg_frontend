@@ -219,8 +219,7 @@ VISOR = {
                                   'skip_query_progress': False,
                                   'engine_for_similar_search': 'cpuvisor-srv',
                                   'improc_timeout': 10,
-                                  'dataset_im_paths': os.path.join( BASE_DATA_DIR, 'backend_data', 'cpuvisor-srv', 'dsetpaths.txt'),
-                                  'dataset_feats_file': os.path.join( BASE_DATA_DIR, 'backend_data', 'cpuvisor-srv', 'dsetfeats.binaryproto')
+                                  'data_manager_module': 'data_pipeline_cpuvisor'
                                 },
                     },
 }
