@@ -263,7 +263,7 @@ def gather_pipeline_input(input_type, img_base_path, files, file_system_encoding
 
                             if os.path.isfile(full_path):
                                 relative_path = os.path.join(root_str.replace(img_base_path, ''), filename)
-                                if relative_path.startswith("/"):
+                                if relative_path.startswith(os.path.sep):
                                     relative_path = relative_path[1:]
                                 # check file is an image...
                                 filename, file_extension = os.path.splitext(relative_path)
@@ -285,7 +285,7 @@ def gather_pipeline_input(input_type, img_base_path, files, file_system_encoding
                     frame_path = frame_path.strip()
                     if frame_path == '':
                         continue
-                    if frame_path.startswith('/'):
+                    if frame_path.startswith(os.path.sep):
                         frame_path = frame_path[1:]
                     # DON'T REMOVE THE CODE BELOW YET !!! before testing in Mac/Win
                     #if not file_system_encoding_not_UTF8:       # if NOT utf-8, convert before operations with the 'os' module,
