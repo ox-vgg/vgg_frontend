@@ -3,7 +3,7 @@ Deployment scripts and usage
 
 These scripts are meant for local deployment on your computer of the applications listed here. This means that they will download and install third-party software and data in your computer, as well as compile and configure source code. The scripts are experimental and are intended for **Software Developers**. Regular users are strongly advised to use the docker version of the applications listed here to install them on their computers.
 
-In all cases, you will need a C++ compiler and Python 2.7 installed on your system. For GPU support you will need the NVIDIA drivers and the CUDA Toolkit in your system. Please be aware that the scripts for GPU might fail depending on your particular CUDA setup (version, location of the CUDA library in your system, etc.). cuDNN is not used anywhere so if you want, for instance, Caffe with cuDNN, you will need to reconfigure and recompile Caffe by yourself.
+In all cases, you will need at least Python 3 (at least 3.7 in some cases) installed on your system. For GPU support you will need the NVIDIA drivers and the CUDA Toolkit in your system. Please be aware that GPU support depends on your particular CUDA setup (version, location of the CUDA library in your system, etc.). cuDNN is not used anywhere.
 
 All scripts contain requirements and some instructions at the beginning of the file. Please read them before attempting the deployment.
 
@@ -28,12 +28,7 @@ Deployment scripts are provided for macOS High Sierra 10.13.3 and Ubuntu 16, wit
 
 Deployment scripts are provided for macOS High Sierra 10.13.3, Ubuntu 16 and Windows10 x64; with or without GPU support.
 
-The GPU version uses [face-py-faster-rcnn](https://github.com/playerkk/face-py-faster-rcnn/) for the face detection, while the CPU-only version uses [facenet](https://github.com/davidsandberg/facenet/).
-
-For Windows, none of these detectors are supported and instead the standard frontal-face detector of [Dlib](http://dlib.net/imaging.html) is used. You can easily change the code in `vgg_face_search\service\face_detection_dlib.py` to use Dlib's `cnn_face_detector` to get better results. In such a case, GPU support would be useful, so you will need to compile Dlib with GPU support.
-
 #### *`vgg_frontend` for Display*
-
 
 The scripts will deploy the code in this repository without any backend engine. It can be used to retrieve a pre-defined list of images associated with a text string.
 
@@ -42,7 +37,7 @@ Deployment scripts are provided for macOS High Sierra 10.13.3, Ubuntu 16 and Win
 Configuration
 -------------
 
-If you have executed one of the scripts in the `install` folder, the application you chose should have been deployed either in `/webapps/` or at `$HOME` or at a directory of your choosing, let's hereby call that directory `MY_FOLDER`.
+If you have executed one of the scripts in the `install` folder, the application you chose should have been deployed either in `/webapps/` or at a directory of your choosing, let's hereby call that directory `MY_FOLDER`.
 
 The main configuration file for the frontend is `MY_FOLDER/visorgen/vgg_frontend/visorgen/settings.py`, which contains a set of variables. You should have no need to change these variables unless you want to customize the application. **Be sure you know what you are doing** before changing the settings.
 
