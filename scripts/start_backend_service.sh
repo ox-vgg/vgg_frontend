@@ -8,7 +8,7 @@ case "${1}" in
         ## Start the text-search engine ##
 
         # run text-retrieval backend
-        screen -dm -S visorgen-text-backend-service bash -l -c 'cd /webapps/visorgen/; source ./bin/activate; cd /webapps/visorgen/vgg_text_search/; ./start_backend_service.sh'
+        screen -dm -S visorgen-text-backend-service bash -l -c 'cd /webapps/visorgen/; source ./bin/activate; cd /webapps/visorgen/vgg_text_search/service/; ./start_backend_service.sh'
     ;;
     cpuvisor-srv)
         ## Start the cpuvisor-srv engine ##
