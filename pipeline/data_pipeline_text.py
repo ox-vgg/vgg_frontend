@@ -188,7 +188,13 @@ def clear_data(DATASET_DATA_BASE_PATH):
             if os.path.isfile(file_path) or os.path.islink(file_path):
                 os.unlink(file_path)
             elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
+                # keep the first-level folders but delete anything inside them
+                for filename2 in os.listdir(file_path):
+                    file_path2 = os.path.join(file_path, filename2)
+                    if os.path.isfile(file_path2) or os.path.islink(file_path2):
+                        os.unlink(file_path2)
+                    elif os.path.isdir(file_path2):
+                        shutil.rmtree(file_path2)
         except Exception as e:
             err = err + str(e) + ' '
             pass
