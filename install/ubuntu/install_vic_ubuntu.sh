@@ -116,7 +116,7 @@ unzip /tmp/vgg_classifier.zip -d /webapps/visorgen/
 mv /webapps/visorgen/vgg_classifier*  /webapps/visorgen/vgg_classifier
 
 # download vgg_frontend repo
-wget https://gitlab.com/vgg/vgg_frontend/-/archive/develop/vgg_frontend-develop.zip -O /tmp/vgg_frontend.zip
+wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O /tmp/vgg_frontend.zip
 unzip /tmp/vgg_frontend.zip -d /webapps/visorgen/
 mv /webapps/visorgen/vgg_frontend*  /webapps/visorgen/vgg_frontend
 

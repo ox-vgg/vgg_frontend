@@ -156,5 +156,3 @@ echo user=User.objects.create_user('admin',password='vggadmin') >> super.py
 echo user.save() >> super.py
 python super.py
 del super.py
-cd ..
-rmdir tmp
