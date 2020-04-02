@@ -272,6 +272,35 @@ IMSEARCHTOOLS = {
 MANAGE_SERVICE_SCRIPTS_BASE_PATH = os.path.join(BASE_DIR, 'scripts')
 
 ######
+# General Data Ingestion settings
+######
+
+# Size of the chunks in which list of frames will be divided.
+PREPROC_CHUNK_SIZE = 500
+
+# Limit to the number of threads to be started when ingesting new data.
+# Each thread will be assigned one chunk of data.
+FRAMES_THREAD_NUM_LIMIT = 6
+
+# Maximum number of individual files to be uploaded
+MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES = 500
+
+# Maximum amount of bytes when uploading individual files
+MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES = MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES * 1024 * 1024
+
+# Minimum number of ingested individual files begore starting pipeline_input thread
+MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES = 1000000
+
+# Set a minimum set of valid image extensions. This is to check whether a file is an image or not
+# WITHOUT actually reading the file, because checking all files is too expensive when large amounts
+# of images are ingested.
+VALID_IMG_EXTENSIONS = { ".jpeg", ".jpg", ".png", ".bmp", ".dib", ".tiff", ".tif", ".ppm" }
+VALID_IMG_EXTENSIONS_STR = ', '.join(VALID_IMG_EXTENSIONS) # '.txt' is added later in the admin view
+
+# Set the maximum width for an image obtained from a IIIF manifest specification
+IIIF_IMAGE_MAX_WIDTH = 500
+
+######
 # Category search engine - Data Ingestion settings
 ######
 

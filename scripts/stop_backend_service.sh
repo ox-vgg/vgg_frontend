@@ -7,7 +7,7 @@ case "${1}" in
     text)
         ## Stop the text-backend engine ##
 
-        GREP=$(ps -fe | grep "[t]ext_retrieval_backend")
+        GREP=$(ps -fe | grep "[v]gg_text_search")
         if [ "$GREP" ]; then
             SESSION=$(screen -ls | grep -o ".*.visorgen-text-backend-service")
             if [ "$SESSION" ]; then
