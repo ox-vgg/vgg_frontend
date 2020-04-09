@@ -3,10 +3,15 @@
 # Start from a clean Ubuntu Xenial machine
 FROM ubuntu:xenial
 
+# For GPU support, start from an nvidia image
+#FROM nvidia/cuda:8.0-devel-ubuntu16.04
+
 # Update repositories and install all apt-get dependencies
 RUN apt-get update && apt-get install -y \
     python-pip \
+    python3-pip \
     python-dev \
+    python3-dev \
     memcached \
     libz-dev \
     libjpeg-dev \
@@ -33,18 +38,24 @@ RUN apt-get update && apt-get install -y \
     && apt-get install -y --no-install-recommends libboost-all-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Change the default shell to be able to work with the virtualenv below
+SHELL ["/bin/bash", "-c"]
+
 # Create requirements files for pip, install all pip requirements, create main folders and secret key file
-# For the "PROTOCOL_SSLv3" change, see https://github.com/mistio/mist-ce/issues/434#issuecomment-86484952
-RUN printf "setuptools==39.1.0\ndjango==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==2.3.0\ngreenlet==0.4.15\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==2.2.1\npyzmq==17.1.2\nWhoosh==2.7.4" > /tmp/requirements.txt \
+RUN pip install --upgrade pip \
+    && pip install virtualenv zipp \
+    && mkdir /webapps/ \
+    && chmod 777 /webapps/ \
+    && mkdir /webapps/visorgen \
+    && cd /webapps/visorgen \
+    && virtualenv -p python3 . \
+    && source ./bin/activate \
+    && printf "django==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==6.1.0\ngreenlet==0.4.15\ngevent==1.1.0\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==2.2.1\npyzmq==17.1.2\nWhoosh==2.7.4\nnumpy==1.11.1" > /tmp/requirements.txt \
     && pip install -r /tmp/requirements.txt \
-    && printf "pyopenssl==17.5.0\npyasn1\nndg-httpsclient" > /tmp/requirements-2.txt \
+    && printf "simplejson==3.8.2\npyopenssl==17.5.0\npyasn1\nndg-httpsclient" > /tmp/requirements-2.txt \
     && pip install -r /tmp/requirements-2.txt \
     && rm  /tmp/requirements*.txt \
-    && mkdir /webapps/  \
-    && chmod 777 /webapps/ \
-    && sed -i 's|PROTOCOL_SSLv3|PROTOCOL_SSLv23|g' /usr/local/lib/python2.7/dist-packages/gevent/ssl.py \
-    && sed -i 's|ssl.PROTOCOL_SSLv3|#ssl.PROTOCOL_SSLv3|g' /usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/contrib/pyopenssl.py \
-    && mkdir /webapps/visorgen /webapps/visorgen/backend_dependencies  /webapps/visorgen/backend_data \
+    && mkdir /webapps/visorgen/backend_dependencies  /webapps/visorgen/backend_data \
           /webapps/visorgen/datasets  /webapps/visorgen/datasets/images/  /webapps/visorgen/datasets/images/mydataset \
           /webapps/visorgen/datasets/metadata/  /webapps/visorgen/datasets/metadata/mydataset \
           /webapps/visorgen/datasets/negatives/  /webapps/visorgen/datasets/negatives/mydataset \
@@ -77,11 +88,10 @@ RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-maste
     && cp -f /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb-vic.js /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js \
     && sed -i 's/"\/vgg_frontend"/"\/vic"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py
 
-# Compile caffe
+# Compile caffe. No need to setup pycaffe.
 RUN cd /webapps/visorgen/backend_dependencies/caffe/ \
     && cp Makefile.config.example Makefile.config \
-    && sed -i 's/# CPU_ONLY/CPU_ONLY/g' Makefile.config \
-    && sed -i 's/\/usr\/include\/python2.7/\/usr\/include\/python2.7 \/usr\/local\/lib\/python2.7\/dist-packages\/numpy\/core\/include/g' Makefile.config \
+    && if [ -f "/usr/local/cuda/bin/nvcc" ]; then echo "Found nvcc, will try to compile Caffe with GPU support"; else sed -i 's/# CPU_ONLY/CPU_ONLY/g' Makefile.config; fi \
     && sed -i 's/INCLUDE_DIRS :=/INCLUDE_DIRS := \/usr\/include\/hdf5\/serial\/ /g' Makefile.config \
     && sed -i 's/LIBRARY_DIRS :=/LIBRARY_DIRS := \/usr\/lib\/x86_64-linux-gnu\/hdf5\/serial\/ /g' Makefile.config \
     && sed -i 's/# Configure build/CXXFLAGS += -std=c++11/g' Makefile \
@@ -105,16 +115,17 @@ RUN cd /webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/ \
     && make \
     && make install \
     && rm -rf /webapps/visorgen/backend_dependencies/cpp-netlib-0.11-devel/build \
-    && sed -i 's/<full_path_to_this_directory>\/dsetpaths_sample/\/webapps\/visorgen\/backend_data\/cpuvisor-srv\/dsetpaths/g' /webapps/visorgen/vgg_classifier/config.prototxt \
-    && sed -i 's/<full_path_to_this_directory>\/negpaths_sample/\/webapps\/visorgen\/backend_data\/cpuvisor-srv\/negpaths/g' /webapps/visorgen/vgg_classifier/config.prototxt \
-    && sed -i 's/<full_path_to_this_directory>/\/webapps\/visorgen\/vgg_classifier/g' /webapps/visorgen/vgg_classifier/config.prototxt \
-    && sed -i 's/<full_path_to_base_folder_where_images_in_dsetpaths_sample.txt_are_located>/\/webapps\/visorgen\/datasets\/images\/mydataset/g' /webapps/visorgen/vgg_classifier/config.prototxt \
-    && sed -i 's/<full_path_to_base_folder_where_images_in_negpaths_sample.txt_are_located>/\/webapps\/visorgen\/datasets\/negatives\/mydataset/g' /webapps/visorgen/vgg_classifier/config.prototxt \
-    && sed -i 's/<full_path_to_dsetfeats_binaryproto_file_produced_by_cpuvisor_preproc>/\/webapps\/visorgen\/backend_data\/cpuvisor-srv\/dsetfeats.binaryproto/g' /webapps/visorgen/vgg_classifier/config.prototxt \
-    && sed -i 's/<full_path_to_negpaths_binaryproto_file_produced_by_cpuvisor_preproc>/\/webapps\/visorgen\/backend_data\/cpuvisor-srv\/negfeats.binaryproto/g' /webapps/visorgen/vgg_classifier/config.prototxt
+    && sed -i 's|<full_path_to_this_directory>|/webapps/visorgen/vgg_classifier|g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's|<full_path_to_base_folder_where_images_in_dsetpaths_sample.txt_are_located>|/webapps/visorgen/datasets/images/mydataset|g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's|<full_path_to_base_folder_where_images_in_negpaths_sample.txt_are_located>|/webapps/visorgen/datasets/negatives/mydataset|g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's|<full_path_to_dsetfeats_binaryproto_file_produced_by_cpuvisor_preproc>|/webapps/visorgen/backend_data/cpuvisor-srv/dsetfeats.binaryproto|g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's|<full_path_to_negpaths_binaryproto_file_produced_by_cpuvisor_preproc>|/webapps/visorgen/backend_data/cpuvisor-srv/negfeats.binaryproto|g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's|/webapps/visorgen/vgg_classifier/dsetpaths_sample.txt|/webapps/visorgen/backend_data/cpuvisor-srv/dsetpaths.txt|g' /webapps/visorgen/vgg_classifier/config.prototxt \
+    && sed -i 's|/webapps/visorgen/vgg_classifier/negpaths_sample.txt|/webapps/visorgen/backend_data/cpuvisor-srv/negpaths.txt|g' /webapps/visorgen/vgg_classifier/config.prototxt
 
 # configure default user in frontend
-RUN cd /webapps/visorgen/vgg_frontend/ \
+RUN source /webapps/visorgen/bin/activate \
+    && cd /webapps/visorgen/vgg_frontend/ \
     && python manage.py migrate \
     && printf "import os\nfrom django.core.wsgi import get_wsgi_application\nos.environ['DJANGO_SETTINGS_MODULE']='visorgen.settings'\napplication = get_wsgi_application()\nfrom django.contrib.auth.models import User\nuser=User.objects.create_user('admin', password='vggadmin')\nuser.is_superuser=True\nuser.is_staff=True\nuser.save()" > super.py \
     && python super.py \
