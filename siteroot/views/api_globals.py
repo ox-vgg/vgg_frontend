@@ -257,8 +257,9 @@ def gather_pipeline_input(input_type, img_base_path, files, file_system_encoding
                             if filename.startswith('.'):
                                 continue # skip hidden files, specially in macOS
                             root_str = root
-                            if file_system_encoding_not_UTF8:
-                                root_str = str(root) # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
+                            # DON'T REMOVE THE CODE BELOW YET !!! before testing in Mac/Win
+                            #if file_system_encoding_not_UTF8:
+                            #    root_str = str(root) # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
                             full_path = os.path.join(root_str, filename)
 
                             if os.path.isfile(full_path):
@@ -269,8 +270,9 @@ def gather_pipeline_input(input_type, img_base_path, files, file_system_encoding
                                 filename, file_extension = os.path.splitext(relative_path)
                                 if file_extension.lower() in settings.VALID_IMG_EXTENSIONS:
                                     # if it is, add it to the list
-                                    if file_system_encoding_not_UTF8:
-                                        relative_path = relative_path.decode('utf-8') # if needed, convert from utf-8. It will be converted back by the pipeline.
+                                    # DON'T REMOVE THE CODE BELOW YET !!! before testing in Mac/Win
+                                    #if file_system_encoding_not_UTF8:
+                                    #    relative_path = relative_path.decode('utf-8') # if needed, convert from utf-8. It will be converted back by the pipeline.
                                     pipeline_frame_list.append(relative_path)
                                 else:
                                     # otherwise, abort !. This might seem drastic, but it is better to
