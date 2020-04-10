@@ -1,135 +1,126 @@
-# Dockerfile for the CPU-based VFF application. See http://www.robots.ox.ac.uk/~vgg/software/vff/
+# Dockerfile for the VFF application. See http://www.robots.ox.ac.uk/~vgg/software/vff/
 
 # Start from a clean Ubuntu Xenial machine
 FROM ubuntu:xenial
 
-# Update repositories and install PART 1 of apt-get dependencies
+# For GPU support, start from an nvidia image
+#FROM nvidia/cuda:8.0-devel-ubuntu16.04
+
+# Update repositories and install all apt-get dependencies
 RUN apt-get update && apt-get install -y \
     python-pip \
+    python3-pip \
     python-dev \
+    python3-dev \
     memcached \
     libz-dev \
     libjpeg-dev \
     libfreetype6-dev \
     libevent-dev \
     libzmq-dev \
-    libxml2-dev \
-    libxslt1-dev \
     screen \
     cmake \
+    libsm6 \
     pkg-config \
-    libgoogle-glog-dev \
-    libhdf5-serial-dev \
-    liblmdb-dev \
-    libleveldb-dev \
-    libprotobuf-dev \
-    protobuf-compiler \
+    python3-tk \
     unzip \
     wget \
     nano \
-    && rm -rf /var/lib/apt/lists/*
-
-# Update repositories and install PART 2 of apt-get dependencies
-RUN apt-get update && apt-get install -y \
-    libopencv-dev \
-    libatlas-base-dev \
-    libsnappy-dev \
-    libgflags-dev \
-    libssl-dev \
-    libffi-dev \
-    python-opencv \
-    gfortran \
-    imagemagick \
     && apt-get install -y --no-install-recommends libboost-all-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Create requirements file, install all requirements, create main folders and secret key file
-# For the "PROTOCOL_SSLv3" change, see https://github.com/mistio/mist-ce/issues/434#issuecomment-86484952
-RUN wget https://bootstrap.pypa.io/get-pip.py -P /tmp \
-    && python /tmp/get-pip.py pip==19.1.1 && rm /tmp/get-pip.py \
-    && printf "setuptools==40.4.3\ndjango==1.10\npython-memcached\ngevent==0.13.8\nrequests==2.2.1\nFlask==0.10.1\nPillow==6.1.0\ngreenlet==0.4.15\nvalidictory==0.9.1\nmsgpack-python==0.3.0\npyzmq==17.1.2\nnumpy==1.15.2\nPyWavelets==1.0.1\nnetworkx==2.2" > /tmp/requirements-1.txt \
-    && pip install -r /tmp/requirements-1.txt \
-    && pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.4.0-cp27-none-linux_x86_64.whl \
-    && printf "simplejson==3.8.2\nmatplotlib==2.1.0\nlxml==4.1.1\nscipy==0.18.1\nscikit-image==0.13.1\nscikit-learn==0.19.1\nWhoosh==2.7.4\npyopenssl==17.5.0\npyasn1\nndg-httpsclient" > /tmp/requirements-2.txt \
-    && pip install -r /tmp/requirements-2.txt \
-    && rm  /tmp/requirements*.txt \
-    && mkdir /webapps/  \
+# Change the default shell to be able to work with the virtualenv below
+SHELL ["/bin/bash", "-c"]
+
+# Create requirements files for pip, install all pip requirements, create main folders and secret key file
+RUN pip install --upgrade pip \
+    && pip install virtualenv zipp \
+    && mkdir /webapps/ \
     && chmod 777 /webapps/ \
-    && sed -i 's|PROTOCOL_SSLv3|PROTOCOL_SSLv23|g' /usr/local/lib/python2.7/dist-packages/gevent/ssl.py \
-    && sed -i 's|ssl.PROTOCOL_SSLv3|#ssl.PROTOCOL_SSLv3|g' /usr/local/lib/python2.7/dist-packages/requests/packages/urllib3/contrib/pyopenssl.py \
-    && mkdir /webapps/visorgen /webapps/visorgen/backend_dependencies  /webapps/visorgen/backend_data /webapps/visorgen/backend_data/faces \
+    && mkdir /webapps/visorgen \
+    && cd /webapps/visorgen \
+    && virtualenv -p python3 . \
+    && source ./bin/activate \
+    && printf "django==1.10\npython-memcached\nprotobuf==3.0.0\nPillow==6.1.0\ngreenlet==0.4.15\ngevent==1.1.0\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==2.2.1\npyzmq==17.1.2\nWhoosh==2.7.4" > /tmp/requirements.txt \
+    && pip install -r /tmp/requirements.txt \
+    && printf "simplejson==3.8.2\npyopenssl==17.5.0\npyasn1\nndg-httpsclient" > /tmp/requirements-2.txt \
+    && pip install -r /tmp/requirements-2.txt \
+    && printf "torch==1.1.0\nPyWavelets==1.1.1\ntorchvision==0.3.0\nscipy==1.2.0\nscikit-image==0.14.2\nmatplotlib==2.1.0\nopencv-python==4.2.0.32" > /tmp/requirements-3.txt \
+    && pip install -r /tmp/requirements-3.txt \
+    && rm  /tmp/requirements*.txt \
+    && mkdir /webapps/visorgen/backend_dependencies  /webapps/visorgen/backend_data \
           /webapps/visorgen/datasets  /webapps/visorgen/datasets/images/  /webapps/visorgen/datasets/images/mydataset \
           /webapps/visorgen/datasets/metadata/  /webapps/visorgen/datasets/metadata/mydataset \
-          /webapps/visorgen/datasets/negatives/  /webapps/visorgen/datasets/negatives/mydataset \
           /webapps/visorgen/frontend_data  /webapps/visorgen/frontend_data/searchdata/ /webapps/visorgen/frontend_data/curatedtrainimgs \
           /webapps/visorgen/frontend_data/searchdata/classifiers /webapps/visorgen/frontend_data/searchdata/postrainanno \
           /webapps/visorgen/frontend_data/searchdata/postrainfeats /webapps/visorgen/frontend_data/searchdata/postrainimgs \
-          /webapps/visorgen/frontend_data/searchdata/rankinglists /webapps/visorgen/frontend_data/searchdata/uploadedimgs \
-    && echo 'gs5oo@o9y!4=c&ol5gio*eujx09jc=q#ac!m4w!20g_=kw_h0h' > /webapps/visorgen/secret_key_visorgen
+          /webapps/visorgen/frontend_data/searchdata/rankinglists /webapps/visorgen/frontend_data/searchdata/predefined_rankinglists \
+          /webapps/visorgen/frontend_data/searchdata/uploadedimgs \
+    && echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
 
-# Install caffe 1.0, SENet modifications (Sep 2017), ffmpeg and davidsandberg's facenet (Dec 2017)
-RUN wget https://github.com/BVLC/caffe/archive/1.0.zip -P /tmp \
-    && unzip /tmp/1.0.zip -d /webapps/visorgen/backend_dependencies/ \
-    && mv /webapps/visorgen/backend_dependencies/caffe* /webapps/visorgen/backend_dependencies/caffe \
-    && wget https://github.com/davidsandberg/facenet/archive/28d3bf2fa7254037229035cac398632a5ef6fc24.zip -P /tmp \
-    && unzip /tmp/28d3bf2fa7254037229035cac398632a5ef6fc24.zip -d /webapps/visorgen/backend_dependencies/ \
-    && mv /webapps/visorgen/backend_dependencies/facenet* /webapps/visorgen/backend_dependencies/facenet \
-    && wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -O /tmp/ffmpeg-release-amd64-static.tar.xz \
-    && tar -xf /tmp/ffmpeg-release-amd64-static.tar.xz -C /webapps/visorgen/backend_dependencies/ \
-    && mv /webapps/visorgen/backend_dependencies/ffmpeg* /webapps/visorgen/backend_dependencies/ffmpeg \
-    && wget https://github.com/lishen-shirley/SENet/archive/c8f7b4e311fc9b5680047e14648fde86fb23cb17.zip -P /tmp \
-    && unzip /tmp/c8f7b4e311fc9b5680047e14648fde86fb23cb17.zip -d /webapps/visorgen/backend_dependencies/ \
-    && mv /webapps/visorgen/backend_dependencies/SENet* /webapps/visorgen/backend_dependencies/SENet \
-    && cp -v /webapps/visorgen/backend_dependencies/SENet/include/caffe/layers/* /webapps/visorgen/backend_dependencies/caffe/include/caffe/layers/ \
-    && cp -v /webapps/visorgen/backend_dependencies/SENet/src/caffe/layers/* /webapps/visorgen/backend_dependencies/caffe/src/caffe/layers/ \
-    && rm -rf /tmp/*.zip \
-    && rm -rf /tmp/*.tar*
-
-# Download and configure vgg repos and models
+# Download and configure vgg repos
 RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O /tmp/vgg_frontend.zip \
     && unzip /tmp/vgg_frontend.zip -d /webapps/visorgen/ \
     && mv /webapps/visorgen/vgg_frontend*  /webapps/visorgen/vgg_frontend \
-    && cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_faces.py /webapps/visorgen/vgg_frontend/visorgen/settings.py \
-    && cp -f /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb-vff.js /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js \
-    && sed -i 's/"\/vgg_frontend"/"\/vff"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py \
     && wget https://gitlab.com/vgg/vgg_face_search/-/archive/master/vgg_face_search-master.zip -O /tmp/vgg_face_search.zip \
     && unzip /tmp/vgg_face_search.zip -d /webapps/visorgen/ \
     && mv /webapps/visorgen/vgg_face_search*  /webapps/visorgen/vgg_face_search \
-    && sed -i 's/DATASET_FEATS_FILE/DATASET_FEATS_FILE="\/webapps\/visorgen\/backend_data\/faces\/features\/database.pkl"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
-    && sed -i 's/FEATURES_CAFFE_MODEL/FEATURES_CAFFE_MODEL="\/webapps\/visorgen\/backend_data\/faces\/resnet50_256.caffemodel"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
-    && sed -i 's/FEATURES_CAFFE_PROTOTXT/FEATURES_CAFFE_PROTOTXT="\/webapps\/visorgen\/backend_data\/faces\/resnet50_256.prototxt"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
-    && sed -i 's/GPU_FACE_DETECTION_CAFFE_MODEL/#GPU_FACE_DETECTION_CAFFE_MODEL/g' /webapps/visorgen/vgg_face_search/service/settings.py \
-    && sed -i 's/DEPENDENCIES_PATH/DEPENDENCIES_PATH="\/webapps\/visorgen\/backend_dependencies\/"#/g' /webapps/visorgen/vgg_face_search/service/settings.py \
+    && rm -rf /tmp/*.zip \
+    && cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_faces.py /webapps/visorgen/vgg_frontend/visorgen/settings.py \
+    && cp -f /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb-vff.js /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js \
+    && sed -i 's/"\/vgg_frontend"/"\/vff"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py \
+    && sed -i "s|DATASET_FEATS_FILE|DATASET_FEATS_FILE='/webapps/visorgen/backend_data/faces/features/database.pkl'#|g" /webapps/visorgen/vgg_face_search/service/settings.py \
+    && sed -i "s|DEPENDENCIES_PATH|DEPENDENCIES_PATH='/webapps/visorgen/backend_dependencies/'#|g" /webapps/visorgen/vgg_face_search/service/settings.py \
+    && sed -i "s|FEATURES_MODEL_WEIGHTS|FEATURES_MODEL_WEIGHTS ='/webapps/visorgen/backend_data/faces/senet50_256.pth'#|g" /webapps/visorgen/vgg_face_search/service/settings.py \
+    && sed -i "s|FEATURES_MODEL_DEF|FEATURES_MODEL_DEF ='/webapps/visorgen/backend_data/faces/senet50_256.py'#|g" /webapps/visorgen/vgg_face_search/service/settings.py \
+    && sed -i "s|FACE_DETECTION_MODEL|FACE_DETECTION_MODEL ='/webapps/visorgen/backend_data/faces/weights/Resnet50_Final.pth'#|g" /webapps/visorgen/vgg_face_search/service/settings.py \
+    && if [ -f "/usr/local/cuda/bin/nvcc" ]; then IS_CUDA_AVAILABLE=True; else IS_CUDA_AVAILABLE=False; fi \
+    && sed -i "s|CUDA_ENABLED|CUDA_ENABLED = ${IS_CUDA_AVAILABLE}#|g" /webapps/visorgen/vgg_face_search/service/settings.py \
     && sed -i "s|ffmpeg|/webapps/visorgen/backend_dependencies/ffmpeg/ffmpeg|g" /webapps/visorgen/vgg_face_search/pipeline/start_pipeline.sh \
     && sed -i 's/resnet50_256/senet50_256/g' /webapps/visorgen/vgg_face_search/service/settings.py \
-    && rm -rf /tmp/*.zip
+    && sed -i 's/localhost/0.0.0.0/g' /webapps/visorgen/vgg_face_search/service/settings.py
 
-# Compile caffe and shot detector
-RUN cd /webapps/visorgen/backend_dependencies/caffe/ \
-    && cp Makefile.config.example Makefile.config \
-    && sed -i 's/# CPU_ONLY/CPU_ONLY/g' Makefile.config \
-    && sed -i 's/\/usr\/include\/python2.7/\/usr\/include\/python2.7 \/usr\/local\/lib\/python2.7\/dist-packages\/numpy\/core\/include/g' Makefile.config \
-    && sed -i 's/INCLUDE_DIRS :=/INCLUDE_DIRS := \/usr\/include\/hdf5\/serial\/ /g' Makefile.config \
-    && sed -i 's/LIBRARY_DIRS :=/LIBRARY_DIRS := \/usr\/lib\/x86_64-linux-gnu\/hdf5\/serial\/ /g' Makefile.config \
-    && sed -i 's/# Configure build/CXXFLAGS += -std=c++11/g' Makefile \
-    && make all \
-    && make pycaffe \
-    && cd /webapps/visorgen/vgg_face_search/pipeline \
+# Install Pytorch_Retinaface (Dec 2019) and download static ffmpeg
+RUN wget https://github.com/biubug6/Pytorch_Retinaface/archive/96b72093758eeaad985125237a2d9d34d28cf768.zip -P /tmp \
+    && unzip /tmp/96b72093758eeaad985125237a2d9d34d28cf768.zip -d /webapps/visorgen/backend_dependencies/ \
+    && mv /webapps/visorgen/backend_dependencies/Pytorch_Retinaface* /webapps/visorgen/backend_dependencies/Pytorch_Retinaface \
+    && wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -O /tmp/ffmpeg-release-amd64-static.tar.xz \
+    && tar -xf /tmp/ffmpeg-release-amd64-static.tar.xz -C /webapps/visorgen/backend_dependencies/ \
+    && mv /webapps/visorgen/backend_dependencies/ffmpeg* /webapps/visorgen/backend_dependencies/ffmpeg \
+    && rm -rf /tmp/*.zip \
+    && rm -rf /tmp/*.tar* \
+    && source /webapps/visorgen/bin/activate \
+    && cd /webapps/visorgen/backend_dependencies/Pytorch_Retinaface/ \
+    && python -c "from models.retinaface import RetinaFace; from data import cfg_re50; RetinaFace(cfg=cfg_re50, phase = 'test')"
+
+# Compile shot detector
+RUN cd /webapps/visorgen/vgg_face_search/pipeline \
     && mkdir build \
     && cd build \
     && cmake -DBoost_INCLUDE_DIR=/usr/include/ ../ \
     && make
 
-# Download models. This is only here for reference. The models should not be copied inside the image to reduce the image size.
-#RUN cd /webapps/visorgen/backend_data/faces \
-#    && wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/senet50_256.caffemodel \
-#    && wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/senet50_256.prototxt
-
-# configure default user in frontend
-RUN cd /webapps/visorgen/vgg_frontend/ \
-    && python manage.py migrate \
+# Configure default user in frontend
+RUN source /webapps/visorgen/bin/activate \
     && cd /webapps/visorgen/vgg_frontend/ \
+    && python manage.py migrate \
     && printf "import os\nfrom django.core.wsgi import get_wsgi_application\nos.environ['DJANGO_SETTINGS_MODULE']='visorgen.settings'\napplication = get_wsgi_application()\nfrom django.contrib.auth.models import User\nuser=User.objects.create_user('admin', password='vggadmin')\nuser.is_superuser=True\nuser.is_staff=True\nuser.save()" > super.py \
     && python super.py \
     && rm -f super.py \
     && echo 'tail -f /dev/null' >> /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh
+
+# Download models. This is only here for reference. The models should not be copied inside the image to reduce the image size.
+# Use the suggested VOLUME below to mount the storage containing the models
+#RUN wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/models/pytorch/senet50_256_pytorch.tar.gz -P /tmp/ \
+#    && tar -xvzf /tmp/senet50_256_pytorch.tar.gz -C /webapps/visorgen/backend_data/faces/ \
+#    && mkdir /webapps/visorgen/backend_data/faces/weights \
+#    && wget http://www.robots.ox.ac.uk/~vgg/software/vff/downloads/models/Pytorch_Retinaface/Resnet50_Final.pth -O  /webapps/visorgen/backend_data/faces/weights/Resnet50_Final.pth
+
+# The customizations below can be done via the command line and are not needed here.
+# If you need them create a new Docker image derived from this one and define them.
+#EXPOSE 8000
+#VOLUME /webapps/visorgen/backend_data \
+#       /webapps/visorgen/frontend_data \
+#       /webapps/visorgen/datasets/images/mydataset \
+#       /webapps/visorgen/datasets/metadata/mydataset
+#ENTRYPOINT /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh faces
