@@ -1,0 +1,139 @@
+# Dockerfile for the VTS application with Yang Liu's Text-Detect-Recognize. See https://gitlab.com/vgg/vgg_text_search
+
+# Start from a clean Ubuntu Xenial image
+FROM ubuntu:xenial
+
+# For GPU support, start from an nvidia image
+#FROM nvidia/cuda:8.0-devel-ubuntu16.04
+
+# Update repositories and install all apt-get dependencies
+RUN if [ -f "/usr/local/cuda/bin/nvcc" ]; then echo "deb http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list; fi \
+    && apt-get update \
+    && apt-get install -y software-properties-common \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y \
+    python-pip \
+    python-dev \
+    python3-pip \
+    python3.6-dev \
+    memcached \
+    libz-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libevent-dev \
+    libzmq-dev \
+    screen \
+    pkg-config \
+    python3-tk \
+    openjdk-8-jdk \
+    ant \
+    unzip \
+    wget \
+    nano \
+    cmake \
+    && apt-get install -y --no-install-recommends libboost-all-dev \
+    && if [ -f "/usr/local/cuda/bin/nvcc" ]; then apt-get install -y libcudnn5-dev; fi \
+    && rm -rf /var/lib/apt/lists/*
+
+# Change the default shell to be able to work with the virtualenv below
+SHELL ["/bin/bash", "-c"]
+
+# Create requirements file, install all requirements, download git repo and configure vgg_face_search
+RUN pip install --upgrade pip \
+    && pip install virtualenv zipp \
+    && mkdir /webapps/ \
+    && chmod 777 /webapps/ \
+    && mkdir /webapps/visorgen \
+    && cd /webapps/visorgen \
+    && virtualenv -p python3.6 . \
+    && source ./bin/activate \
+    && pip install django==1.10 python-memcached protobuf==3.8.0 greenlet==0.4.15 gevent==1.1.0 validictory==0.9.1 msgpack-python==0.3.0 requests==2.2.1 pyzmq==17.1.2 \
+    && pip install Pillow==6.1.0 setproctitle==1.1.10 matplotlib==3.1.1 opencv-python==4.1.1.26 cython==0.29.14 tqdm==4.37.0 \
+    && if [ -f "/usr/local/cuda/bin/nvcc" ]; then pip install tensorflow-gpu==1.1.0; else pip install tensorflow==1.1.0; fi \
+    && pip install https://download.pytorch.org/whl/cu90/torch-1.1.0-cp36-cp36m-linux_x86_64.whl \
+    && pip install https://download.pytorch.org/whl/cu90/torchvision-0.3.0-cp36-cp36m-manylinux1_x86_64.whl \
+    && pip install scipy==1.1.0 imgaug==0.3.0 tensorboardx==1.9 editdistance==0.5.3 simplejson==3.8.2 Flask==0.10.1 \
+    && pip install Whoosh==2.7.4 pyopenssl==17.5.0 pyasn1 ndg-httpsclient \
+    && wget https://archive.apache.org/dist/lucene/pylucene/pylucene-8.1.1-src.tar.gz -P /tmp \
+    && cd /tmp && tar -xvzf pylucene-8.1.1-src.tar.gz \
+    && cd /tmp/pylucene-8.1.1/jcc/ && sed -i 's|java-8-oracle|java-8-openjdk-amd64|g' setup.py \
+    && python setup.py build && python setup.py install \
+    && cd /tmp/pylucene-8.1.1 \
+    && sed -i 's|# Linux     (Debian Jessie 64-bit, Python 3.4.2|\nPREFIX_PYTHON=/webapps/visorgen\nANT=JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 /usr/bin/ant\nPYTHON=$(PREFIX_PYTHON)/bin/python3\nJCC=$(PYTHON) -m jcc --shared\nNUM_FILES=10\n#|g' Makefile \
+    && make &&  make install \
+    && rm -rf /tmp/*.zip && rm -rf /tmp/*.tar* && rm -rf /tmp/pylucene-8.1.1/ \
+    && mkdir /webapps/visorgen/backend_dependencies  /webapps/visorgen/backend_data \
+          /webapps/visorgen/datasets  /webapps/visorgen/datasets/images/  /webapps/visorgen/datasets/images/mydataset \
+          /webapps/visorgen/datasets/metadata/  /webapps/visorgen/datasets/metadata/mydataset \
+          /webapps/visorgen/frontend_data  /webapps/visorgen/frontend_data/searchdata/ /webapps/visorgen/frontend_data/curatedtrainimgs \
+          /webapps/visorgen/frontend_data/searchdata/classifiers /webapps/visorgen/frontend_data/searchdata/postrainanno \
+          /webapps/visorgen/frontend_data/searchdata/postrainfeats /webapps/visorgen/frontend_data/searchdata/postrainimgs \
+          /webapps/visorgen/frontend_data/searchdata/rankinglists /webapps/visorgen/frontend_data/searchdata/predefined_rankinglists \
+          /webapps/visorgen/frontend_data/searchdata/uploadedimgs \
+    && echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/secret_key_visorgen
+
+#### &&
+# Download and configure vgg repos
+RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O /tmp/vgg_frontend.zip \
+    && unzip /tmp/vgg_frontend.zip -d /webapps/visorgen/ \
+    && mv /webapps/visorgen/vgg_frontend*  /webapps/visorgen/vgg_frontend \
+    && wget https://gitlab.com/vgg/vgg_text_search/-/archive/master/vgg_text_search-master.zip -O /tmp/vgg_text_search.zip \
+    && unzip /tmp/vgg_text_search.zip -d /webapps/visorgen/ \
+    && mv /webapps/visorgen/vgg_text_search* /webapps/visorgen/vgg_text_search \
+    && rm -rf /tmp/*.zip \
+    && sed -i 's/localhost/0.0.0.0/g' /webapps/visorgen/vgg_text_search/service/settings.py \
+    && rm -rf /webapps/visorgen/vgg_text_search/data/images.index/.gitignore \
+    && sed -i "s|LUCENE_INDEX|LUCENE_INDEX = '/webapps/visorgen/backend_data/text/images.index' #|g" /webapps/visorgen/vgg_text_search/service/settings.py \
+    && sed -i "s|TEXT_RESULTS_DIR|TEXT_RESULTS_DIR = '/webapps/visorgen/backend_data/text/text_detections' #|g" /webapps/visorgen/vgg_text_search/service/settings.py \
+    && sed -i "s|DEPENDENCIES_PATH|DEPENDENCIES_PATH='/webapps/visorgen/backend_dependencies' #|g" /webapps/visorgen/vgg_text_search/service/settings.py \
+    && sed -i "s|ffmpeg|/webapps/visorgen/backend_dependencies/ffmpeg/ffmpeg|g" /webapps/visorgen/vgg_text_search/pipeline/start_pipeline.sh \
+    && sed -i "s|./model/conv3_3/|/webapps/visorgen/backend_data/text/conv3_3/|g" /webapps/visorgen/vgg_text_search/pipeline/start_pipeline.sh \
+    && sed -i "s|../attention_net/model/|/webapps/visorgen/backend_data/text/|g"  /webapps/visorgen/vgg_text_search/pipeline/start_pipeline.sh \
+    && if [ -f "/usr/local/cuda/bin/nvcc" ]; then sed -i 's/--gpus -1/--gpus 0/g' /webapps/visorgen/vgg_text_search/pipeline/start_pipeline.sh; fi \
+    && cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_text.py /webapps/visorgen/vgg_frontend/visorgen/settings.py \
+    && cp -f /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb-vts.js /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js \
+    && sed -i 's/"\/vgg_frontend"/"\/vts"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py
+
+# Install Yang Liu's Text-Detect-Recognize and download static ffmpeg
+RUN wget https://github.com/ox-vgg/Text-Detect-Recognize/archive/master.zip -O /tmp/text-detect-master.zip \
+    && unzip /tmp/text-detect-master.zip -d /webapps/visorgen/backend_dependencies/ \
+    && mv /webapps/visorgen/backend_dependencies/Text-Detect-Recognize* /webapps/visorgen/backend_dependencies/Text-Detect-Recognize \
+    && rm -rf /webapps/visorgen/backend_dependencies/Text-Detect-Recognize/detection/pixel_link/pylib \
+    && wget https://github.com/dengdan/pylib/archive/python3.zip -O /tmp/pylib.zip \
+    && unzip /tmp/pylib.zip -d /webapps/visorgen/backend_dependencies/Text-Detect-Recognize/detection/pixel_link/ \
+    && mv /webapps/visorgen/backend_dependencies/Text-Detect-Recognize/detection/pixel_link/pylib* /webapps/visorgen/backend_dependencies/Text-Detect-Recognize/detection/pixel_link/pylib \
+    && wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -O /tmp/ffmpeg-release-amd64-static.tar.xz \
+    && tar -xf /tmp/ffmpeg-release-amd64-static.tar.xz -C /webapps/visorgen/backend_dependencies/ \
+    && mv /webapps/visorgen/backend_dependencies/ffmpeg* /webapps/visorgen/backend_dependencies/ffmpeg \
+    && rm -rf /tmp/*.zip && rm -rf /tmp/*.tar*
+
+# Compile shot detector
+RUN cd /webapps/visorgen/vgg_text_search/pipeline \
+    && mkdir build \
+    && cd build \
+    && cmake -DBoost_INCLUDE_DIR=/usr/include/ ../ \
+    && make
+
+# Configure default user in frontend
+RUN source /webapps/visorgen/bin/activate \
+    && cd /webapps/visorgen/vgg_frontend/ \
+    && python manage.py migrate \
+    && printf "import os\nfrom django.core.wsgi import get_wsgi_application\nos.environ['DJANGO_SETTINGS_MODULE']='visorgen.settings'\napplication = get_wsgi_application()\nfrom django.contrib.auth.models import User\nuser=User.objects.create_user('admin', password='vggadmin')\nuser.is_superuser=True\nuser.is_staff=True\nuser.save()" > super.py \
+    && python super.py \
+    && rm -f super.py \
+    && echo 'tail -f /dev/null' >> /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh
+
+# Download models from https://drive.google.com/drive/folders/1PuLCYVG457UOFzWHz4GuerTzWABZR0b6
+# The contents of pixel_link_vgg_4s.zip should be unzipped to:
+#    /webapps/visorgen/backend_data/text/
+# The 0_480000.pth file should be copied to:
+#    /webapps/visorgen/backend_data/text/
+
+# The customizations below can be done via the command line and are not needed here.
+# If you need them create a new Docker image derived from this one and define them.
+#EXPOSE 8000
+#VOLUME /webapps/visorgen/backend_data \
+#       /webapps/visorgen/frontend_data \
+#       /webapps/visorgen/datasets/images/mydataset \
+#       /webapps/visorgen/datasets/metadata/mydataset
+#ENTRYPOINT /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh text
