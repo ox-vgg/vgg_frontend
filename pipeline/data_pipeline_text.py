@@ -186,8 +186,14 @@ def clear_data(DATASET_DATA_BASE_PATH):
         file_path = os.path.join(DATASET_DATA_BASE_PATH, filename)
         try:
             if os.path.isfile(file_path) or os.path.islink(file_path):
+                # ... except pytorch files
+                if file_path.endswith('.pth'):
+                    continue
                 os.unlink(file_path)
             elif os.path.isdir(file_path):
+                # skip the model's folder, if present
+                if 'conv3_3' in file_path:
+                    continue
                 # keep the first-level folders but delete anything inside them
                 for filename2 in os.listdir(file_path):
                     file_path2 = os.path.join(file_path, filename2)
