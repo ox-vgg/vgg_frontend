@@ -972,7 +972,7 @@ class UserPages:
             # the metadata comes from the "file_attributes" column of the metadata CSV file, so
             # it should be a list of tuples. The parsing below should fail otherwise, and then
             # the raw metadata will be rendered
-            if isinstance(metadata, list):
+            if isinstance(metadata, type({}.items())):
                 formatted_metadata = '<ul>'
                 iii_source = ''
                 for item in metadata:
