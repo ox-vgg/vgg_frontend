@@ -77,7 +77,7 @@ pip install simplejson==3.8.2
 
 REM vgg_img_downloader dependencies
 pip install greenlet==0.4.15
-pip install gevent==1.3.0
+REM pip install gevent==1.3a2 --> Not really needed for VFF
 pip install Flask==0.10.1
 pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
 
@@ -99,7 +99,6 @@ pip install matplotlib==2.2.2
 
 REM delete all zips
 del /Q *.zip
-del /Q *.gz
 
 REM modify some vgg_face_search settings
 REM Note that the CUDA_ENABLED setting is not changed !.
