@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import sys
 
 ######
 # Main paths
@@ -20,6 +21,9 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BASE_DATA_DIR = '/webapps/visorgen/'
+
+# Add extra paths to modules
+sys.path.append( os.path.join(BASE_DIR, 'siteroot') )
 
 ######
 # Quick-start development settings - unsuitable for production
@@ -214,7 +218,8 @@ VISOR = {
                                   'can_save_uber_classifier': True,
                                   'skip_query_progress': False,
                                   'engine_for_similar_search': 'cpuvisor-srv',
-                                  'improc_timeout': 10
+                                  'improc_timeout': 10,
+                                  'data_manager_module': 'data_pipeline_cpuvisor'
                                 },
                     },
 }

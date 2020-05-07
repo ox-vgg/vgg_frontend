@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import sys
 
 ######
 # Main paths
@@ -20,6 +21,9 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BASE_DATA_DIR = '/webapps/visorgen/'
+
+# Add extra paths to modules
+sys.path.append( os.path.join(BASE_DIR, 'siteroot') )
 
 ######
 # Quick-start development settings - unsuitable for production
@@ -182,7 +186,6 @@ STATIC_URL = SITE_PREFIX + '/static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'siteroot', 'static')
 
-
 ######
 # Visor web site options
 ######
@@ -217,7 +220,8 @@ VISOR = {
                                   'can_save_uber_classifier': True,
                                   'skip_query_progress': False,
                                   'engine_for_similar_search': 'cpuvisor-srv',
-                                  'improc_timeout': 10
+                                  'improc_timeout': 10,
+                                  'data_manager_module': 'data_pipeline_cpuvisor'
                                 },
 
                 # Sample backend engine for text search.
@@ -232,7 +236,8 @@ VISOR = {
                                   'can_save_uber_classifier': False,
                                   'skip_query_progress': True,  # Set to True because this engine can return
                                                                 # results almost instantly
-                                  'engine_for_similar_search': None # Set to 'cpuvisor-srv' only if that engine is included in the settings
+                                  'engine_for_similar_search': None, # Set to 'cpuvisor-srv' only if that engine is included in the settings
+                                  'data_manager_module': 'data_pipeline_text'
                                 },
 
                 # Sample backend engine for face search.
@@ -245,11 +250,12 @@ VISOR = {
                               'pattern_fname_classifier' : 'dummy', # Not used but cannot be 'None'
                               'can_save_uber_classifier': True,
                               'skip_query_progress': False,
-                              'engine_for_similar_search': 'faces'
+                              'engine_for_similar_search': 'faces',
+                              'data_manager_module': 'data_pipeline_faces'
                             },
 
                 # Sample backend engine for instance search.
-                # It support images and text as input.
+                ## It support images and text as input.
                 'instances':{ 'full_name' : 'Instances',
                               'url': '/',
                               'backend_port' : 45288,
@@ -348,17 +354,3 @@ IIIF_IMAGE_MAX_WIDTH = 500
 
 # Path to the config.prototxt file of the object-search engine.
 CONFIG_PROTO_PATH = os.path.join(BASE_DIR, '..', 'vgg_classifier', 'config.prototxt')
-
-
-######
-# Face search engine - Data Ingestion settings
-######
-
-# Setup settings for face-search engine
-FACE_ENGINE_SETTINGS = {}
-FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'] = os.path.join( PATHS['datasets'], VISOR['datasets'].keys()[0] )
-FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'] = os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'dsetpaths.txt')
-FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_PATHS'] = None
-FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_BASE_PATH'] = None
-FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'] = os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'features', 'database.pkl')
-FACE_ENGINE_SETTINGS['FACES_NEG_FEATS_FILE'] = None

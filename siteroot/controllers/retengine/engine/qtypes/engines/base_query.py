@@ -4,9 +4,9 @@ import os
 from copy import deepcopy
 
 from retengine import models
-from retengine import managers
-from retengine import utils as retengine_utils
-import feature_computation
+from retengine.managers import compdata_cache as compdata_cache_module
+from retengine.utils import timing
+from . import feature_computation
 
 
 class BaseQuery(object):
@@ -35,8 +35,8 @@ class BaseQuery(object):
         """
         if not isinstance(opts, models.param_sets.VisorEngineProcessOpts):
             raise ValueError('opts must be of type models.param_sets.VisorEngineProcessOpts')
-        if not isinstance(compdata_cache, managers.CompDataCache):
-            raise ValueError('compdata_cache must be of type managers.CompDataCache')
+        if not isinstance(compdata_cache, compdata_cache_module.CompDataCache):
+            raise ValueError('compdata_cache must be of type compdata_cache.CompDataCache')
 
         self.query_id = query_id
         self.query = query
@@ -59,7 +59,6 @@ class BaseQuery(object):
                 The time it took to compute the features
         """
         image_dict = deepcopy(self.query['qdef'])
-
         for image in image_dict:
             imfn = image['image'].replace(self.srv_imgdir, '')
             imfn = imfn.replace('%23', '#') # replace html-encoded curated search character
@@ -87,7 +86,7 @@ class BaseQuery(object):
             else:
                 image['anno'] = 1
 
-        with retengine_utils.timing.TimerBlock() as timer:
+        with timing.TimerBlock() as timer:
             feat_comp = feature_computation.FeatureComputer(self.query_id, self.backend_port)
             feat_comp.compute_feats(image_dict)
 

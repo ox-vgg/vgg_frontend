@@ -6,21 +6,16 @@ REM variables (if you don't already have them set).
 REM 1- Create the directory where you want the application to be deployed, and copy this file inside that folder.
 REM    Let's call that folder the INSTALL_FOLDER.
 REM 2- Download wget.exe (https://eternallybored.org/misc/wget/) and copy it inside INSTALL_FOLDER
-REM 3- Make sure you have Python 2.7 x64 installed and that you can execute 'pip' and 'easy_install' from the command line
+REM 3- Make sure you have Python 3.7 x64 installed and that you can execute 'pip'.
+REM    Here we assume Python 3.7 is installed C:\Python37\
 REM 4- Install 'virtualenv', by entering 'pip install virtualenv' in the command line
-REM 5- Install CMake and make sure you can access it from the command line
-REM 6- Install Microsoft Visual C++ Compiler for Python 2.7
-REM 7- The installation of DLib will most likely require compilation, and you will need a more modern compile, so please
-REM    install the Visual C++ 2017 Build Tools (https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2017).
-REM    Note that you only need the "Visual C++ build tools" regardless of all the other software offered by the installer.
-REM 8- Start the x64 command prompt created by the Visual Studio installer, it should be called something like, for instance:
-REM        x64 Native Tools Command Prompt for VS 2017
 REM 9- From that command prompt, go to the INSTALL_FOLDER and run this batch file. All software will be download and setup for you.
 REM    Note that a python virtual environment will be created inside INSTALL_FOLDER. You need to activate it before running the
 REM    application, with:
 REM        INSTALL_FOLDER\Scripts\activate
 REM 10-Start the application from the command line. Go to INSTALL_FOLDER\vgg_frontend\ and type:
 REM        python manage.py runserver
+
 
 REM create all subdirs
 mkdir backend_data\faces\features
@@ -36,6 +31,11 @@ mkdir frontend_data\searchdata\rankinglists\faces
 mkdir frontend_data\searchdata\uploadedimgs
 mkdir tmp
 
+REM Create virtual environment. Change the path to the Python executable if needed.
+cd %~dp0
+virtualenv -p C:\Python37\python.exe --prompt "(vff) " .
+call Scripts\activate
+
 REM download and extract vgg_frontend
 wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O vgg_frontend.zip
 powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('vgg_frontend.zip', '.'); }"
@@ -46,11 +46,16 @@ wget https://gitlab.com/vgg/vgg_face_search/-/archive/master/vgg_face_search-mas
 powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('vgg_face_search.zip', '.'); }"
 move vgg_face_search-* vgg_face_search
 
-REM Download models
-wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/resnet50_256.caffemodel -O resnet50_256.caffemodel
-wget http://www.robots.ox.ac.uk/~vgg/data/vgg_face2/256/resnet50_256.prototxt -O resnet50_256.prototxt
-move resnet50_256.caffemodel backend_data\faces\
-move resnet50_256.prototxt backend_data\faces\
+REM download Pytorch_Retinaface (Dec 2019)
+wget https://github.com/biubug6/Pytorch_Retinaface/archive/96b72093758eeaad985125237a2d9d34d28cf768.zip -O Pytorch_Retinaface.zip
+powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('Pytorch_Retinaface.zip', '.'); }"
+move Pytorch_Retinaface-* backend_dependencies\Pytorch_Retinaface
+mkdir  backend_dependencies\Pytorch_Retinaface\weights
+
+REM download models
+wget http://www.robots.ox.ac.uk/~vgg/software/vff/downloads/models/senet50_256_pytorch.zip
+powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('senet50_256_pytorch.zip', 'backend_data\faces\'); }"
+wget http://www.robots.ox.ac.uk/~vgg/software/vff/downloads/models/Pytorch_Retinaface/Resnet50_Final.pth -O backend_dependencies\Pytorch_Retinaface\weights\Resnet50_Final.pth
 
 REM Download ffmpeg
 wget https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-4.1.1-win64-static.zip
@@ -60,60 +65,54 @@ powershell.exe -nologo -noprofile -command "$mod='""'+$pwd.Path+'\backend_depend
 copy /Y vgg_face_search\pipeline\start_pipeline.replace.bat vgg_face_search\pipeline\start_pipeline.bat
 del vgg_face_search\pipeline\start_pipeline.replace.bat
 
-REM Create virtual environment
-cd %~dp0
-virtualenv .
-call Scripts\activate
-
-REM Install vgg_face_search dependencies
-pip install setuptools==39.1.0
-pip install simplejson==3.8.2
-pip install Pillow==6.1.0
-pip install numpy==1.14.0
-pip install Cython==0.27.3
-pip install matplotlib==2.1.0
-pip install scipy==1.0.1
-pip install protobuf==3.0.0
-REM Download stdint.h, see https://stackoverflow.com/questions/44865576/python-scikit-image-install-failing-using-pip
-wget https://raw.githubusercontent.com/mattn/gntp-send/master/include/msinttypes/stdint.h -O "%LOCALAPPDATA%\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC\include\stdint.h"
-pip install scikit-image==0.13.1
-pip install easydict==1.7
-pip install dlib==19.9.0
-
-REM Install vgg_frontend additional dependencies
+REM Django dependencies
 pip install django==1.10
+pip install python-memcached
 
-REM Install vgg_img_downloader additional dependencies
+REM frontend dependencies
+pip install protobuf==3.0.0
+pip install Pillow==6.1.0
+pip install Whoosh==2.7.4
+pip install simplejson==3.8.2
+
+REM vgg_img_downloader dependencies
 pip install greenlet==0.4.15
-pip install gevent==1.1.0
+REM pip install gevent==1.3a2 --> Not really needed for VFF
 pip install Flask==0.10.1
 pip install pyopenssl==17.5.0 pyasn1 ndg-httpsclient
 
-REM Install vgg_frontend controller additional dependencies
+REM controller dependencies
 pip install validictory==0.9.1
 pip install msgpack-python==0.3.0
 pip install requests==2.2.1
-easy_install https://files.pythonhosted.org/packages/ea/78/79c8efb5de3c648b6c945f21c4ac291bb405b81b8cf6bb906eeb2d816187/pyzmq-17.1.2-cp27-cp27m-win_amd64.whl
-pip install Whoosh==2.7.4
+pip install pyzmq==17.1.2
 
-REM Download static caffe for windows (Release version, CPU only, Python 2.7) from https://github.com/BVLC/caffe/tree/windows
-wget "https://github.com/Coderx7/Caffe_1.0_Windows/releases/download/caffe_1.0_windows/caffe_cpu_x64_MSVC14_Py27_release.zip" -O caffe.zip
-powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('caffe.zip', 'backend_dependencies\caffe'); }"
+REM vgg_face_search dependencies
+REM Note that torch is installed for CPU only !!!
+pip install https://download.pytorch.org/whl/cpu/torch-1.1.0-cp37-cp37m-win_amd64.whl
+pip install PyWavelets==1.1.1
+pip install https://download.pytorch.org/whl/cpu/torchvision-0.3.0-cp37-cp37m-win_amd64.whl
+pip install https://3f23b170c54c2533c070-1c8a9b3114517dc5fe17b7c3f8c63a43.ssl.cf2.rackcdn.com/scipy-1.2.0-cp37-cp37m-win_amd64.whl
+pip install scikit-image==0.14.2
+pip install opencv-python==4.2.0.32
+pip install matplotlib==2.2.2
 
 REM delete all zips
 del /Q *.zip
 
 REM modify some vgg_face_search settings
+REM Note that the CUDA_ENABLED setting is not changed !.
 cd %~dp0
 powershell.exe -nologo -noprofile -command "$mod='DEPENDENCIES_PATH=''' + $pwd.Path + '\backend_dependencies''#';$mod=$mod -replace '\\','\\'; cat vgg_face_search\service\settings.py | %%{$_ -replace 'DEPENDENCIES_PATH', $mod } > vgg_face_search\service\settings.replace.py"
 copy /Y vgg_face_search\service\settings.replace.py vgg_face_search\service\settings.py
-powershell.exe -nologo -noprofile -command "cat vgg_face_search\service\settings.py | %%{$_ -replace 'GPU_FACE_DETECTION_CAFFE_MODEL', '#GPU_FACE_DETECTION_CAFFE_MODEL' } > vgg_face_search\service\settings.replace.py"
-copy /Y vgg_face_search\service\settings.replace.py vgg_face_search\service\settings.py
 powershell.exe -nologo -noprofile -command "$mod='DATASET_FEATS_FILE=''' + $pwd.Path + '\backend_data\faces\features\database.pkl''#';$mod=$mod -replace '\\','\\'; cat vgg_face_search\service\settings.py | %%{$_ -replace 'DATASET_FEATS_FILE', $mod } > vgg_face_search\service\settings.replace.py"
 copy /Y vgg_face_search\service\settings.replace.py vgg_face_search\service\settings.py
-powershell.exe -nologo -noprofile -command "$mod='FEATURES_CAFFE_MODEL=''' + $pwd.Path + '\backend_data\faces\resnet50_256.caffemodel''#';$mod=$mod -replace '\\','\\'; cat vgg_face_search\service\settings.py | %%{$_ -replace 'FEATURES_CAFFE_MODEL', $mod } > vgg_face_search\service\settings.replace.py"
+powershell.exe -nologo -noprofile -command "$mod='FEATURES_MODEL_WEIGHTS=''' + $pwd.Path + '\backend_data\faces\senet50_256.pth''#';$mod=$mod -replace '\\','\\'; cat vgg_face_search\service\settings.py | %%{$_ -replace 'FEATURES_MODEL_WEIGHTS', $mod } > vgg_face_search\service\settings.replace.py"
 copy /Y vgg_face_search\service\settings.replace.py vgg_face_search\service\settings.py
-powershell.exe -nologo -noprofile -command "$mod='FEATURES_CAFFE_PROTOTXT=''' + $pwd.Path + '\backend_data\faces\resnet50_256.prototxt''#';$mod=$mod -replace '\\','\\'; cat vgg_face_search\service\settings.py | %%{$_ -replace 'FEATURES_CAFFE_PROTOTXT', $mod } > vgg_face_search\service\settings.replace.py"
+powershell.exe -nologo -noprofile -command "$mod='FEATURES_MODEL_DEF=''' + $pwd.Path + '\backend_data\faces\senet50_256.py''#';$mod=$mod -replace '\\','\\'; cat vgg_face_search\service\settings.py | %%{$_ -replace 'FEATURES_MODEL_DEF', $mod } > vgg_face_search\service\settings.replace.py"
+copy /Y vgg_face_search\service\settings.replace.py vgg_face_search\service\settings.py
+powershell.exe -nologo -noprofile -command "$mod='FACE_DETECTION_MODEL=''' + $pwd.Path + '\backend_dependencies\Pytorch_Retinaface\weights\Resnet50_Final.pth''#';$mod=$mod -replace '\\','\\'; cat vgg_face_search\service\settings.py | %%{$_ -replace 'FACE_DETECTION_MODEL', $mod } > vgg_face_search\service\settings.replace.py"
+copy /Y vgg_face_search\service\settings.replace.py vgg_face_search\service\settings.py
 echo $path = "vgg_face_search\service\settings.replace.py" > replaceends.ps1
 echo (Get-Content $path -Raw).Replace("`r`n","`n") ^| Set-Content -NoNewline $path -Force >> replaceends.ps1
 powershell.exe -nologo -noprofile -ExecutionPolicy ByPass -file replaceends.ps1

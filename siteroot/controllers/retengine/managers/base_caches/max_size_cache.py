@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 
 from threading import Lock
-
-try:
-    from collections import OrderedDict # for Python 2.7 and above
-except ImportError:
-    from ordereddict import OrderedDict # for Python 2.6 and below
-                                        # (needs to be installed from PyPI)
+from collections import OrderedDict
 
 # ----------------------------------
 ## Max Size Cache Class
@@ -65,7 +60,7 @@ class MaxSizeCache(object):
             if lock:
                 self._datastore_lock.acquire()
             while len(self._datastore) > self._entry_limit:
-                print 'entry count is: %d vs entry limit of : %d' % (len(self._datastore), self._entry_limit)
+                print ('entry count is: %d vs entry limit of : %d' % (len(self._datastore), self._entry_limit))
                 self._datastore.popitem(False)
         finally:
             if lock:
@@ -93,7 +88,7 @@ class MaxSizeCache(object):
         """
         with self._datastore_lock:
             self._datastore = OrderedDict((key, ritem)
-                                          for (key, ritem) in self._datastore.iteritems()
+                                          for (key, ritem) in self._datastore.items()
                                           if not partial_tuple == key[:len(partial_tuple)])
 
 
@@ -135,5 +130,4 @@ class MaxSizeCache(object):
             if key in self._datastore:
                 del self._datastore[key]
             self._datastore[key] = data
-
             self.purge_old_data(False)

@@ -118,7 +118,7 @@ class SessionCache(object):
             if ses_id in self._sessions:
                 self._sessions[ses_id] = dict((key, item)
                                               for (key, item)
-                                              in self._sessions[ses_id].iteritems()
+                                              in self._sessions[ses_id].items()
                                               if not partial_tuple == key[:len(partial_tuple)])
 
 

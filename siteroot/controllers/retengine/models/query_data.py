@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import opts
+from retengine.models import opts
 
 # ----------------------------------
 ## Query data structures
@@ -46,7 +46,7 @@ class QueryStatus(object):
             Returns:
                 The status in dictionary form
         """
-        return dict((k, v) for (k, v) in self.__dict__.iteritems() if not k.startswith('__'))
+        return dict((k, v) for (k, v) in self.__dict__.items() if not k.startswith('__'))
 
 
 class QueryData(object):

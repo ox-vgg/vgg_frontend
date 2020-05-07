@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import opts as retengine_opts
+from . import opts
 
 # ----------------------------------
 ## Parameter sets
@@ -12,7 +12,7 @@ class VisorOptions(object):
     def __init__(self,
                  title='VISOR',
                  datasets={},
-                 default_view=retengine_opts.Vmode.grid,
+                 default_view=opts.Vmode.grid,
                  results_per_page=20,
                  engines={},
                  select_roi=False,
@@ -101,10 +101,10 @@ class VisorEngineProcessOpts(object):
                                          improc_timeout=15.0,
                                          per_image_timeout=1.0,
                                          num_pos_train=200),
-                 rf_rank_type=retengine_opts.RfRankTypes.full,
+                 rf_rank_type=opts.RfRankTypes.full,
                  rf_rank_topn=2000,
-                 rf_train_type=retengine_opts.RfTrainTypes.regular,
-                 feat_detector_type=retengine_opts.FeatDetectorType.fast
+                 rf_train_type=opts.RfTrainTypes.regular,
+                 feat_detector_type=opts.FeatDetectorType.fast
                 ):
         """
             Initializes the class

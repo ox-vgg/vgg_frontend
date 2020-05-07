@@ -7,7 +7,9 @@ FROM ubuntu:xenial
 # Update repositories and install all apt-get dependencies
 RUN apt-get update && apt-get install -y \
     python-pip \
+    python3-pip \
     python-dev \
+    python3-dev \
     memcached \
     libz-dev \
     libjpeg-dev \
@@ -19,12 +21,21 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
+# Change the default shell to be able to work with the virtualenv below
+SHELL ["/bin/bash", "-c"]
+
 # Create requirements files for pip, install all pip requirements, create main folders and secret key file
-RUN printf "django==1.10\npython-memcached\nPillow==2.3.0\ngreenlet==0.4.10\ngevent==0.13.8\nFlask==0.10.1\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==1.1.0\ngevent-zeromq==0.2.5\nWhoosh==2.7.4" > /tmp/requirements.txt \
-    && pip install -r /tmp/requirements.txt \
-    && mkdir /webapps/  \
+RUN pip install --upgrade pip \
+    && pip install virtualenv zipp \
+    && mkdir /webapps/ \
     && chmod 777 /webapps/ \
-    && mkdir /webapps/visorgen /webapps/visorgen/backend_dependencies  /webapps/visorgen/backend_data \
+    && mkdir /webapps/visorgen \
+    && cd /webapps/visorgen \
+    && virtualenv -p python3 . \
+    && source ./bin/activate \
+    && printf "django==1.10\npython-memcached\nPillow==2.3.0\nprotobuf==3.0.0\nsimplejson==3.8.2\nvalidictory==0.9.1\nmsgpack-python==0.3.0\nrequests==2.2.1\npyzmq==17.1.2\nWhoosh==2.7.4" > /tmp/requirements.txt \
+    && pip install -r /tmp/requirements.txt \
+    && mkdir /webapps/visorgen/backend_dependencies  /webapps/visorgen/backend_data \
           /webapps/visorgen/datasets  /webapps/visorgen/datasets/images/  /webapps/visorgen/datasets/images/mydataset \
           /webapps/visorgen/datasets/metadata/  /webapps/visorgen/datasets/metadata/mydataset \
           /webapps/visorgen/datasets/negatives/  /webapps/visorgen/datasets/negatives/mydataset \
@@ -42,6 +53,7 @@ RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-maste
     && rm -rf /tmp/*.zip \
     && cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_display.py /webapps/visorgen/vgg_frontend/visorgen/settings.py \
     && cd /webapps/visorgen/vgg_frontend/ \
+    && source /webapps/visorgen/bin/activate \
     && python manage.py migrate \
     && echo 'tail -f /dev/null' >> /webapps/visorgen/vgg_frontend/scripts/start_all_django.sh
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import opts
+from retengine.models import opts
 
 # ----------------------------------
 ## JSON Schema (for use with validictory)

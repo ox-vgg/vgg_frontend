@@ -1,11 +1,8 @@
 from hashlib import md5
-try:
-    import simplejson as json
-except ImportError:
-    import json  # Python 2.6+ only
+import simplejson as json
 import validictory
-import models
 
+from retengine.models import opts, json_schema
 
 def querystr_tuple_to_query(querystr, qtype, dsetname, engine, prev_qsid=None):
     """
@@ -23,7 +20,7 @@ def querystr_tuple_to_query(querystr, qtype, dsetname, engine, prev_qsid=None):
            json_schema.query_schema.
     """
     query = {'qtype': qtype, 'dsetname': dsetname}
-    if qtype == models.opts.Qtypes.text:
+    if qtype == opts.Qtypes.text:
         query['qdef'] = querystr
     else:
         query['qdef'] = decode_image_querystr(querystr)
@@ -36,7 +33,7 @@ def querystr_tuple_to_query(querystr, qtype, dsetname, engine, prev_qsid=None):
         query['prev_qsid'] = prev_qsid
 
     # validate converted input just in case...
-    validictory.validate(query, models.json_schema.query_schema)
+    validictory.validate(query, json_schema.query_schema)
 
     return query
 
@@ -68,7 +65,7 @@ def query_to_querystr(query):
         Returns:
            query string as sent originally by the frontend.
     """
-    if query['qtype'] == models.opts.Qtypes.text:
+    if query['qtype'] == opts.Qtypes.text:
         querystr = query['qdef']
     else:
         querystr = encode_image_querystr(query['qdef'])
@@ -91,7 +88,7 @@ def get_qhash(query, include_engine=True, include_qtype=True, include_dsetname=T
     """
     # store query hash lazily in query object
     if 'qhash' not in query:
-        query['qhash'] = md5(json.dumps(query['qdef'])).hexdigest()
+        query['qhash'] = md5( json.dumps(query['qdef']).encode('utf-8') ).hexdigest()
 
     qhash_out = query['qhash']
     if include_qtype:
@@ -126,7 +123,7 @@ def decode_image_querystr(querystr):
                 ext_param = param_str.split(':')
                 if ext_param[0] == 'roi':
                     ext_param[1] = ext_param[1].split('_')
-                    ext_param[1] = map(float, ext_param[1])
+                    ext_param[1] = [float(i) for i in ext_param[1]]
                 if ext_param[0] == 'anno':
                     ext_param[1] = int(ext_param[1])
 
@@ -151,7 +148,7 @@ def encode_image_querystr(data):
         qstr = qstr + image['image']
         if 'extra_params' in image:
             if len(image['extra_params']) > 0:
-                for param, value in image['extra_params'].iteritems():
+                for param, value in image['extra_params'].items():
                     if param == 'anno':
                         value = str(value)
                     elif param == 'roi':

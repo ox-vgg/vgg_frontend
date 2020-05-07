@@ -64,10 +64,12 @@
                         <a class="result_image_link" href="{{HOME_LOCATION}}viewdetails?qsid={{QUERY_ID}}&amp;page={{PAGE}}&amp;dsetresid={{RITEM.dsetresid|urlencode}}&amp;dsetname={{QUERY.dsetname}}&amp;view=rois{% if RITEM.roi %}&amp;roi={{RITEM.roi}}{% endif %}">
                             <img src="{{SA_THUMBS}}{{RITEM.path|urlencode}}{{RITEM.thumbnailroi}}" />
                         </a>
+                        {% if SIMILAR_ENGINE %}
                         <div class="result_refinebtns">
                             <div class="result_refinebtn_url" style="display:none;">{{RITEM.dsetresid}}</div>
                             <a class="result_refinebtn result_refinebtn_unselected result_refinebtn_pos" href="#">+</a>
                         </div>
+                        {% endif %}
                         <div class="result_belowtext">
                             {% if RITEM.score >= 0 %}
                                 <div><span class="result_belowtext_movsymbol" style="color:#008300;">/</span><span class="result_belowtext_text">{{RITEM.desc|trunc:20}}</span></div>

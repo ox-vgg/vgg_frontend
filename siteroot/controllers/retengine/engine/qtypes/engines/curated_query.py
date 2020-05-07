@@ -3,9 +3,9 @@
 import os
 
 from retengine import models
-from retengine import managers
-from retengine import utils as retengine_utils
-import feature_computation
+from retengine.managers import compdata_cache as compdata_cache_module
+from retengine.utils import timing
+from . import feature_computation
 
 # NOTE: Reverting to text query is disable for now
 # from text_query import TextQuery
@@ -35,7 +35,7 @@ class CuratedQuery(object):
         """
         if not isinstance(opts, models.param_sets.VisorEngineProcessOpts):
             raise ValueError('opts must be of type models.param_sets.VisorEngineProcessOpts')
-        if not isinstance(compdata_cache, managers.CompDataCache):
+        if not isinstance(compdata_cache, compdata_cache_module.CompDataCache):
             raise ValueError('compdata_cache must be of type managers.CompDataCache')
 
         self.query_id = query_id
@@ -96,7 +96,7 @@ class CuratedQuery(object):
                 }
             )
 
-        with retengine_utils.timing.TimerBlock() as timer:
+        with timing.TimerBlock() as timer:
             feat_comp = feature_computation.FeatureComputer(self.query_id, self.backend_port)
             feat_comp.compute_feats(imgs_dict)
 
@@ -115,7 +115,7 @@ class CuratedQuery(object):
         #     negpaths = [os.path.join(negimgrootdir, image) \
         #                     for image in negimgpaths]
 
-        #     with TimerBlock() as t:
+        #     with timing.TimerBlock() as t:
         #         # compute features for all images in list
         #         imageproc.compfeats(negpaths,
         #                             '', query_id,

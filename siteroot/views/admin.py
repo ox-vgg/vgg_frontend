@@ -73,6 +73,11 @@ class AdminPages:
         if 'VALID_IMG_EXTENSIONS_STR' in dir_settings:
             VALID_IMG_EXTENSIONS_STR = settings.VALID_IMG_EXTENSIONS_STR + ", .txt" # accept .txt too for providing list of files
 
+        engines_with_pipeline = {}
+        for engine in settings.VISOR['engines']:
+            if 'data_manager_module' in settings.VISOR['engines'][engine]:
+                engines_with_pipeline[engine] = settings.VISOR['engines'][engine]['full_name']
+
         # set up rendering context and render the page
         context = {
         'HOME_LOCATION': home_location,
@@ -83,8 +88,7 @@ class AdminPages:
         'IMPROC_ENGINE' : improc_engine,
         'IMPROC_ENGINE_LIST' : improc_engine_list,
         'ENGINES_NAMES': engines_names,
-        'CPUVISOR_ENABLED': 'cpuvisor-srv' in engines_names.keys(),
-        'FACES_ENABLED': 'faces' in engines_names.keys(),
+        'ENGINES_WITH_PIPELINE': engines_with_pipeline,
         'CACHED_TEXT_QUERIES' : cached_text_queries,
         'MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES': MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES,
         'MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES': MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES,

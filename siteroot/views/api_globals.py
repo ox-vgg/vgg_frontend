@@ -257,19 +257,22 @@ def gather_pipeline_input(input_type, img_base_path, files, file_system_encoding
                             if filename.startswith('.'):
                                 continue # skip hidden files, specially in macOS
                             root_str = root
-                            if file_system_encoding_not_UTF8:
-                                root_str = str(root) # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
+                            # DON'T REMOVE THE CODE BELOW YET !!! before testing in Mac/Win
+                            #if file_system_encoding_not_UTF8:
+                            #    root_str = str(root) # convert to the system's 'str' to avoid problems with the 'os' module in non-utf-8 systems
                             full_path = os.path.join(root_str, filename)
+
                             if os.path.isfile(full_path):
                                 relative_path = os.path.join(root_str.replace(img_base_path, ''), filename)
-                                if relative_path.startswith("/"):
+                                if relative_path.startswith(os.path.sep):
                                     relative_path = relative_path[1:]
                                 # check file is an image...
                                 filename, file_extension = os.path.splitext(relative_path)
                                 if file_extension.lower() in settings.VALID_IMG_EXTENSIONS:
                                     # if it is, add it to the list
-                                    if file_system_encoding_not_UTF8:
-                                        relative_path = relative_path.decode('utf-8') # if needed, convert from utf-8. It will be converted back by the pipeline.
+                                    # DON'T REMOVE THE CODE BELOW YET !!! before testing in Mac/Win
+                                    #if file_system_encoding_not_UTF8:
+                                    #    relative_path = relative_path.decode('utf-8') # if needed, convert from utf-8. It will be converted back by the pipeline.
                                     pipeline_frame_list.append(relative_path)
                                 else:
                                     # otherwise, abort !. This might seem drastic, but it is better to
@@ -284,10 +287,11 @@ def gather_pipeline_input(input_type, img_base_path, files, file_system_encoding
                     frame_path = frame_path.strip()
                     if frame_path == '':
                         continue
-                    if frame_path.startswith('/'):
+                    if frame_path.startswith(os.path.sep):
                         frame_path = frame_path[1:]
-                    if not file_system_encoding_not_UTF8:       # if NOT utf-8, convert before operations with the 'os' module,
-                        frame_path = frame_path.decode('utf-8') # otherwise convert it later
+                    # DON'T REMOVE THE CODE BELOW YET !!! before testing in Mac/Win
+                    #if not file_system_encoding_not_UTF8:       # if NOT utf-8, convert before operations with the 'os' module,
+                    #    frame_path = frame_path.decode('utf-8') # otherwise convert it later
                     full_frame_path = os.path.join(img_base_path, frame_path)
                     filename, file_extension = os.path.splitext(full_frame_path)
                     # Check frame exists
@@ -296,9 +300,10 @@ def gather_pipeline_input(input_type, img_base_path, files, file_system_encoding
                         abort = True
                     # Check file is an image ...
                     elif file_extension.lower() in settings.VALID_IMG_EXTENSIONS:
+                        # DON'T REMOVE THE CODE BELOW YET !!! before testing in Mac/Win
                         # if it is, add it to the list
-                        if file_system_encoding_not_UTF8:
-                            frame_path = frame_path.decode('utf-8') # if needed, convert from utf-8
+                        #if file_system_encoding_not_UTF8:
+                        #    frame_path = frame_path.decode('utf-8') # if needed, convert from utf-8
                         pipeline_frame_list.append(frame_path)
                     else:
                         # otherwise, abort !. This might seem drastic, but it is better to
@@ -331,7 +336,7 @@ def gather_pipeline_input(input_type, img_base_path, files, file_system_encoding
     except Exception as e:
         # log the exception and leave
         if fout:
-            fout.write('CHECK_PIPELINE_EXCEPTION %s\n' % e.message)
+            fout.write('CHECK_PIPELINE_EXCEPTION %s\n' % str(e))
         pass
 
     if fout:

@@ -6,9 +6,11 @@ REM variables (if you don't already have them set).
 REM 1- Create the directory where you want the application to be deployed, and copy this file inside that folder.
 REM    Let's call that folder the INSTALL_FOLDER.
 REM 2- Download wget.exe (https://eternallybored.org/misc/wget/) and copy it inside INSTALL_FOLDER
-REM 3- Make sure you have Python 2.7 x64 installed and that you can execute 'pip' and 'easy_install' from the command line
-REM 4- Install 'virtualenv', by entering 'pip install virtualenv' in the command line
-REM 5- From that command prompt, go to the INSTALL_FOLDER and run this batch file. All software will be download and setup for you.
+REM 3- Make sure you have Python 3.7 x64 installed and that you can execute 'pip'.
+REM    Here we assume Python 3.7 is installed C:\Python37\
+REM 4- Install 'virtualenv', by entering 'pip install virtualenv' in the command line.
+REM    You will need at least virtualenv 20.0.4.
+REM 5- From that command prompt, go to the INSTALL_FOLDER and run this batch file. All other software will be download and setup for you.
 REM    Note that a python virtual environment will be created inside INSTALL_FOLDER. You need to activate it before running the
 REM    application, with:
 REM        INSTALL_FOLDER\Scripts\activate
@@ -29,25 +31,21 @@ mkdir frontend_data\searchdata\rankinglists\display
 mkdir frontend_data\searchdata\uploadedimgs
 mkdir tmp
 
+REM Create virtual environment. Change the path to the Python executable if needed.
+cd %~dp0
+virtualenv -p C:\Python37\python.exe --prompt "(vgg_frontend) " .
+call Scripts\activate
+
 REM download and extract vgg_frontend
 wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-master.zip -O vgg_frontend.zip
 powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('vgg_frontend.zip', '.'); }"
 move vgg_frontend-* vgg_frontend
 
-REM Create virtual environment
-cd %~dp0
-virtualenv .
-call Scripts\activate
-
 REM Install vgg_frontend additional dependencies
 pip install django==1.10
 pip install protobuf==3.0.0
-pip install Pillow==2.3.0
-
-REM Install vgg_img_downloader additional dependencies
-pip install greenlet==0.4.15
-pip install gevent==0.13.8
-pip install Flask==0.10.1
+pip install Pillow==6.1.0
+pip install simplejson==3.8.2
 
 REM Install vgg_frontend controller additional dependencies
 pip install validictory==0.9.1
@@ -81,3 +79,5 @@ REM create default user in vgg_frontend
 cd %~dp0
 cd vgg_frontend
 python manage.py migrate
+cd ..
+rmdir tmp

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from retengine import query_translations
-from session_cache import SessionCache
+from . import session_cache
 
 
 # ----------------------------------
@@ -20,7 +20,7 @@ class SessionExcludeListCache(object):
         """
         self.cache_exclude_list = set([])
         # initialize session cache with expiry time of 30 mins
-        self._session_cache = SessionCache(session_lifetime)
+        self._session_cache = session_cache.SessionCache(session_lifetime)
 
 
     def query_in_exclude_list(self, query, ses_id=None):
@@ -38,8 +38,8 @@ class SessionExcludeListCache(object):
         qhash = query_translations.get_qhash(query, include_engine=True, include_qtype=True)
         # get the data itself
         data = self._session_cache.get_data(ses_id, qhash)
-        # print 'Looking for query in exclude list: (%s), ses_id: %s, class: %s - %s' %
-        #       (qhash, ses_id, self.__class__.__name__, data != None)
+        # print ('Looking for query in exclude list: (%s), ses_id: %s, class: %s - %s' %
+        #       (qhash, ses_id, self.__class__.__name__, data != None))
         # return only whether the key was present or not (and had non-None data)
         return data != None
 
@@ -55,8 +55,8 @@ class SessionExcludeListCache(object):
         if not ses_id:
             ses_id = 'universal'
         qhash = query_translations.get_qhash(query, include_engine=True, include_qtype=True)
-        # print 'Adding query to exclude list: (%s), ses_id: %s, class: %s' %
-        #       (qhash, ses_id, self.__class__.__name__)
+        # print ('Adding query to exclude list: (%s), ses_id: %s, class: %s' %
+        #       (qhash, ses_id, self.__class__.__name__))
         # add dummy data as only the keys of excluded queries are important
         self._session_cache.add_data('excluded query', ses_id, qhash)
 
@@ -93,7 +93,7 @@ class SessionResultCache(object):
                 session_lifetime: number of seconds before a cache entry
                                   expires. The default is 15 minutes.
         """
-        self._session_cache = SessionCache(session_lifetime)
+        self._session_cache = session_cache.SessionCache(session_lifetime)
 
 
     def get_results(self, ses_id, query=None):

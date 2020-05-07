@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import urllib2
+import urllib.request
 import os
 import uuid
 import base64
-import imchecktools
+from . import imchecktools
 import re
 import string
 
@@ -49,19 +49,20 @@ class ImageUploader:
                 is the of the file created with img_data.
         """
         localdir = str(uuid.uuid4())
-        print 'Getting local image from imgdata'
+        print ('Getting local image from imgdata')
         localfilenames = []
         remotefilename = img_data['filename'];
         localpath = os.path.join(self.upload_dir, localdir)
         if not os.path.isdir(localpath):
-            os.makedirs(localpath, 0755)
+            os.makedirs(localpath, 0o755)
 
         # remove unpleasant characters from the filename
         pattern = re.compile('[^a-zA-Z0-9_.]')
         string_accepted = pattern.sub('', string.printable)
         remotefilename = ''.join(filter(lambda afunc: afunc in string_accepted, remotefilename))
         # now proceed to save it in the localpath
-        print '  ->' + remotefilename
+        print ('  ->' + remotefilename)
+
         localfilepath = os.path.join(localpath, remotefilename)
         localfile = open(localfilepath, 'wb')
         if is_data_base64:
@@ -70,12 +71,12 @@ class ImageUploader:
             data = img_data['data']
         localfile.write(data)
         localfile.close()
-        print '  Image Written'
+        print ('  Image Written')
 
         localfilepath = imchecktools.verify_image(localfilepath,
                                                   self.maximwidth,
                                                   self.maximheight)
-        print '  Image verified'
+        print ('  Image verified')
 
         localfilenames.append(remotefilename)
 
@@ -95,30 +96,30 @@ class ImageUploader:
                 is the list of names for the uploaded files.
         """
         localdir = str(uuid.uuid4())
-        print 'Getting local image from file(s)'
+        print ('Getting local image from file(s)')
         localfilenames = []
         for src_filepath in files:
             src_filename = os.path.basename(src_filepath)
             localpath = os.path.join(self.upload_dir, localdir)
             if not os.path.isdir(localpath):
-                os.makedirs(localpath, 0755)
+                os.makedirs(localpath, 0o755)
             # remove unpleasant characters from the filename
             pattern = re.compile('[^a-zA-Z0-9_.]')
             string_accepted = pattern.sub('', string.printable)
             src_filename_clean = ''.join(filter(lambda afunc: afunc in string_accepted, src_filename))
             # now proceed to compute dest_filepath
             dest_filepath = os.path.join(localpath, src_filename_clean)
-            print '  ->' + dest_filepath
+            print ('  ->' + dest_filepath)
             with open(src_filepath, 'rb') as src_file:
                 data = src_file.read()
                 with open(dest_filepath, 'wb') as dest_file:
                     dest_file.write(data)
-            print '  Image Written'
+            print ('  Image Written')
 
             localfilepath = imchecktools.verify_image(dest_filepath,
                                                       self.maximwidth,
                                                       self.maximheight)
-            print '  Image verified'
+            print ('  Image verified')
 
             localfilenames.append(src_filename_clean)
 
@@ -156,28 +157,28 @@ class ImageUploader:
                 is the list of names for the uploaded files.
         """
         localdir = str(uuid.uuid4())
-        print 'Getting local image from url(s)'
+        print ('Getting local image from url(s)')
         localfilenames = []
         for url in urls:
             remotefilename = os.path.basename(url)
             localpath = os.path.join(self.upload_dir, localdir)
             if not os.path.isdir(localpath):
-                os.makedirs(localpath, 0755)
+                os.makedirs(localpath, 0o755)
             localfilepath = os.path.join(localpath, remotefilename)
-            print '  ' + url + '->' + localfilepath
-            opener = urllib2.build_opener()
+            print ('  ' + url + '->' + localfilepath)
+            opener = urllib.request.build_opener()
             opener.addheaders = [('User-agent', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0')] # pretend to be firefox
             img = opener.open(url, None, timeout)
 
             localfile = open(localfilepath, 'wb')
             localfile.write(img.read())
             localfile.close()
-            print '  Image Written'
+            print ('  Image Written')
 
             localfilepath = imchecktools.verify_image(localfilepath,
                                                       self.maximwidth,
                                                       self.maximheight)
-            print '  Image verified'
+            print ('  Image verified')
 
             localfilenames.append(remotefilename)
 

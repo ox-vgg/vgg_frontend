@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from retengine import query_translations
-from max_size_cache import MaxSizeCache
+from . import max_size_cache
 
 # ----------------------------------
 ## Session Cache for Results
@@ -17,7 +17,7 @@ class MaxSizeResultCache(object):
                 entry_limit: maximum number of entries on the cache.
                              The default is 100 entries.
         """
-        self._max_size_cache = MaxSizeCache(entry_limit)
+        self._max_size_cache = max_size_cache.MaxSizeCache(entry_limit)
 
 
     def get_results(self, query):

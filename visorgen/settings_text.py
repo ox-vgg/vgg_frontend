@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import sys
 
 ######
 # Main paths
@@ -20,6 +21,9 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BASE_DATA_DIR = '/webapps/visorgen/'
+
+# Add extra paths to modules
+sys.path.append( os.path.join(BASE_DIR, 'siteroot') )
 
 ######
 # Quick-start development settings - unsuitable for production
@@ -213,7 +217,8 @@ VISOR = {
                                   'can_save_uber_classifier': False,
                                   'skip_query_progress': True,  # Set to True because this engine can return
                                                                 # results almost instantly
-                                  'engine_for_similar_search': None # Set to 'cpuvisor-srv' only if that engine is included in the settings
+                                  'engine_for_similar_search': None, # Set to 'cpuvisor-srv' only if that engine is included in the settings
+                                  'data_manager_module': 'data_pipeline_text'
                                 },
                     },
 }
@@ -265,3 +270,39 @@ IMSEARCHTOOLS = {
 
 # Base folder of scripts to manage the service
 MANAGE_SERVICE_SCRIPTS_BASE_PATH = os.path.join(BASE_DIR, 'scripts')
+
+######
+# General Data Ingestion settings
+######
+
+# Size of the chunks in which list of frames will be divided.
+PREPROC_CHUNK_SIZE = 500
+
+# Limit to the number of threads to be started when ingesting new data.
+# Each thread will be assigned one chunk of data.
+FRAMES_THREAD_NUM_LIMIT = 6
+
+# Maximum number of individual files to be uploaded
+MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES = 500
+
+# Maximum amount of bytes when uploading individual files
+MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES = MAX_NUMBER_UPLOAD_INDIVIDUAL_FILES * 1024 * 1024
+
+# Minimum number of ingested individual files begore starting pipeline_input thread
+MIN_NUMBER_INPUT_THREAD_INDIVIDUAL_FILES = 1000000
+
+# Set a minimum set of valid image extensions. This is to check whether a file is an image or not
+# WITHOUT actually reading the file, because checking all files is too expensive when large amounts
+# of images are ingested.
+VALID_IMG_EXTENSIONS = { ".jpeg", ".jpg", ".png", ".bmp", ".dib", ".tiff", ".tif", ".ppm" }
+VALID_IMG_EXTENSIONS_STR = ', '.join(VALID_IMG_EXTENSIONS) # '.txt' is added later in the admin view
+
+# Set the maximum width for an image obtained from a IIIF manifest specification
+IIIF_IMAGE_MAX_WIDTH = 500
+
+######
+# Category search engine - Data Ingestion settings
+######
+
+# Not used. To be deleted in the future.
+CONFIG_PROTO_PATH = None

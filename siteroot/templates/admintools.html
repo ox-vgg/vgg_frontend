@@ -9,8 +9,7 @@ The following variables are defined:
   IMPROC_ENGINE - Image Search Engine currently selected
   IMPROC_ENGINE_LIST - List of Image Search Engines
   ENGINES_NAMES - Dictionary of engines names
-  CPUVISOR_ENABLED - Boolean indicating the 'cpuvisor-srv' is included in the backend engines
-  FACES_ENABLED - Boolean indicating the 'faces' is included in the backend engines
+  ENGINES_WITH_PIPELINE - Dictionary of engines (with pipeline) names
   CACHED_TEXT_QUERIES - List of cached text queries
   HOME_LOCATION - location of the root home page taking into account possible redirections
   MAX_TOTAL_SIZE_UPLOAD_INDIVIDUAL_FILES - Maximum amount of bytes when uploading individual files
@@ -42,9 +41,8 @@ The following variables are defined:
 
             <ul class="tab">
                 <li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'Configuration')">Global Server Configuration</a></li>
-                <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'Manage')">Manage Backend Service</a></li>
-                {% if CPUVISOR_ENABLED %}<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ProcessCategory')">Manage Category Backend Data</a></li>{% endif %}
-                {% if FACES_ENABLED %}<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ProcessFaces')">Manage Faces Backend Data</a></li>{% endif %}
+                <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ManageService')">Manage Backend Service</a></li>
+                <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ManageData')">Manage Backend Data</a></li>
             </ul>
 
             <!-- "Global Server Configuration" tab -->
@@ -139,8 +137,8 @@ The following variables are defined:
                 </form>
             </div>
 
-            <!-- "Manage Service" tab -->
-            <div id="Manage" class="tabcontent" style="display: none;">
+            <!-- "Manage Backend Service" tab -->
+            <div id="ManageService" class="tabcontent" style="display: none;">
                 <form id="backend_start" action="start_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
                         <h2>Start Backend Service</h2>
@@ -174,69 +172,21 @@ The following variables are defined:
                 <br/>
             </div>
 
-            {% if CPUVISOR_ENABLED %}
-            <!-- "Manage Category Backend Data" tab -->
-            <div id="ProcessCategory" class="tabcontent" style="display: none;">
+            <!-- "Manage Backend Data" tab -->
+            <div id="ManageData" class="tabcontent" style="display: none;">
                 <form id="config_pipeline"  action="pipeline_input" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
-                        <h2>Category search engine: DATA INGESTION</h2>
+                        <h2>Ingest New Data</h2>
                         <div id="config-options-container">
                                 <dl>
-                                    <dt>Input type:</dt>
-                                    <dd>
-                                          <input type="radio" name="input_type" value="positive" checked> Positive Images<br>
-                                          <input type="radio" name="input_type" value="negative"> Negative Images<br>
-                                    </dd>
-                                    <br/>
-                                    <dt>(OPTIONAL) Select specific files to be ingested:</dt>
-                                    <dd>
-                                        <ul>
-                                        <br>
-                                        <li>Select files from a local storage: <input name="input_file" id="input_descriptor_file_input" type="file" multiple="true" accept="{{VALID_IMG_EXTENSIONS_STR}}"/><br></li>
-                                        <br>
-                                        <li>Select a local IIIF Manifest specifying the files: <input name="input_json" id="input_descriptor_json_input" type="file" accept=".json"/><br></li>
-                                        <br>
-                                        <li>Enter the URL of an IIIF Manifest specifying the files: <input name="input_url" id="input_descriptor_url_input" type="url"/><br></li>
-                                        </ul>
-                                    </dd>
-                                    <input type="hidden" name="engine" value="cpuvisor-srv" />
-                                </dl>
-                        </div>
-                        <strong>If no specific files are selected for ingestion, the full content of the images folder will be processed</strong>
-                        <br/>
-                        <br/>
-                        <input type="submit" value="Ingest"/>
-                    </div>
-                </form>
-                <br/>
-                <form id="clear_backend" action="clear_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
-                    <div id="config-options-container">
-                        <h2>Category search engine: CLEAR BACKEND DATA</h2>
-                        <div id="config-options-container">
-                                <dl>
-                                    <dt>Input type:</dt>
-                                    <dd>
-                                          <input type="radio" name="input_type" value="positive" checked> Positive Images<br>
-                                          <input type="radio" name="input_type" value="negative"> Negative Images<br>
-                                    </dd>
-                                    <input type="hidden" name="engine" value="cpuvisor-srv"/>
-                                </dl>
-                        </div>
-                        <input type="submit" value="Clear"/>
-                    </div>
-                </form>
-                <br/>
-            </div>
-            {% endif %}
-
-            {% if FACES_ENABLED %}
-            <!-- "Manage Face Backend Data" tab -->
-            <div id="ProcessFaces" class="tabcontent" style="display: none;">
-                <form id="config_pipeline"  action="pipeline_input" enctype="multipart/form-data" method="post">{% csrf_token %}
-                    <div id="config-options-container">
-                        <h2>Face search engine: DATA INGESTION</h2>
-                        <div id="config-options-container">
-                                <dl>
+                                    <dt>Search Engine:
+                                        <select name="engine">
+                                        {% for ENGINE,NAME in ENGINES_WITH_PIPELINE.items %}
+                                            <option value="{{ENGINE}}">{{NAME}}</option>
+                                        {% endfor %}
+                                        </select>
+                                    </dt>
+                                    <br>
                                     <dt>Input type:</dt>
                                     <dd>
                                           <br>
@@ -260,7 +210,6 @@ The following variables are defined:
                                           <strong>Only videos up to 90 minutes are supported. MP4 format is recommended.</strong><br>
                                           <strong>BE ADVISED: Video ingestion is computationally intensive.</strong><br>
                                     </dd>
-                                    <input type="hidden" name="engine" value="faces" />
                                 </dl>
                         </div>
                         <input type="submit" value="Ingest"/>
@@ -269,15 +218,21 @@ The following variables are defined:
                 <br/>
                 <form id="config_pipeline" action="clear_backend" enctype="multipart/form-data" method="post">{% csrf_token %}
                     <div id="config-options-container">
-                        <h2>Face search engine: CLEAR BACKEND DATA</h2>
+                        <h2>Clear Backend Data</h2>
+                        <dt>Search Engine:
+                            <select name="engine">
+                            {% for ENGINE,NAME in ENGINES_WITH_PIPELINE.items %}
+                                <option value="{{ENGINE}}">{{NAME}}</option>
+                            {% endfor %}
+                            </select>
+                        </dt>
+                        <br>
                         <input type="hidden" name="input_type" value="positive" />
-                        <input type="hidden" name="engine" value="faces" />
                         <input type="submit" value="Clear"/>
                     </div>
                 </form>
                 <br/>
             </div>
-            {% endif %}
 
             <!-- ACKs -->
             <div class="results_nav_ack">

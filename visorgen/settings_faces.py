@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import sys
 
 ######
 # Main paths
@@ -20,6 +21,9 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BASE_DATA_DIR = '/webapps/visorgen/'
+
+# Add extra paths to modules
+sys.path.append( os.path.join(BASE_DIR, 'siteroot') )
 
 ######
 # Quick-start development settings - unsuitable for production
@@ -212,7 +216,8 @@ VISOR = {
                               'pattern_fname_classifier' : 'dummy', # Not used but cannot be 'None'
                               'can_save_uber_classifier': True,
                               'skip_query_progress': False,
-                              'engine_for_similar_search': 'faces'
+                              'engine_for_similar_search': 'faces',
+                              'data_manager_module': 'data_pipeline_faces'
                             },
                     },
 }
@@ -296,14 +301,8 @@ VALID_IMG_EXTENSIONS_STR = ', '.join(VALID_IMG_EXTENSIONS) # '.txt' is added lat
 IIIF_IMAGE_MAX_WIDTH = 500
 
 ######
-# Face search engine - Data Ingestion settings
+# Category search engine - Data Ingestion settings
 ######
 
-# Setup settings for face-search engine
-FACE_ENGINE_SETTINGS = {}
-FACE_ENGINE_SETTINGS['FACES_DATASET_IM_BASE_PATH'] = os.path.join( PATHS['datasets'], VISOR['datasets'].keys()[0] )
-FACE_ENGINE_SETTINGS['FACES_DATASET_IM_PATHS'] = os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'dsetpaths.txt')
-FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_PATHS'] = None
-FACE_ENGINE_SETTINGS['FACES_NEGATIVE_IM_BASE_PATH'] = None
-FACE_ENGINE_SETTINGS['FACES_DATASET_FEATS_FILE'] = os.path.join( BASE_DATA_DIR, 'backend_data', 'faces', 'features', 'database.pkl')
-FACE_ENGINE_SETTINGS['FACES_NEG_FEATS_FILE'] = None
+# Not used. To be deleted in the future.
+CONFIG_PROTO_PATH = None
