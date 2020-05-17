@@ -86,6 +86,7 @@ RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-maste
     && sed -i "s|LUCENE_INDEX|LUCENE_INDEX = '/webapps/visorgen/backend_data/text/images.index' #|g" /webapps/visorgen/vgg_text_search/service/settings.py \
     && sed -i "s|TEXT_RESULTS_DIR|TEXT_RESULTS_DIR = '/webapps/visorgen/backend_data/text/text_detections' #|g" /webapps/visorgen/vgg_text_search/service/settings.py \
     && sed -i "s|DEPENDENCIES_PATH|DEPENDENCIES_PATH='/webapps/visorgen/backend_dependencies' #|g" /webapps/visorgen/vgg_text_search/service/settings.py \
+    && sed -i "s|WORD_FREQUENCY_FILE|WORD_FREQUENCY_FILE='/webapps/visorgen/backend_data/text/word_freq.txt' #|g" /webapps/visorgen/vgg_text_search/service/settings.py \
     && sed -i "s|ffmpeg|/webapps/visorgen/backend_dependencies/ffmpeg/ffmpeg|g" /webapps/visorgen/vgg_text_search/pipeline/start_pipeline.sh \
     && sed -i "s|./model/conv3_3/|/webapps/visorgen/backend_data/text/conv3_3/|g" /webapps/visorgen/vgg_text_search/pipeline/start_pipeline.sh \
     && sed -i "s|../attention_net/model/|/webapps/visorgen/backend_data/text/|g"  /webapps/visorgen/vgg_text_search/pipeline/start_pipeline.sh \

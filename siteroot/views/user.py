@@ -150,6 +150,28 @@ class UserPages:
         tour = request.GET.get('tour', 0)
         open_tour = (int(tour) != 0) and enable_tour
 
+        # word cloud stuff for the 'text' engine
+        words_json = None
+        if 'text' in available_engines.keys():
+            try:
+                dataset = list(VISOR_SETTINGS['datasets'].keys())[0]
+                f = open(available_engines['text']['word_frecuency_path'], 'r')
+                words_json = json.load(f)
+                f.close()
+                words = []
+                for item in words_json:
+                    words.append( {
+                    'text': item['text'],
+                    'weight' : item['weight'],
+                    'link': home_location + 'searchproc_qstr?q=%s&qtype=text&dsetname=%s&engine=text' % ( item['text'].lower(), dataset)
+                    } )
+                words_json = json.dumps(words)
+            except Exception as e:
+                print ('WARNING: Could not load word frequency for word cloud. Exception ', e)
+                # In case of any exception, just disable the world cloud and move on
+                words_json=None
+                pass
+
         # set up rendering context and render the page
         context = {
         'AUTHENTICATED' : request.user.is_authenticated(),
@@ -160,6 +182,7 @@ class UserPages:
         'ENABLE_TOUR' : enable_tour,
         'OPEN_TOUR' : open_tour,
         'ENGINES_WITH_IMAGE_SEARCH_SUPPORT': str_engines_with_image_input_support,
+        'WORD_CLOUD_WORDS': words_json
         }
         return render_to_response(template, context)
 
