@@ -12,10 +12,12 @@
       DATASETS - dictionary of supported datasets { name_id1:real_name1, name_id2:real_name2, ... }
       ENGINES_WITH_IMAGE_SEARCH_SUPPORT - list of strings with the ids of those engines supporting images as input
       HOME_LOCATION - location of the root home page taking into account possible redirections
+      WORD_CLOUD_WORDS - json with words for word cloud
     {% endcomment %}
     <head>
         <meta content="en-gb" http-equiv="Content-Language" />
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>{{SITE_TITLE}}</title>
         <!-- main stylesheet for site -->
         <link href="static/styles/main.css" rel="stylesheet" type="text/css" />
         <!-- stylesheets for querybar/imageuploader/keyselector widgets -->
@@ -26,7 +28,8 @@
         <link href="static/scripts/lib/fancybox/jquery.fancybox.css" rel="stylesheet" type="text/css" />
         <link href="static/scripts/lib/fancybox/helpers/jquery.fancybox-buttons.css" rel="stylesheet" type="text/css" />
         <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
-        <title>{{SITE_TITLE}}</title>
+        <!-- stylesheet for word cloud -->
+        <link href="static/styles/jqcloud.css" rel="stylesheet" type="text/css" />
     </head>
 
     <body>
@@ -67,6 +70,8 @@
                     </div>
                 </form>
             </div>
+            <!-- word cloud -->
+            <div id="wordcloud"></div>
             <!-- ACKs -->
             <div id="ack_console">
                 <img src="static/images/ack-ox.png" />
@@ -92,6 +97,8 @@
         <script type="text/javascript" src="static/scripts/lib/fancybox/jquery.fancybox.js"></script>
         <script type="text/javascript" src="static/scripts/lib/fancybox/helpers/jquery.fancybox-buttons.js"></script>
         <script type="text/javascript" src="static/scripts/add-getting-started-lb.js"></script>
+        <!-- word cloud support script for the 'text' engine -->
+        <script type="text/javascript" src="static/scripts/jqcloud-1.0.4.js"></script>
         <!-- set up the example queries -->
         {% if OPEN_TOUR %}
         <script type="text/javascript">
@@ -100,6 +107,11 @@
             });
         </script>
         {% endif %}
+        <script>
+            // Configuration of word cloud for the 'text' engine
+            var word_array = {{ WORD_CLOUD_WORDS|safe }};
+            $('#wordcloud').jQCloud(word_array);
+        </script>
         <script>
         // Configuration of autocomplete widget
         $(function() {

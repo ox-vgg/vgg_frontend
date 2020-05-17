@@ -1028,3 +1028,15 @@ ul.ui-autocomplete {
 }
 
 /* @end */
+
+/* @group Word cloud */
+
+#wordcloud {
+    margin-top: -20px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 610px;
+    height: 330px;
+}
+
+/* @end */

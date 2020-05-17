@@ -56,6 +56,7 @@ sed -i "s|LUCENE_INDEX|LUCENE_INDEX = '/webapps/visorgen/backend_data/text/image
 sed -i "s|TEXT_RESULTS_DIR|TEXT_RESULTS_DIR = '/webapps/visorgen/backend_data/text/text_detections' #|g" /webapps/visorgen/vgg_text_search/service/settings.py
 sed -i "s|DEPENDENCIES_PATH|DEPENDENCIES_PATH='/webapps/visorgen/backend_dependencies' #|g" /webapps/visorgen/vgg_text_search/service/settings.py
 sed -i "s|ffmpeg|/webapps/visorgen/backend_dependencies/ffmpeg/ffmpeg|g" /webapps/visorgen/vgg_text_search/pipeline/start_pipeline.sh
+sed -i "s|WORD_FREQUENCY_FILE|WORD_FREQUENCY_FILE='/webapps/visorgen/backend_data/text/word_freq.txt' #|g" /webapps/visorgen/vgg_text_search/service/settings.py
 
 # Install Yang Liu's Text-Detect-Recognize and download static ffmpeg
 wget https://github.com/ox-vgg/Text-Detect-Recognize/archive/master.zip -O /tmp/text-detect-master.zip
