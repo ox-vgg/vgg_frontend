@@ -69,7 +69,7 @@ class SessionCache(object):
         try:
             if lock:
                 self._sessions_lock.acquire()
-            for key in self._sessions.keys():
+            for key in list(self._sessions.keys()):
                 if (time() - self._sessions[key].last_update) > self._session_lifetime:
                     del self._sessions[key]
         finally:
