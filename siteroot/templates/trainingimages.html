@@ -16,7 +16,7 @@
         <h1>{{TRAINIMGS|length}} Training Images</h1>
         <p>If a new search is started from this page, only the images surrounded in green will be used as input for the search.
            Click on each image to change the color of its surrounding rectangle.</p>
-        <a href="javascript:history.go(-1)" title="&laquo; Back to the previous page">&laquo; Back to the previous page</a>
+        <a href="javascript:history.go(-1)" title="&laquo; Back to results">&laquo; Back to results</a>
     </div>
     <div id="content">
         <div id="results_list" class="grid_list">
@@ -38,8 +38,7 @@
     <div>
     <div id="results_header_borderless">
         {% if TRAINIMGS %}<input id="selection_search" type="button" value="Search">{% endif %}
-        <br><br>
-        <a href="javascript:history.go(-1)" title="&laquo; Back to the previous page">&laquo; Back to the previous page</a>
+        <br>
     </div>
     <!-- dynamically load in styles associated specifically with this page -->
     <script type="text/javascript">

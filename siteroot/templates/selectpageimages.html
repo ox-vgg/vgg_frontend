@@ -17,7 +17,7 @@
         <p>Only the images surrounded in green are considered selected. Click on each image to select/unselect it or use the buttons below to select/unselect all images. <strong>Only the paths to images surrounded in green will be saved</strong>.</p>
         {% if IMAGE_LIST %}<input id="set_all_images_green" type="button" value="Select all images"></input>{% endif %}
         {% if IMAGE_LIST %}<input id="set_all_images_yellow" type="button" value="Unselect all images"></input><br/><br/>{% endif %}
-        <a href="javascript:history.go(-1)" title="&laquo; Back to the previous page">&laquo; Back to the previous page</a>
+        <a href="javascript:history.go(-1)" title="&laquo; Back to results">&laquo; Back to results</a>
     </div>
     <div id="content">
         <div id="results_list" class="grid_list">
@@ -39,8 +39,7 @@
     <div>
     <div id="results_header_borderless">
         {% if IMAGE_LIST %}<input id="selection_save" type="button" value="Save selection"></input>{% endif %}
-        <br><br>
-        <a href="javascript:history.go(-1)" title="&laquo; Back to the previous page">&laquo; Back to the previous page</a>
+        <br>
     </div>
     <!-- dynamically load in styles associated specifically with this page -->
     <script type="text/javascript">
