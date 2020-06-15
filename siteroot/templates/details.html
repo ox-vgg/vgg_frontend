@@ -23,7 +23,6 @@
         <p>
             <a href="javascript:history.go(-1)" title="&laquo; Back to results">&laquo; Back to results</a>
         </p>
-        <br><br>
         {% if SELECT_ROI and ROI_ENGINE %}
             <!-- ROI selection -->
             <script type="text/javascript" src="static/scripts/lib/jcrop/jquery.Jcrop.min.js"></script>
@@ -56,7 +55,7 @@
                                          <td valign="bottom" align="center">
                                                {% if ROI %}
                                                <input id="show_roi" type="checkbox" onchange="toggleCheckbox(this)">
-                                               <label for="show_roi">Show detection</label>
+                                               <label for="show_roi"><strong>Show detection</strong></label><br><br>
                                                {% endif %}
                                                <div id="div_detailimg" >
                                                    {% if SELECT_ROI %}
