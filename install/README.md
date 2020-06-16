@@ -28,6 +28,14 @@ Deployment scripts are provided for macOS High Sierra 10.13.3 and Ubuntu 16, wit
 
 Deployment scripts are provided for macOS High Sierra 10.13.3, Ubuntu 16 and Windows10 x64; with or without GPU support.
 
+#### *VGG Text Search (VTS) engine*
+
+`VTS` is a combination of the code in this repository and [vgg_text_search](https://gitlab.com/vgg/vgg_text_search).
+
+`VTS` is an application that serves as a web engine to search for text-strings within the images of an user-defined image dataset. More detailed information can be found at [VTS' VGG page](http://www.robots.ox.ac.uk/~vgg/software/vts/).
+
+Deployment scripts are provided for macOS High Sierra 10.13.3, Ubuntu 16 and Windows10 x64; with or without GPU support.
+
 #### *`vgg_frontend` for Display*
 
 The scripts will deploy the code in this repository without any backend engine. It can be used to retrieve a pre-defined list of images associated with a text string.

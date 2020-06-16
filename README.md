@@ -68,6 +68,24 @@ Finally, advanced users can also build the docker image by using the files in th
 
 If you are NOT using the docker version, read the [Dataset](https://gitlab.com/vgg/vgg_frontend#dataset) section to find out how to link your images to the application and how to define metadata. Also, read the [Usage Instructions](https://gitlab.com/vgg/vgg_frontend/tree/master/install#usage-instructions) to find out how to start the application.
 
+#### *VGG Text Search (VTS) engine*
+
+`VTS` is a combination of the code in this repository and [vgg_text_search](https://gitlab.com/vgg/vgg_text_search). It is an application that serves as a web engine to search for text-strings within the images of an user-defined image dataset. More detailed information can be found at [VTS' VGG page](http://www.robots.ox.ac.uk/~vgg/software/vts/).
+
+In order to use `VTS`, you can easily download and use a pre-built docker version available at [this repository's container registry](https://gitlab.com/vgg/vgg_frontend/container_registry). All you need to do is to use the docker service installed on your PC to download the image, by entering the following command:
+
+	docker pull registry.gitlab.com/vgg/vgg_frontend/vts
+
+There is also a docker image available at [DockerHub](https://hub.docker.com/r/oxvgg/vts/), which can be downloaded in a similar way, or via a GUI called [Kitematic](https://kitematic.com/).
+
+If you are using the docker version, there are usage instructions and sample data for `VTS` at the [Docker deployment](http://www.robots.ox.ac.uk/~vgg/software/vts/#docker_version) section on [VTS' VGG page](http://www.robots.ox.ac.uk/~vgg/software/vts/).
+
+For advanced users, deployment scripts for MS Windows, macOS and Ubuntu can be found in the `install` directory, with or without GPU support. The scripts will help you find out the software dependencies and configuration requirements.
+
+Finally, advanced users can also build the docker image by using the files in the `Dockerfiles` directory. Use `vts-kitematic` for a version that is specifically tailored to work with [Kitematic](https://kitematic.com/). Otherwise, use `vts-base` to obtain a more flexible version.
+
+If you are NOT using the docker version, read the [Dataset](https://gitlab.com/vgg/vgg_frontend#dataset) section to find out how to link your images to the application and how to define metadata. Also, read the [Usage Instructions](https://gitlab.com/vgg/vgg_frontend/tree/master/install#usage-instructions) to find out how to start the application.
+
 Dataset
 -------
 
