@@ -144,6 +144,7 @@
     function toggleCheckbox() {
       canvas=document.getElementById("canvas");
       context=canvas.getContext("2d");
+      context.imageSmoothingEnabled = false;
       img=document.getElementById("detailimg");
       divCanvas=document.getElementById("div_canvas");
       divImg=document.getElementById("div_detailimg");
@@ -156,9 +157,8 @@
             lineWidth = 4*Math.min(clientWidth/jcrop_boxWidth,clientHeight/jcrop_boxHeight);
             lineWidth = Math.max(lineWidth, 4);
             {% else %}
-            clientWidth = divImg.clientWidth;
-            clientHeight = divImg.clientHeight;
-            clientHeight = clientHeight-3; // for some reason, in this case the height is always 3 units off
+            clientHeight = Math.min(img.clientHeight,{{IMAGE_HEIGHT}});
+            clientWidth = Math.min(img.clientWidth, {{IMAGE_WIDTH}});
             scaleWidth = clientWidth/{{IMAGE_WIDTH}};
             scaleHeight = clientHeight/{{IMAGE_HEIGHT}};
             lineWidth = 4;
