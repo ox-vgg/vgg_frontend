@@ -3,10 +3,12 @@
     <!-- Details page for an image result. Loaded as subpage into searchres.html. -->
     {% comment %}
     The following variables are defined:
+        HOME_LOCATION - location of the root home page taking into account possible redirections
         QUERY_ID - Query id
         DATASET_NAME - Dataset name
         PAGE - page of results to display
-        ROI_ENGINE - currently selected engine
+        ROI_ENGINE - engine for a search on "similar" cases
+        ENGINE - currently selected engine
         AVAILABLE_ENGINES - engines info
         IMAGE_NAME - image name
         IMAGE_URL - full URL of the image
@@ -16,6 +18,7 @@
         IMAGE_FORMAT - image format
         SELECT_ROI - boolean indicating if the roi selection is enable
         ROI - actual ROI coming from the backend in the form of a list
+        ROIS - a list with all ROIs detected in the image
         DSET_RES_ID - Dataset result id from previous page. Use this to make a query in case ROI is invalid.
         METADATA - Metadata associated to the image
     {% endcomment %}
@@ -55,7 +58,11 @@
                                          <td valign="bottom" align="center">
                                                {% if ROI %}
                                                <input id="show_roi" type="checkbox" onchange="toggleCheckbox(this)">
-                                               <label for="show_roi"><strong>Show detection</strong></label><br><br>
+                                               <label for="show_roi"><strong>Show detection</strong></label>
+                                               {% if ENGINE == 'text' %}
+                                               (Click on a detection box to show the text here: <span id="clicked_box"></span>)
+                                               {% endif %}
+                                               <br><br>
                                                {% endif %}
                                                <div id="div_detailimg" >
                                                    {% if SELECT_ROI %}
@@ -140,6 +147,38 @@
     <script type="text/javascript" src="static/scripts/ajax_setup.js"></script>
     <script type="text/javascript" src="static/scripts/roi-search.js"></script>
     {% if ROI %}
+        {% if ROIS and ENGINE == 'text' %}
+        <script type="text/javascript">
+            var allRois = [];
+            {% for A_ROI in ROIS %}
+                roi = [ {{A_ROI.0}}, {{A_ROI.1}}, {{A_ROI.4}}, {{A_ROI.5}}, "{{A_ROI.10}}"];
+                allRois.push(roi);
+            {% endfor %}
+            document.getElementById("canvas").addEventListener('click', function(event) {
+                divCanvas = document.getElementById("canvas").getBoundingClientRect();
+                canvasLeft = divCanvas.left;
+                canvasTop = divCanvas.top;
+                canvasHeight = divCanvas.bottom - divCanvas.top;
+                canvasWidth = divCanvas.right - divCanvas.left;
+                clientHeight = Math.min(canvasHeight,{{IMAGE_HEIGHT}});
+                clientWidth = Math.min(canvasWidth, {{IMAGE_WIDTH}});
+                scaleWidth = clientWidth/{{IMAGE_WIDTH}};
+                scaleHeight = clientHeight/{{IMAGE_HEIGHT}}
+                x = event.pageX - canvasLeft - $(document).scrollLeft();
+                y = event.pageY - canvasTop - $(document).scrollTop();
+                for (i = 0; i < allRois.length; i++) {
+                    if (y > allRois[i][1]*scaleHeight && y < allRois[i][3]*scaleHeight &&
+                        x > allRois[i][0]*scaleWidth && x < allRois[i][2]*scaleWidth) {
+                            document.getElementById("clicked_box").innerHTML = '';
+                            a = document.createElement('a');
+                            a.innerHTML = allRois[i][4];
+                            a.href = '{{HOME_LOCATION}}searchproc_qstr?q=' + allRois[i][4] + '&qtype=text&dsetname={{DATASET_NAME}}&engine={{ENGINE}}';
+                            document.getElementById("clicked_box").appendChild(a);
+                        }
+                    };
+            }, false);
+        </script>
+        {% endif %}
     <script type="text/javascript">
     function toggleCheckbox() {
       canvas=document.getElementById("canvas");
@@ -168,6 +207,21 @@
             canvas.height = clientHeight;
             canvas.width = clientWidth;
             context.drawImage(img, 0, 0, {{IMAGE_WIDTH}}, {{IMAGE_HEIGHT}}, 0, 0, canvas.width, canvas.height);
+            {% if ROIS %}
+                context.beginPath();
+                {% for A_ROI in ROIS %}
+                 {% if A_ROI != ROI %}
+                    context.moveTo({{A_ROI.0}}*scaleWidth,{{A_ROI.1}}*scaleHeight);
+                    context.lineTo({{A_ROI.2}}*scaleWidth,{{A_ROI.3}}*scaleHeight);
+                    context.lineTo({{A_ROI.4}}*scaleWidth,{{A_ROI.5}}*scaleHeight);
+                    context.lineTo({{A_ROI.6}}*scaleWidth,{{A_ROI.7}}*scaleHeight);
+                    context.lineTo({{A_ROI.8}}*scaleWidth,{{A_ROI.9}}*scaleHeight);
+                 {% endif %}
+                {% endfor %}
+                context.lineWidth = lineWidth;
+                context.strokeStyle = "cyan";
+                context.stroke();
+            {% endif %}
             context.beginPath();
             context.moveTo({{ROI.0}}*scaleWidth,{{ROI.1}}*scaleHeight);
             context.lineTo({{ROI.2}}*scaleWidth,{{ROI.3}}*scaleHeight);
@@ -193,6 +247,9 @@
         canvas.width = 0;
         divCanvas.style.display = "none";
         divImg.style.display = "block";
+        {% if ENGINE == 'text' %}
+            document.getElementById("clicked_box").innerHTML = '';
+        {% endif %}
         {% if SELECT_ROI %}
             jcrop_api_canvas.release();
             jcrop_api_detailimg.enable();

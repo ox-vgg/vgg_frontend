@@ -667,6 +667,8 @@ class UserPages:
                 json_response = json.loads(roi_response)
                 if 'roi' in json_response and len(json_response['roi']) > 0:
                     roi = json_response['roi']
+                    if isinstance(roi, list):
+                        roi = '_'.join(roi[:10]) # string roi should be x1_y1_x2_y1_x2_y2_x1_y2_x1_y1
                     ritem['thumbnailroi'] = ',roi:' + roi
 
         # compute home location taking into account any possible redirections
@@ -976,6 +978,20 @@ class UserPages:
                 if 'roi' in json_response and  len(json_response['roi']) > 0:
                     roi = json_response['roi']
 
+        all_rois = None
+        if self.visor_controller.opts.engines_dict[engine]['backend_port']:
+            # check if we can retrieve ALL rois for the image
+            backend_port = self.visor_controller.opts.engines_dict[engine]['backend_port']
+            ses = backend_client.Session(backend_port)
+            func_in = {}
+            func_in['func'] = 'getRoiList'
+            func_in['frame_path'] = imagename
+            request = json.dumps(func_in)
+            response = ses.custom_request(request)
+            json_response = json.loads(response)
+            if 'rois' in json_response and len(json_response['rois']) > 0:
+                all_rois = json_response['rois']
+
         # check if an engine for 'similar' searches was specified in the settings
         # and use it as the engine for the ROIs
         roi_engine = None
@@ -985,8 +1001,10 @@ class UserPages:
 
         # add roi to URL, if available
         imgurl = imloc
-        if roi:
-            #imgurl = imgurl + ',roi:' + roi  # Disable. Now the ROI is drawn with javascript.
+        if roi and isinstance(roi, str):
+            # if the roi comes as a string, it should be as x1_y1_x2_y1_x2_y2_x1_y2_x1_y1,
+            # where (x1,y1) corresponds to the top-left corner of the ROI and (x2,y2) to
+            # the bottom-right corner. Split it here in preparatation for rendering.
             roi = roi.split('_')
 
         # format metadata to make it look nicer in the page
@@ -1011,10 +1029,12 @@ class UserPages:
 
         # set up rendering context and render the page
         context = {
+        'HOME_LOCATION': home_location,
         'QUERY_ID': query_id,
         'DATASET_NAME': dsetname,
         'PAGE': page,
         'ROI_ENGINE' : roi_engine,
+        'ENGINE': engine,
         'AVAILABLE_ENGINES' : available_engines,
         'IMAGE_NAME' : imagename,
         'IMAGE_URL': imgurl,
@@ -1023,6 +1043,7 @@ class UserPages:
         'IMAGE_HEIGHT' : imheight,
         'IMAGE_FORMAT' : imformat,
         'ROI': roi,
+        'ROIS': all_rois,
         'SELECT_ROI' : self.visor_controller.opts.select_roi,
         'DSET_RES_ID': dsetresid,
         'METADATA': metadata
