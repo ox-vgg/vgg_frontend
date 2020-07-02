@@ -132,6 +132,8 @@ echo '%45yak9wu56^(@un!b+&022fdr!-1@92_u*gctw*cw4*@hfu5t' > /webapps/visorgen/se
 cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_text.py /webapps/visorgen/vgg_frontend/visorgen/settings.py
 cp -f /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb-vts.js /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js
 sed -i 's/"\/vgg_frontend"/"\/vts"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py
+sed -i 's/74AFAD/72AF8E/g' /webapps/visorgen/vgg_frontend/siteroot/static/styles/main.css
+sed -i 's/74AFAD/72AF8E/g' /webapps/visorgen/vgg_frontend/siteroot/static/styles/jqcloud.css
 
 # configure default user in vgg_frontend
 cd /webapps/visorgen/vgg_frontend/

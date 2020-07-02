@@ -137,6 +137,9 @@ copy /Y vgg_frontend\visorgen\settings_faces.py vgg_frontend\visorgen\settings.p
 copy /Y vgg_frontend\siteroot\static\scripts\add-getting-started-lb-vff.js vgg_frontend\siteroot\static\scripts\add-getting-started-lb.js
 del replaceends.ps1
 del vgg_frontend\visorgen\settings.replace.py
+powershell.exe -nologo -noprofile -command "cat vgg_frontend\siteroot\static\styles\main.css | %%{$_ -replace '74AFAD', '7293AF' } > vgg_frontend\siteroot\static\styles\main.replace.css"
+copy /Y vgg_frontend\siteroot\static\styles\main.replace.css vgg_frontend\siteroot\static\styles\main.css
+del vgg_frontend\siteroot\static\styles\main.replace.css
 
 REM create Django's secret key
 echo %45yak9wu56^^(@un!b+^&022fdr!-1@92_u*gctw*cw4*@hfu5t > secret_key_visorgen

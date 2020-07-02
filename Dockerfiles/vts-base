@@ -93,7 +93,9 @@ RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-maste
     && if [ -f "/usr/local/cuda/bin/nvcc" ]; then sed -i 's/--gpus -1/--gpus 0/g' /webapps/visorgen/vgg_text_search/pipeline/start_pipeline.sh; fi \
     && cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_text.py /webapps/visorgen/vgg_frontend/visorgen/settings.py \
     && cp -f /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb-vts.js /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js \
-    && sed -i 's/"\/vgg_frontend"/"\/vts"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py
+    && sed -i 's/"\/vgg_frontend"/"\/vts"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py \
+    && sed -i 's/74AFAD/72AF8E/g' /webapps/visorgen/vgg_frontend/siteroot/static/styles/main.css \
+    && sed -i 's/74AFAD/72AF8E/g' /webapps/visorgen/vgg_frontend/siteroot/static/styles/jqcloud.css
 
 # Install Yang Liu's Text-Detect-Recognize and download static ffmpeg
 RUN wget https://github.com/ox-vgg/Text-Detect-Recognize/archive/master.zip -O /tmp/text-detect-master.zip \

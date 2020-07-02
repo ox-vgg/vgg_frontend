@@ -69,6 +69,7 @@ RUN wget https://gitlab.com/vgg/vgg_frontend/-/archive/master/vgg_frontend-maste
     && cp -f /webapps/visorgen/vgg_frontend/visorgen/settings_faces.py /webapps/visorgen/vgg_frontend/visorgen/settings.py \
     && cp -f /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb-vff.js /webapps/visorgen/vgg_frontend/siteroot/static/scripts/add-getting-started-lb.js \
     && sed -i 's/"\/vgg_frontend"/"\/vff"/g' /webapps/visorgen/vgg_frontend/visorgen/settings.py \
+    && sed -i 's/74AFAD/7293AF/g' /webapps/visorgen/vgg_frontend/siteroot/static/styles/main.css \
     && sed -i "s|DATASET_FEATS_FILE|DATASET_FEATS_FILE='/webapps/visorgen/backend_data/faces/features/database.pkl'#|g" /webapps/visorgen/vgg_face_search/service/settings.py \
     && sed -i "s|DEPENDENCIES_PATH|DEPENDENCIES_PATH='/webapps/visorgen/backend_dependencies/'#|g" /webapps/visorgen/vgg_face_search/service/settings.py \
     && sed -i "s|FEATURES_MODEL_WEIGHTS|FEATURES_MODEL_WEIGHTS ='/webapps/visorgen/backend_data/faces/senet50_256.pth'#|g" /webapps/visorgen/vgg_face_search/service/settings.py \
