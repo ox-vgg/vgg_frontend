@@ -39,7 +39,7 @@ urlpatterns = [
     url(r'^uploadimage$', api_functions.upload_image, name='uploadimage'),
     url(r'^(?P<img_set>thumbnails|datasets|postrainimgs|curatedtrainimgs|uploadedimgs|regions)/(.*/)', api_functions.get_image, name='getimage'),
     url(r'^text_suggestions', api_functions.get_text_suggestions, name='text_suggestions'),
-    url(r'^savelistastext$', api_functions.savelistastext, name='savelistastext'),
+    url(r'^save_results_as_via_csv$', api_functions.save_results_as_via_csv, name='save_results_as_via_csv'),
     url(r'^keyword_list$', api_functions.get_keyword_list, name='keyword_list'),
 
     # API urls (restricted - requires user authentication)

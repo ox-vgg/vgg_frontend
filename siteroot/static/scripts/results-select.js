@@ -1,6 +1,6 @@
 $(function() {
 
-    $('#selection_save').bind('click', function() {
+    $('#selection_save_via_csv').bind('click', function() {
         var list = '';
         var qsid = '';
         var page = '';
@@ -15,7 +15,7 @@ $(function() {
             alert('No image has been selected for saving');
         }
         else {
-            savePageAsText(list, qsid, page);
+            savePageAsViaCSV(list, qsid, page);
         }
     });
 
@@ -39,7 +39,7 @@ $(function() {
 
 });
 
-function savePageAsText(list, qsid, page) {
+function savePageAsViaCSV(list, qsid, page) {
     fullHomeLocation = location.protocol + '//' + window.location.hostname;
     if (location.port.length>0) {
         fullHomeLocation = fullHomeLocation + ':' + location.port + '/';
@@ -53,7 +53,7 @@ function savePageAsText(list, qsid, page) {
         * Otherwise, there is either no site prefix, or something else is wrong. */
         fullHomeLocation = fullHomeLocation + pathArray[3] + '/';
     }
-    execstr = fullHomeLocation + 'savelistastext?qsid=' + qsid +
+    execstr = fullHomeLocation + 'save_results_as_via_csv?qsid=' + qsid +
         '&list=' + encodeURIComponent(list) +
         '&page=' + page;
     window.open(execstr, '_blank');

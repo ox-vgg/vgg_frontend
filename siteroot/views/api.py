@@ -74,14 +74,16 @@ class APIFunctions:
 
 
     @method_decorator(require_GET)
-    def savelistastext(self, request):
+    def save_results_as_via_csv(self, request):
         """
-            Saves a specified query as a list of items in plain text
+            Saves a specified query as a list of items in a CSV for the
+            VGG Image Annotator (VIA) version 2.0.10.
+            See https://www.robots.ox.ac.uk/~vgg/software/via/
             Only GET requests are allowed.
             Arguments:
                request: request object specifying the id of the query to be saved
             Returns:
-               Redirects to a text file in the static area of the site
+               Redirects to a CSV file in the static area of the site
                HTTP 400 if the query id is missing or something else goes wrong.
         """
         query_id = request.GET.get('qsid', None)
@@ -101,6 +103,7 @@ class APIFunctions:
         idx_list = idx_list[:-1]
 
         try:
+            engine = request.session['engine']
 
             # get query definition dict from query_ses_id
             query = self.visor_controller.query_key_cache.get_query_details(query_id)
@@ -114,18 +117,67 @@ class APIFunctions:
             if page > page_count:
                 return HttpResponseBadRequest("Incorrect page specified")
 
+            for idx in idx_list:
+                int_idx = int(idx)
+                if 'roi' in rlist[int_idx]:
+                    # in this case the roi should come in string form x1_y1_x2_y1_x2_y2_x1_y2_x1_y1
+                    roi_as_list = rlist[int_idx]['roi'].split('_')
+                    rlist[int_idx]['rois'] = [ roi_as_list ]
+                elif self.visor_controller.opts.engines_dict[engine]['backend_port']:
+                    # check if we can retrieve ALL rois for the image
+                    backend_port = self.visor_controller.opts.engines_dict[engine]['backend_port']
+                    ses = retengine.engine.backend_client.Session(backend_port)
+                    func_in = {}
+                    func_in['func'] = 'getRoiList'
+                    func_in['frame_path'] = rlist[int_idx]['path']
+                    roi_request = json.dumps(func_in)
+                    response = ses.custom_request(roi_request)
+                    json_response = json.loads(response)
+                    if 'rois' in json_response and len(json_response['rois']) > 0:
+                        rlist[int_idx]['rois'] = json_response['rois']
+
             # create file using query_id and only the items with indexes included in the idx_list
-            with open(os.path.join(os.path.dirname(__file__), '..', 'static', 'lists', '%s_%s.txt' % (query_id, page)), 'w') as fout:
+            with open(os.path.join(os.path.dirname(__file__), '..', 'static', 'lists', '%s_%s.csv' % (query_id, page)), 'w') as fout:
+                fout.write('filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes\n')
                 for idx in idx_list:
                     int_idx = int(idx)
-                    fout.write(rlist[int_idx]['path'] + '\n')
+                    if 'rois' in rlist[int_idx]:
+                        num_rois = len(rlist[int_idx]['rois'])
+                        for idx in range(num_rois):
+                            fout.write(rlist[int_idx]['path'] + ',')
+                            fout.write('-1,')
+                            if 'desc' in rlist[int_idx] and rlist[int_idx]['desc'] not in rlist[int_idx]['path']:
+                                fout.write('"{""CAPTION"":""' + rlist[int_idx]['desc'] +'""}",')
+                            else:
+                                fout.write('{},')
+                            fout.write(str(num_rois) + ',')
+                            fout.write(str(idx) + ',')
+                            # ROI should be [x1, y1, x2, y1, x2, y2, x1, y2, x1, y1]
+                            x1 = rlist[int_idx]['rois'][idx][0]
+                            y1 = rlist[int_idx]['rois'][idx][1]
+                            width = float(rlist[int_idx]['rois'][idx][2]) - float(x1)
+                            height = float(rlist[int_idx]['rois'][idx][5]) - float(y1)
+                            fout.write('"{""name"":""rect"",""x"":'+ x1 + ',')
+                            fout.write('""y"":' + y1 + ',')
+                            fout.write('""width"":' + str(width) + ',')
+                            fout.write('""height"":' + str(height) + '}",')
+                            if len(rlist[int_idx]['rois'][idx])> 10:
+                                fout.write('"{""LABEL"":""' + rlist[int_idx]['rois'][idx][10] +'""}"\n')
+                            else:
+                                fout.write('{}\n')
+                    elif 'desc' in rlist[int_idx] and rlist[int_idx]['desc'] not in rlist[int_idx]['path']:
+                        fout.write(rlist[int_idx]['path'] + ',-1,')
+                        fout.write('"{""CAPTION"":""' + rlist[int_idx]['desc'] +'""}",')
+                        fout.write('0,0,{},{}\n')
+                    else:
+                        fout.write(rlist[int_idx]['path'] + ',-1,{},0,0,{},{}\n')
 
             # respond with a redirect
             home_location = settings.SITE_PREFIX + '/'
             if 'HTTP_X_FORWARDED_HOST' in request.META:
                 home_location = 'http://' + request.META['HTTP_X_FORWARDED_HOST'] + home_location
 
-            return redirect(home_location + ('static/lists/%s_%s.txt' % (query_id, page)))
+            return redirect(home_location + ('static/lists/%s_%s.csv' % (query_id, page)))
 
         except Exception as e:
 

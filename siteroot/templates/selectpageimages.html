@@ -14,10 +14,12 @@
     {% load siteroot_extras %}
      <div id="results_header_borderless">
         <a href="javascript:history.go(-1)" title="&laquo; Back to results">&laquo; Back to results</a>
-        <h1>Save results as Text List</h1>
-        <p>Only the images surrounded in green are considered selected. Click on each image to select/unselect it or use the buttons below to select/unselect all images. <strong>Only the paths to images surrounded in green will be saved</strong>.</p>
-        {% if IMAGE_LIST %}<input id="set_all_images_green" type="button" value="Select all images"></input>{% endif %}
-        {% if IMAGE_LIST %}<input id="set_all_images_yellow" type="button" value="Unselect all images"></input><br/><br/>{% endif %}
+        <h1>Export results page</h1>
+        <p><strong>Only the images surrounded in green are considered selected for exporting</strong>. Click on each image to select/unselect it or use the buttons below to select/unselect all images.</p>
+        {% if IMAGE_LIST %}<input id="set_all_images_green" type="button" value="Select all images">{% endif %}
+        {% if IMAGE_LIST %}<input id="set_all_images_yellow" type="button" value="Unselect all images">{% endif %}
+        <p>Each image path and annotations (if any) will be exported to a CSV in a format suitable for the <a href="https://www.robots.ox.ac.uk/~vgg/software/via/" target="_blank">VGG Image Annotator v2.0.10.</a></p>
+        {% if IMAGE_LIST %}<input id="selection_save_via_csv" type="button" value="Export selection as CSV">{% endif %}
     </div>
     <div id="content">
         <div id="results_list" class="grid_list">
@@ -37,10 +39,6 @@
         </div>
     </div>
     <div>
-    <div id="results_header_borderless">
-        {% if IMAGE_LIST %}<input id="selection_save" type="button" value="Save selection"></input>{% endif %}
-        <br>
-    </div>
     <!-- dynamically load in styles associated specifically with this page -->
     <script type="text/javascript">
     $(function() {
