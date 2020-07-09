@@ -136,7 +136,13 @@ class VisorInterface(object):
                 keyword_matches = self.metadata_handler.get_files_by_keyword(key, query['dsetname'])
                 training_images = set().union(keyword_matches, training_images)
             for img in training_images:
-                rlist.append({'path': img})
+                result = {'path': img}
+                result_meta = dict(self.metadata_handler.get_meta_from_fname(img, query['dsetname']))
+                if 'caption' in result_meta:
+                    result['desc'] = result_meta['caption']
+                if 'keywords' in result_meta:
+                    result['keywords'] = result_meta['keywords']
+                rlist.append(result)
             status = query_data.QueryStatus(state=opts.States.results_ready)
             return query_data.QueryData(status, rlist)
 
